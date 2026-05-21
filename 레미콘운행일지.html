@@ -10,11 +10,11 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,sans-serif;background:#f1f5f9;overscroll-behavior:none}
-.app{max-width:430px;margin:0 auto;display:flex;flex-direction:column;background:#ffffff;font-family:-apple-system,sans-serif;color:#1e293b;min-height:100vh;min-height:100dvh}
+.app{max-width:430px;margin:0 auto;display:flex;flex-direction:column;background:#fff;color:#1e293b;min-height:100vh;min-height:100dvh}
 .hdr{background:#1a1a2e;color:#fff;padding:11px 16px;padding-top:max(11px,env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
 .hdr-t{font-size:15px;font-weight:600}.hdr-s{font-size:11px;color:#aaa;margin-top:1px}
 .content{flex:1;overflow-y:auto;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#ffffff;border-top:0.5px solid #e2e8f0;display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:0.5px solid #e2e8f0;display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
 .nb{flex:1;padding:9px 0 7px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#94a3b8;font-size:10px}
 .nb.on{color:#1a1a2e;font-weight:600}.ni{font-size:19px}
 .mnav{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px}
@@ -23,13 +23,15 @@ body{font-family:-apple-system,sans-serif;background:#f1f5f9;overscroll-behavior
 .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e2e8f0;border-top:0.5px solid #e2e8f0}
 .ch{background:#f8fafc;text-align:center;font-size:11px;font-weight:500;padding:5px 0;color:#64748b}
 .ch:first-child{color:#e53e3e}.ch:last-child{color:#3182ce}
-.cc{background:#fff;min-height:60px;padding:3px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
+.cc{background:#fff;min-height:62px;padding:3px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
 .cc:active{opacity:.7}.cc.empty{background:#f8fafc;cursor:default}
 .cc.today .dn{background:#1a1a2e;color:#fff;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center}
 .cc:nth-child(7n+1) .dn{color:#e53e3e}.cc:nth-child(7n) .dn{color:#3182ce}
 .dn{font-size:11px;font-weight:500;line-height:19px;min-width:19px;text-align:center}
 .cbadge{border-radius:4px;font-size:11px;font-weight:700;min-width:22px;height:18px;padding:0 3px;display:flex;align-items:center;justify-content:center}
-.cbadge-off{background:#F1EFE8;color:#444;font-size:9px;border-radius:4px;padding:0 3px;height:16px;display:flex;align-items:center}
+.cbadge-off{font-size:8px;border-radius:4px;padding:0 3px;height:16px;display:flex;align-items:center;font-weight:700}
+.off-v{background:#fef9c3;color:#854d0e}
+.off-r{background:#fee2e2;color:#991b1b}
 .mini-row{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:46px}
 .mbadge{font-size:8px;font-weight:700;border-radius:3px;padding:1px 3px;line-height:1.4}
 .wbadge{background:#E1F5EE;color:#085041}.ot2badge{background:#EEEDFE;color:#3C3489}
@@ -51,25 +53,34 @@ body{font-family:-apple-system,sans-serif;background:#f1f5f9;overscroll-behavior
 .field textarea{resize:none;min-height:60px;font-size:13px}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .kmh{font-size:11px;color:#64748b;margin-top:3px}
+/* 버튼 공통 */
 .btns{display:flex;gap:5px}
 .btn{flex:1;padding:9px 4px;border:1.5px solid #d1d5db;border-radius:8px;background:#f9fafb;font-size:12px;cursor:pointer;color:#6b7280;text-align:center;font-weight:500}
 .btn.on{background:#1d4ed8!important;color:#fff!important;border-color:#1d4ed8!important;font-weight:700}
-.wbtns{display:flex;gap:4px}
-.wbtn{flex:1;padding:8px 2px;border:1.5px solid #d1d5db;border-radius:8px;background:#f9fafb;font-size:12px;cursor:pointer;color:#6b7280;text-align:center}
-.wbtn.on{background:#059669!important;color:#fff!important;border-color:#059669!important;font-weight:700}
+.btn.off-btn.on{background:#d97706!important;border-color:#d97706!important}
+.btn.rep-btn.on{background:#dc2626!important;border-color:#dc2626!important}
+/* 결산방식 버튼 */
 .tbts{display:flex;gap:6px}
 .tbt{flex:1;padding:9px 4px;border:1.5px solid #d1d5db;border-radius:8px;background:#f9fafb;font-size:12px;cursor:pointer;color:#6b7280;text-align:center}
 .tbt.on{background:#7c3aed!important;color:#fff!important;border-color:#7c3aed!important;font-weight:700}
+/* 연료 카드 */
 .fuel-card{background:#f8fafc;border-radius:10px;overflow:hidden;margin-top:8px;border:0.5px solid #e2e8f0}
 .fuel-card-title{background:#0f172a;color:#94a3b8;font-size:10px;font-weight:600;padding:6px 12px;letter-spacing:.5px;text-transform:uppercase}
 .fcrow{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:0.5px solid #e2e8f0}
 .fcrow:last-child{border-bottom:none}
 .fck{font-size:12px;color:#64748b}.fcv{font-size:13px;font-weight:600}
-.fcv.plus{color:#059669}.fcv.minus{color:#dc2626}.fcv.neutral{color:#1e293b}
+.fcv.plus{color:#059669}.fcv.minus{color:#dc2626}.fcv.neutral{color:#1e293b}.fcv.blue{color:#1d4ed8}
 .fuel-balance-big{background:#0f172a;border-radius:0 0 10px 10px;padding:11px 12px;display:flex;justify-content:space-between;align-items:center}
 .fbb-label{font-size:11px;color:#94a3b8;font-weight:500}
 .fbb-val{font-size:20px;font-weight:700}
 .fbb-val.plus{color:#34d399}.fbb-val.minus{color:#f87171}
+/* km 카드 */
+.km-card{background:#f8fafc;border-radius:10px;overflow:hidden;margin-top:6px;border:0.5px solid #e2e8f0}
+.km-card-title{background:#1a1a2e;color:#94a3b8;font-size:10px;font-weight:600;padding:6px 12px;letter-spacing:.5px;text-transform:uppercase}
+.km-total-bar{background:#1a1a2e;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.km-total-label{font-size:11px;color:#94a3b8}
+.km-total-val{font-size:18px;font-weight:700;color:#e2e8f0}
+/* 톨비 카드 */
 .toll-card{background:#f8fafc;border-radius:10px;overflow:hidden;margin-top:8px;border:0.5px solid #e2e8f0}
 .toll-card-title{background:#1e3a5f;color:#93c5fd;font-size:10px;font-weight:600;padding:6px 12px;letter-spacing:.5px;text-transform:uppercase}
 .toll-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:0.5px solid #e2e8f0}
@@ -78,20 +89,27 @@ body{font-family:-apple-system,sans-serif;background:#f1f5f9;overscroll-behavior
 .toll-total-bar{background:#1e3a5f;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
 .toll-total-label{font-size:11px;color:#93c5fd;font-weight:500}
 .toll-total-val{font-size:18px;font-weight:700;color:#60a5fa}
-.ot2e{background:#f8fafc;border-radius:10px;padding:11px 12px;margin-bottom:8px;border:0.5px solid #e2e8f0}
-.ot2h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.ot2t{font-size:12px;font-weight:600;color:#64748b}
-.ot2r{background:none;border:0.5px solid #cbd5e1;border-radius:6px;color:#64748b;cursor:pointer;font-size:11px;padding:3px 8px}
-.ot2f{display:flex;flex-direction:column;gap:9px}.ot2f .field{margin:0}
+/* 공통 항목 카드 (OT2, 폐수, 정비) */
+.item-card{background:#f8fafc;border-radius:10px;padding:11px 12px;margin-bottom:8px;border:0.5px solid #e2e8f0}
+.item-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.item-title{font-size:12px;font-weight:600;color:#64748b}
+.item-rm{background:none;border:0.5px solid #cbd5e1;border-radius:6px;color:#64748b;cursor:pointer;font-size:11px;padding:3px 8px}
+.item-fields{display:flex;flex-direction:column;gap:9px}
+.item-fields .field{margin:0}
 .add-btn{width:100%;padding:9px;border:0.5px dashed #cbd5e1;border-radius:9px;background:none;color:#64748b;font-size:13px;cursor:pointer;margin-top:4px}
 .chint{font-size:12px;font-weight:600;margin-top:4px}
-.parea{border:1.5px dashed #cbd5e1;border-radius:10px;padding:12px;text-align:center;cursor:pointer;position:relative;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:#fff}
+/* 사진 */
+.parea{border:1.5px dashed #cbd5e1;border-radius:10px;padding:14px;text-align:center;cursor:pointer;position:relative;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:#fff}
 .parea:active{background:#f8fafc}
-.parea input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .pimg{width:100%;border-radius:8px;max-height:200px;object-fit:cover}
-.pdel{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:13px;cursor:pointer;z-index:2}
+.pdel{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center}
+/* 사진 버튼 2개 */
+.photo-btns{display:flex;gap:8px;width:100%}
+.photo-btn{flex:1;padding:10px 6px;border:1.5px solid #cbd5e1;border-radius:8px;background:#f9fafb;font-size:12px;cursor:pointer;color:#64748b;text-align:center;position:relative;overflow:hidden}
+.photo-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .bsave{width:100%;padding:14px;background:#1a1a2e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
 .bdel{width:100%;padding:11px;background:none;color:#dc2626;border:1.5px solid #dc2626;border-radius:10px;font-size:14px;cursor:pointer;margin-top:7px}
+/* 통계 */
 .sp{padding:14px 16px 20px}
 .sec{font-size:11px;font-weight:600;color:#64748b;letter-spacing:.4px;margin:16px 0 8px;text-transform:uppercase;border-bottom:0.5px solid #e2e8f0;padding-bottom:5px}
 .sec:first-child{margin-top:0}
@@ -107,16 +125,17 @@ body{font-family:-apple-system,sans-serif;background:#f1f5f9;overscroll-behavior
 .fsettle.pos{background:#ecfdf5;border:1px solid #6ee7b7}.fsettle.neg{background:#fef2f2;border:1px solid #fca5a5}
 .fsl{font-size:12px;font-weight:600}.fsl.pos{color:#065f46}.fsl.neg{color:#991b1b}
 .fsa{font-size:18px;font-weight:700}.fsa.pos{color:#059669}.fsa.neg{color:#dc2626}
-.ot2i{background:#f8fafc;border-radius:8px;padding:9px 12px;margin-bottom:6px;border-left:3px solid #7c3aed;border:0.5px solid #e2e8f0;border-left:3px solid #7c3aed}
+.ot2i{background:#f8fafc;border-radius:8px;padding:9px 12px;margin-bottom:6px;border-left:3px solid #7c3aed;border:0.5px solid #e2e8f0;border-left-width:3px}
 .ot2i.mo{border-left-color:#dc2626}
 .ot2d{font-size:11px;color:#64748b;margin-bottom:3px}
 .ot2n{font-size:13px;font-weight:500;display:flex;align-items:center;flex-wrap:wrap;gap:5px;color:#1e293b}
 .ot2tp{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
 .tc{background:#ede9fe;color:#5b21b6}.tm{background:#fee2e2;color:#991b1b}
+.wwi{background:#f8fafc;border-radius:8px;padding:9px 12px;margin-bottom:6px;border-left:3px solid #059669;border:0.5px solid #e2e8f0;border-left-width:3px}
 .emsg{text-align:center;color:#64748b;font-size:13px;padding:14px;background:#f8fafc;border-radius:8px;border:0.5px solid #e2e8f0}
 .sblk{background:#f8fafc;border-radius:10px;overflow:hidden;margin-bottom:10px;border:0.5px solid #e2e8f0}
 .srow{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-bottom:0.5px solid #e2e8f0}.srow:last-child{border-bottom:none}
-.slbl{font-size:13px;color:#1e293b}.sinp{width:95px;padding:5px 9px;border:0.5px solid #cbd5e1;border-radius:7px;font-size:13px;text-align:right;background:#fff;color:#1e293b}
+.slbl{font-size:13px;color:#1e293b}.sinp{width:110px;padding:5px 9px;border:0.5px solid #cbd5e1;border-radius:7px;font-size:13px;text-align:right;background:#fff;color:#1e293b}
 </style>
 </head>
 <body>
@@ -127,42 +146,573 @@ body{font-family:-apple-system,sans-serif;background:#f1f5f9;overscroll-behavior
   <button class="nb on" id="nbCalendar" onclick="go('calendar')"><span class="ni">📅</span>달력</button>
   <button class="nb" id="nbEntry" onclick="go('entry')"><span class="ni">✏️</span>기록</button>
   <button class="nb" id="nbStats" onclick="go('stats')"><span class="ni">📊</span>통계</button>
+  <button class="nb" id="nbAnnual" onclick="go('annual')"><span class="ni">🏆</span>연말결산</button>
 </nav>
 </div>
 <script>
-var tab='calendar',cd=new Date(),sel=null,cSt='work',ol=[],curWw=0,prevFB={totalAdded:0,totalUsed:0,balance:0};
-var logs=JSON.parse(localStorage.getItem('rl7_logs')||'{}');
-var cfg=JSON.parse(localStorage.getItem('rl7_cfg')||'{"unitPrice":70000,"fuelRate":0.55,"otRate":18000,"fuelPrice":1500,"toll1":3600,"toll2":2400}');
-function sv(){localStorage.setItem('rl7_logs',JSON.stringify(logs));localStorage.setItem('rl7_cfg',JSON.stringify(cfg));}
+var tab='calendar',cd=new Date(),sel=null,cSt='work',ol=[],wwList=[],repList=[],prevFB={totalAdded:0,totalUsed:0,balance:0};
+var logs=JSON.parse(localStorage.getItem('rl8_logs')||'{}');
+var cfg=JSON.parse(localStorage.getItem('rl8_cfg')||'{"unitPrice":70000,"fuelRate":0.55,"otRate":18000,"fuelPrice":1500,"toll1":3600,"toll2":2400,"initKm":125000,"wwPay":0,"ot2Pay":0}');
+if(!cfg.wwPay)cfg.wwPay=0;if(!cfg.ot2Pay)cfg.ot2Pay=0;
+
+function sv(){localStorage.setItem('rl8_logs',JSON.stringify(logs));localStorage.setItem('rl8_cfg',JSON.stringify(cfg));}
 function dk(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
 function cc(n){var C=[null,{b:'#E6F1FB',t:'#0C447C'},{b:'#EAF3DE',t:'#27500A'},{b:'#E1F5EE',t:'#085041'},{b:'#FAEEDA',t:'#633806'},{b:'#FAC775',t:'#412402'},{b:'#FBEAF0',t:'#72243E'},{b:'#FAECE7',t:'#711B13'},{b:'#F09595',t:'#501313'}];n=parseInt(n)||0;if(!n)return null;return n<C.length?C[n]:{b:'#E24B4A',t:'#fff'};}
-function go(t){tab=t;['Calendar','Entry','Stats'].forEach(function(x){document.getElementById('nb'+x).classList.remove('on');});document.getElementById('nb'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('on');render();}
+function go(t){tab=t;['Calendar','Entry','Stats','Annual'].forEach(function(x){document.getElementById('nb'+x).classList.remove('on');});document.getElementById('nb'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('on');render();}
 function pm(){cd=new Date(cd.getFullYear(),cd.getMonth()-1,1);render();}
 function nm(){cd=new Date(cd.getFullYear(),cd.getMonth()+1,1);render();}
-function render(){if(tab==='calendar')rCal();else if(tab==='entry')rEntry();else rStats();}
-function calcPrevFuel(targetDate){var keys=Object.keys(logs).filter(function(k){return k<targetDate;}).sort();var ta=0,tu=0;keys.forEach(function(k){var v=logs[k];ta+=parseFloat(v.fuel||0);var km=parseInt(v.ekm||0)-parseInt(v.skm||0);tu+=km*cfg.fuelRate;});return{totalAdded:+ta.toFixed(2),totalUsed:+tu.toFixed(2),balance:+(ta-tu).toFixed(2)};}
-function fuelMonth(y,m){var mp=y+'-'+String(m+1).padStart(2,'0');var keys=Object.keys(logs).filter(function(k){return k.startsWith(mp);});var mf=0,mu=0;keys.forEach(function(k){var v=logs[k],km=parseInt(v.ekm||0)-parseInt(v.skm||0);mf+=parseFloat(v.fuel||0);mu+=km*cfg.fuelRate;});return{mf:+mf.toFixed(2),mu:+mu.toFixed(2)};}
+function render(){if(tab==='calendar')rCal();else if(tab==='entry')rEntry();else if(tab==='stats')rStats();else rAnnual();}
+
+/* 이 날짜 이전까지 누적 연료 */
+function calcPrevFuel(targetDate){
+  var keys=Object.keys(logs).filter(function(k){return k<targetDate;}).sort();
+  var ta=0,tu=0;
+  keys.forEach(function(k){var v=logs[k];ta+=parseFloat(v.fuel||0);var km=parseInt(v.ekm||0)-parseInt(v.skm||0);tu+=km*cfg.fuelRate;});
+  return{totalAdded:+ta.toFixed(2),totalUsed:+tu.toFixed(2),balance:+(ta-tu).toFixed(2)};
+}
+/* 이 날짜 이전까지 누적 운행 km */
+function calcPrevKm(targetDate){
+  var keys=Object.keys(logs).filter(function(k){return k<targetDate;}).sort();
+  var total=0;
+  keys.forEach(function(k){var v=logs[k];total+=parseInt(v.ekm||0)-parseInt(v.skm||0);});
+  return total;
+}
+/* 월간 연료 집계 */
+function fuelMonth(y,m){
+  var mp=y+'-'+String(m+1).padStart(2,'0');
+  var keys=Object.keys(logs).filter(function(k){return k.startsWith(mp);});
+  var mf=0,mu=0;
+  keys.forEach(function(k){var v=logs[k],km=parseInt(v.ekm||0)-parseInt(v.skm||0);mf+=parseFloat(v.fuel||0);mu+=km*cfg.fuelRate;});
+  return{mf:+mf.toFixed(2),mu:+mu.toFixed(2)};
+}
+/* 이달 주유량 합계 (특정 날짜까지 포함) */
+function monthFuelUpTo(targetDate){
+  var mp=targetDate.substring(0,7);
+  var keys=Object.keys(logs).filter(function(k){return k.startsWith(mp)&&k<=targetDate;});
+  var total=0;
+  keys.forEach(function(k){total+=parseFloat(logs[k].fuel||0);});
+  return +total.toFixed(1);
+}
 function tollTotal(t1,t2){return(parseInt(t1)||0)*cfg.toll1+(parseInt(t2)||0)*cfg.toll2;}
-function uToll(){var t1=document.getElementById('fT1').value,t2=document.getElementById('fT2').value;var tot=tollTotal(t1,t2);var el=document.getElementById('tollCard');if(!el)return;el.innerHTML='<div class="toll-card-title">톨비 현황 (울산대교)</div><div class="toll-row"><span class="toll-key">3,600원 × '+(parseInt(t1)||0)+'회</span><span class="toll-val">'+((parseInt(t1)||0)*cfg.toll1).toLocaleString()+'원</span></div><div class="toll-row"><span class="toll-key">2,400원 × '+(parseInt(t2)||0)+'회</span><span class="toll-val">'+((parseInt(t2)||0)*cfg.toll2).toLocaleString()+'원</span></div><div class="toll-total-bar"><span class="toll-total-label">오늘 톨비 합계</span><span class="toll-total-val">'+tot.toLocaleString()+'원</span></div>';}
-function rCal(){var y=cd.getFullYear(),m=cd.getMonth();document.getElementById('hS').textContent=y+'년 '+(m+1)+'월';var days=new Date(y,m+1,0).getDate(),first=new Date(y,m,1).getDay();var td=new Date(),tdk=dk(td.getFullYear(),td.getMonth(),td.getDate());var mp=y+'-'+String(m+1).padStart(2,'0');var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});var wd=ml.filter(function(e){return !e[1].st||e[1].st==='work';}).length;var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);var ep=Math.round(wd*cfg.unitPrice/10000);var h='<div class="mnav"><button class="ma" onclick="pm()">‹</button><span class="ml">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div><div class="cgrid">';['일','월','화','수','목','금','토'].forEach(function(d){h+='<div class="ch">'+d+'</div>';});for(var i=0;i<first;i++)h+='<div class="cc empty"></div>';for(var d=1;d<=days;d++){var key=dk(y,m,d),log=logs[key]||{};var isT=key===tdk,calls=parseInt(log.calls)||0,col=cc(calls);var ww=parseInt(log.ww)||0,ot2=(JSON.parse(log.ot2List||'[]')).length>0;var badge='';if(log.st==='off')badge='<div class="cbadge-off">휴무</div>';else if(log.st==='edu')badge='<div class="cbadge-off">교육</div>';else if(col)badge='<div class="cbadge" style="background:'+col.b+';color:'+col.t+'">'+calls+'</div>';var mn='';if(ww>0)mn+='<div class="mbadge wbadge">'+(ww>1?ww:'')+'W</div>';if(ot2)mn+='<div class="mbadge ot2badge">2시↑</div>';var dayToll=tollTotal(log.t1,log.t2);h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')"><span class="dn">'+d+'</span>'+badge+(mn?'<div class="mini-row">'+mn+'</div>':'')+'<div class="dots">'+(parseFloat(log.fuel)>0?'<div class="dot df"></div>':'')+(parseFloat(log.ot)>0?'<div class="dot dp"></div>':'')+(dayToll>0?'<div class="dot dt"></div>':'')+(log.photo?'<div class="dot dph"></div>':'')+'</div></div>';}h+='</div><div class="sbar"><div class="si"><div class="sl">이달 공수</div><div class="sv">'+tc+'<span class="su">콜</span></div></div><div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div><div class="si"><div class="sl">예상급여</div><div class="sv">'+ep+'<span class="su">만원</span></div></div></div><div class="legend"><div class="li"><div class="lsw" style="background:#EAF3DE"></div>1~3콜</div><div class="li"><div class="lsw" style="background:#FAEEDA"></div>4~5콜</div><div class="li"><div class="lsw" style="background:#FBEAF0"></div>6콜</div><div class="li"><div class="lsw" style="background:#FAECE7"></div>7콜</div><div class="li"><div class="lsw" style="background:#F09595"></div>8콜↑</div><div class="li"><div class="mbadge wbadge">W</div>폐수</div><div class="li"><div class="mbadge ot2badge">2시↑</div>2시간초과</div><div class="li"><div class="dot df"></div>주유</div><div class="li"><div class="dot dt"></div>톨비</div><div class="li"><div class="dot dph"></div>사진</div></div>';document.getElementById('mc').innerHTML=h;}
+function isOffDay(st){return st==='vacation'||st==='repair';}
+
+/* 달력 */
+function rCal(){
+  var y=cd.getFullYear(),m=cd.getMonth();
+  document.getElementById('hS').textContent=y+'년 '+(m+1)+'월';
+  var days=new Date(y,m+1,0).getDate(),first=new Date(y,m,1).getDay();
+  var td=new Date(),tdk=dk(td.getFullYear(),td.getMonth(),td.getDate());
+  var mp=y+'-'+String(m+1).padStart(2,'0');
+  var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});
+  var wd=ml.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
+  var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
+  var ep=Math.round(wd*cfg.unitPrice/10000);
+  var h='<div class="mnav"><button class="ma" onclick="pm()">‹</button><span class="ml">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div><div class="cgrid">';
+  ['일','월','화','수','목','금','토'].forEach(function(d){h+='<div class="ch">'+d+'</div>';});
+  for(var i=0;i<first;i++)h+='<div class="cc empty"></div>';
+  for(var d=1;d<=days;d++){
+    var key=dk(y,m,d),log=logs[key]||{};
+    var isT=key===tdk,calls=parseInt(log.calls)||0,col=cc(calls);
+    var ww=(JSON.parse(log.wwList||'[]')).length;
+    var ot2=(JSON.parse(log.ot2List||'[]')).length>0;
+    var st=log.st||'';
+    var badge='';
+    if(st==='vacation')badge='<div class="cbadge-off off-v">휴가</div>';
+    else if(st==='repair')badge='<div class="cbadge-off off-r">정비</div>';
+    else if(col)badge='<div class="cbadge" style="background:'+col.b+';color:'+col.t+'">'+calls+'</div>';
+    var mn='';
+    if(ww>0)mn+='<div class="mbadge wbadge">'+(ww>1?ww:'')+'W</div>';
+    if(ot2)mn+='<div class="mbadge ot2badge">2시↑</div>';
+    var dayToll=tollTotal(log.t1,log.t2);
+    h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')"><span class="dn">'+d+'</span>'+badge+(mn?'<div class="mini-row">'+mn+'</div>':'')+'<div class="dots">'+(parseFloat(log.fuel)>0?'<div class="dot df"></div>':'')+(parseFloat(log.ot)>0?'<div class="dot dp"></div>':'')+(dayToll>0?'<div class="dot dt"></div>':'')+(log.photo?'<div class="dot dph"></div>':'')+'</div></div>';
+  }
+  h+='</div><div class="sbar"><div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div><div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div><div class="si"><div class="sl">예상급여</div><div class="sv">'+ep+'<span class="su">만원</span></div></div></div>';
+  h+='<div class="legend"><div class="li"><div class="lsw" style="background:#EAF3DE"></div>1~3바리</div><div class="li"><div class="lsw" style="background:#FAEEDA"></div>4~5바리</div><div class="li"><div class="lsw" style="background:#FBEAF0"></div>6바리</div><div class="li"><div class="lsw" style="background:#FAECE7"></div>7바리</div><div class="li"><div class="lsw" style="background:#F09595"></div>8↑</div><div class="li"><div class="mbadge wbadge">W</div>폐수</div><div class="li"><div class="mbadge ot2badge">2시↑</div>초과</div><div class="li"><div class="dot df"></div>주유</div><div class="li"><div class="dot dt"></div>톨비</div><div class="li"><div class="dot dph"></div>사진</div></div>';
+  document.getElementById('mc').innerHTML=h;
+}
+
 function openDay(k){sel=k;go('entry');}
-function mkOT2(){if(!ol.length)return'<div style="font-size:12px;color:#64748b;padding:4px 0 8px">없음</div>';return ol.map(function(e,i){return'<div class="ot2e"><div class="ot2h"><span class="ot2t">현장 '+(i+1)+'</span><button class="ot2r" onclick="rmO2('+i+')">삭제</button></div><div class="ot2f"><div class="field"><label class="fl">현장명</label><input type="text" id="o2s'+i+'" value="'+(e.site||'')+'" placeholder="현장명" oninput="upO2('+i+')"></div><div class="field"><label class="fl">담당 영업사원</label><input type="text" id="o2m'+i+'" value="'+(e.mgr||'')+'" placeholder="이름" oninput="upO2('+i+')"></div><div class="field"><label class="fl">결산 방식</label><div class="tbts"><button id="o2ta'+i+'" class="tbt'+((e.type||'monthly')==='credit'?' on':'')+'" onclick="setO2T('+i+',\'credit\')">영업사원 콜 지급</button><button id="o2tb'+i+'" class="tbt'+((e.type||'monthly')==='monthly'?' on':'')+'" onclick="setO2T('+i+',\'monthly\')">월말 결산</button></div></div></div></div>';}).join('');}
+
+/* OT2 */
+function mkOT2(){
+  if(!ol.length)return'<div style="font-size:12px;color:#64748b;padding:4px 0 8px">없음</div>';
+  return ol.map(function(e,i){
+    return'<div class="item-card"><div class="item-hdr"><span class="item-title">현장 '+(i+1)+'</span><button class="item-rm" onclick="rmO2('+i+')">삭제</button></div><div class="item-fields"><div class="field"><label class="fl">현장명</label><input type="text" id="o2s'+i+'" value="'+(e.site||'')+'" placeholder="현장명" oninput="upO2('+i+')"></div><div class="field"><label class="fl">담당 영업사원</label><input type="text" id="o2m'+i+'" value="'+(e.mgr||'')+'" placeholder="이름" oninput="upO2('+i+')"></div><div class="field"><label class="fl">결산 방식</label><div class="tbts"><button id="o2ta'+i+'" class="tbt'+((e.type||'monthly')==='credit'?' on':'')+'" onclick="setO2T('+i+',\'credit\')">영업사원 콜 지급</button><button id="o2tb'+i+'" class="tbt'+((e.type||'monthly')==='monthly'?' on':'')+'" onclick="setO2T('+i+',\'monthly\')">월말 결산</button></div></div></div></div>';
+  }).join('');
+}
 function addO2(){ol.push({site:'',mgr:'',type:'monthly'});document.getElementById('o2Con').innerHTML=mkOT2();}
 function rmO2(i){ol.splice(i,1);document.getElementById('o2Con').innerHTML=mkOT2();}
 function setO2T(i,t){ol[i].type=t;document.getElementById('o2ta'+i).classList.toggle('on',t==='credit');document.getElementById('o2tb'+i).classList.toggle('on',t==='monthly');}
 function upO2(i){var s=document.getElementById('o2s'+i),mg=document.getElementById('o2m'+i);if(s&&mg){ol[i].site=s.value;ol[i].mgr=mg.value;}}
-function setSt(s){cSt=s;['work','off','edu','other'].forEach(function(k,i){var el=document.getElementById('stb'+i);if(el)el.className='btn'+(k===s?' on':'');});}
-function setWw(n){curWw=n;for(var i=0;i<=4;i++){var el=document.getElementById('wbt'+i);if(el)el.className='wbtn'+(i===n?' on':'');}}
-function uFuelCard(){var el=document.getElementById('fuelCard');if(!el)return;var todayFuel=parseFloat(document.getElementById('fF').value)||0;var s=parseInt(document.getElementById('fSk').value)||0,e=parseInt(document.getElementById('fEk').value)||0;var km=e>s?e-s:0,used=+(km*cfg.fuelRate).toFixed(1);var totalAdded=+(prevFB.totalAdded+todayFuel).toFixed(1);var balance=+(prevFB.balance+todayFuel-used).toFixed(1);var isPlus=balance>=0;el.innerHTML='<div class="fuel-card-title">연료 현황</div><div class="fcrow"><span class="fck">이전 누적 잔량</span><span class="fcv neutral">'+prevFB.balance.toFixed(1)+'L</span></div><div class="fcrow"><span class="fck">오늘 주유</span><span class="fcv plus">+'+todayFuel+'L</span></div><div class="fcrow"><span class="fck">오늘 소비 ('+km+'km × '+cfg.fuelRate+')</span><span class="fcv minus">−'+used+'L</span></div><div class="fcrow"><span class="fck">누적 총 주유량</span><span class="fcv neutral">'+totalAdded+'L</span></div><div class="fuel-balance-big"><span class="fbb-label">현재 연료 잔량</span><span class="fbb-val '+(isPlus?'plus':'minus')+'">'+balance+'L</span></div>';}
-function uKm(){var s=parseInt(document.getElementById('fSk').value)||0,e=parseInt(document.getElementById('fEk').value)||0;if(s&&e&&e>s)document.getElementById('kmH').textContent='✅ 운행거리: '+(e-s)+'km';uFuelCard();}
+
+/* 폐수처리 */
+function mkWW(){
+  if(!wwList.length)return'<div style="font-size:12px;color:#64748b;padding:4px 0 8px">없음</div>';
+  return wwList.map(function(e,i){
+    return'<div class="item-card" style="border-left:3px solid #059669"><div class="item-hdr"><span class="item-title" style="color:#065f46">폐수 '+(i+1)+'</span><button class="item-rm" onclick="rmWW('+i+')">삭제</button></div><div class="item-fields"><div class="field"><label class="fl">현장명</label><input type="text" id="wws'+i+'" value="'+(e.site||'')+'" placeholder="현장명 입력" oninput="upWW('+i+')"></div></div></div>';
+  }).join('');
+}
+function addWW(){wwList.push({site:''});document.getElementById('wwCon').innerHTML=mkWW();}
+function rmWW(i){wwList.splice(i,1);document.getElementById('wwCon').innerHTML=mkWW();}
+function upWW(i){var el=document.getElementById('wws'+i);if(el)wwList[i].site=el.value;}
+
+/* 차량정비 */
+function mkRep(){
+  if(!repList.length)return'<div style="font-size:12px;color:#64748b;padding:4px 0 8px">없음</div>';
+  return repList.map(function(e,i){
+    return'<div class="item-card" style="border-left:3px solid #dc2626"><div class="item-hdr"><span class="item-title" style="color:#991b1b">정비 '+(i+1)+'</span><button class="item-rm" onclick="rmRep('+i+')">삭제</button></div><div class="item-fields"><div class="field"><label class="fl">정비 항목</label><input type="text" id="rps'+i+'" value="'+(e.item||'')+'" placeholder="예: 엔진오일 교체" oninput="upRep('+i+')"></div><div class="field"><label class="fl">정비소</label><input type="text" id="rpp'+i+'" value="'+(e.place||'')+'" placeholder="정비소명" oninput="upRep('+i+')"></div><div class="field"><label class="fl">비용 (원)</label><input type="number" id="rpc'+i+'" value="'+(e.cost||'')+'" placeholder="0" oninput="upRep('+i+')"></div></div></div>';
+  }).join('');
+}
+function addRep(){repList.push({item:'',place:'',cost:''});document.getElementById('repCon').innerHTML=mkRep();}
+function rmRep(i){repList.splice(i,1);document.getElementById('repCon').innerHTML=mkRep();}
+function upRep(i){var s=document.getElementById('rps'+i),p=document.getElementById('rpp'+i),c=document.getElementById('rpc'+i);if(s)repList[i].item=s.value;if(p)repList[i].place=p.value;if(c)repList[i].cost=c.value;}
+
+/* 근무상태 */
+function setSt(s){
+  cSt=s;
+  ['work','vacation','repair','other'].forEach(function(k,i){
+    var el=document.getElementById('stb'+i);
+    if(el)el.className='btn'+(k==='vacation'?' off-btn':'')+(k==='repair'?' rep-btn':'')+(k===s?' on':'');
+  });
+}
+
+/* 연료 카드 업데이트 — 총주유량 / 당일주유량 / 남은잔량 */
+function uFuelCard(){
+  var el=document.getElementById('fuelCard');if(!el)return;
+  var todayFuel=parseFloat(document.getElementById('fF').value)||0;
+  var s=parseInt(document.getElementById('fSk').value)||0,e2=parseInt(document.getElementById('fEk').value)||0;
+  var km=e2>s?e2-s:0;
+  /* 총주유량 = 이전까지 누적 총주유 + 오늘 주유 */
+  var totalFuel=+(prevFB.totalAdded+todayFuel).toFixed(1);
+  /* 누적 총소비 = 이전까지 소비 + 오늘 소비 */
+  var totalUsed=+(prevFB.totalUsed+(km*cfg.fuelRate)).toFixed(1);
+  /* 남은 주유잔량 = 총주유량 - 누적 총소비 */
+  var remain=+(totalFuel-totalUsed).toFixed(1);
+  var isPlus=remain>=0;
+  el.innerHTML='<div class="fuel-card-title">연료 현황</div>'
+    +'<div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div>'
+    +'<div class="fcrow" style="background:#eff6ff"><span class="fck" style="font-weight:600;color:#1d4ed8">총 주유량 <span style="font-size:10px;font-weight:400">(누적 합계)</span></span><span class="fcv blue">'+totalFuel+'L</span></div>'
+    +'<div class="fcrow"><span class="fck">누적 소비량 (총km × '+cfg.fuelRate+')</span><span class="fcv minus">−'+totalUsed+'L</span></div>'
+    +'<div class="fuel-balance-big"><span class="fbb-label">남은 주유 잔량</span><span class="fbb-val '+(isPlus?'plus':'minus')+'">'+remain+'L</span></div>';
+}
+
+/* km 카드 업데이트 */
+function uKmCard(){
+  var el=document.getElementById('kmCard');if(!el)return;
+  var s=parseInt(document.getElementById('fSk').value)||0,e2=parseInt(document.getElementById('fEk').value)||0;
+  var todayKm=e2>s?e2-s:0;
+  var totalKm=cfg.initKm+prevKmVal+todayKm;
+  if(s&&e2&&e2>s)document.getElementById('kmH').textContent='✅ 오늘 운행거리: '+todayKm+'km';
+  el.innerHTML='<div class="km-card-title">전체 누적 km</div>'
+    +'<div class="fcrow"><span class="fck">기준 km</span><span class="fcv neutral">'+cfg.initKm.toLocaleString()+'km</span></div>'
+    +'<div class="fcrow"><span class="fck">이전 누적 운행</span><span class="fcv neutral">+'+prevKmVal.toLocaleString()+'km</span></div>'
+    +'<div class="fcrow"><span class="fck">오늘 운행</span><span class="fcv plus">+'+todayKm+'km</span></div>'
+    +'<div class="km-total-bar"><span class="km-total-label">전체 누적 km</span><span class="km-total-val">'+totalKm.toLocaleString()+'km</span></div>';
+}
+
+function uKm(){uKmCard();uFuelCard();}
+
+function uToll(){
+  var t1=document.getElementById('fT1').value,t2=document.getElementById('fT2').value;
+  var tot=tollTotal(t1,t2);
+  var el=document.getElementById('tollCard');if(!el)return;
+  el.innerHTML='<div class="toll-card-title">톨비 현황 (울산대교)</div><div class="toll-row"><span class="toll-key">3,600원 × '+(parseInt(t1)||0)+'회</span><span class="toll-val">'+((parseInt(t1)||0)*cfg.toll1).toLocaleString()+'원</span></div><div class="toll-row"><span class="toll-key">2,400원 × '+(parseInt(t2)||0)+'회</span><span class="toll-val">'+((parseInt(t2)||0)*cfg.toll2).toLocaleString()+'원</span></div><div class="toll-total-bar"><span class="toll-total-label">오늘 톨비 합계</span><span class="toll-total-val">'+tot.toLocaleString()+'원</span></div>';
+}
+
 function uOT(){var h=parseFloat(document.getElementById('fOt').value)||0;var a=h*cfg.otRate;document.getElementById('otA').textContent=a>0?'💰 오티 수당: '+a.toLocaleString()+'원':'';}
-function rEntry(){if(!sel){var t=new Date(),tk=dk(t.getFullYear(),t.getMonth(),t.getDate());document.getElementById('mc').innerHTML='<div style="padding:28px 16px;text-align:center;color:#64748b"><p style="margin-bottom:14px">달력에서 날짜를 탭하세요</p><button class="bsave" style="max-width:180px" onclick="openDay(\''+tk+'\')">오늘 기록하기</button></div>';return;}var log=logs[sel]||{};var pts=sel.split('-'),y=pts[0],m=pts[1],d=pts[2];var dow=['일','월','화','수','목','금','토'][new Date(+y,+m-1,+d).getDay()];document.getElementById('hS').textContent=y+'.'+m+'.'+d+' ('+dow+')';cSt=log.st||'work';ol=JSON.parse(log.ot2List||'[]');curWw=parseInt(log.ww)||0;prevFB=calcPrevFuel(sel);var kmD=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;var todayFuel=parseFloat(log.fuel||0),todayUsed=+(kmD*cfg.fuelRate).toFixed(1);var totalAdded=+(prevFB.totalAdded+todayFuel).toFixed(1);var balance=+(prevFB.balance+todayFuel-todayUsed).toFixed(1),isPlus=balance>=0;var otA=(parseFloat(log.ot)||0)*cfg.otRate;var t1=parseInt(log.t1||0),t2=parseInt(log.t2||0),tTot=tollTotal(t1,t2);document.getElementById('mc').innerHTML='<div class="ef"><div class="shdr">근무 상태</div><div class="btns">'+['work','off','edu','other'].map(function(k,i){return'<button id="stb'+i+'" class="btn'+(cSt===k?' on':'')+'" onclick="setSt(\''+k+'\')">'+['근무','휴무','교육','기타'][i]+'</button>';}).join('')+'</div><div class="shdr">기본 운행</div><div class="r2"><div class="field"><label class="fl">콜 수</label><input type="number" id="fC" value="'+(log.calls||'')+'" placeholder="0" min="0" max="30" oninput="aVol()"></div><div class="field"><label class="fl">운반량 (㎥)</label><input type="number" id="fV" value="'+(log.vol||'')+'" placeholder="자동입력" step="0.5"></div></div><div class="r2"><div class="field"><label class="fl">시작 km</label><input type="number" id="fSk" value="'+(log.skm||'')+'" placeholder="7924" oninput="uKm()"></div><div class="field"><label class="fl">종료 km</label><input type="number" id="fEk" value="'+(log.ekm||'')+'" placeholder="7999" oninput="uKm()"></div></div><div class="kmh" id="kmH">'+(kmD>0?'✅ 운행거리: '+kmD+'km':'종료km 입력 시 자동계산')+'</div><div class="shdr">연료 주유</div><div class="field"><label class="fl">당일 주유량 (L)</label><input type="number" id="fF" value="'+(log.fuel||'')+'" placeholder="0" step="10" oninput="uFuelCard()"></div><div class="fuel-card" id="fuelCard"><div class="fuel-card-title">연료 현황</div><div class="fcrow"><span class="fck">이전 누적 잔량</span><span class="fcv neutral">'+prevFB.balance.toFixed(1)+'L</span></div><div class="fcrow"><span class="fck">오늘 주유</span><span class="fcv plus">+'+todayFuel+'L</span></div><div class="fcrow"><span class="fck">오늘 소비 ('+kmD+'km × '+cfg.fuelRate+')</span><span class="fcv minus">−'+todayUsed+'L</span></div><div class="fcrow"><span class="fck">누적 총 주유량</span><span class="fcv neutral">'+totalAdded+'L</span></div><div class="fuel-balance-big"><span class="fbb-label">현재 연료 잔량</span><span class="fbb-val '+(isPlus?'plus':'minus')+'">'+balance+'L</span></div></div><div class="shdr">시간외수당 (오티)</div><div class="field"><label class="fl">오티 시간 — 4시 이후</label><input type="number" id="fOt" value="'+(log.ot||'')+'" placeholder="0" step="0.5" oninput="uOT()"></div><div class="chint" id="otA" style="color:#7c3aed">'+(otA>0?'💰 오티 수당: '+otA.toLocaleString()+'원':'')+'</div><div class="shdr">2시간초과 현장</div><div id="o2Con">'+mkOT2()+'</div><button class="add-btn" onclick="addO2()">＋ 2시간초과 현장 추가</button><div class="shdr">폐수처리</div><div class="field"><label class="fl">처리 횟수</label><div class="wbtns">'+[0,1,2,3,4].map(function(n){return'<button id="wbt'+n+'" class="wbtn'+(curWw===n?' on':'')+'" onclick="setWw('+n+')">'+(n===0?'없음':n+'W')+'</button>';}).join('')+'</div></div><div class="field"><label class="fl">폐수 현장명</label><input type="text" id="fWs" value="'+(log.wwSite||'')+'" placeholder="현장명"></div><div class="shdr">톨비 (울산대교)</div><div class="r2"><div class="field"><label class="fl">3,600원 — 횟수</label><input type="number" id="fT1" value="'+(log.t1||'')+'" placeholder="0" min="0" oninput="uToll()"></div><div class="field"><label class="fl">2,400원 — 횟수</label><input type="number" id="fT2" value="'+(log.t2||'')+'" placeholder="0" min="0" oninput="uToll()"></div></div><div class="toll-card" id="tollCard"><div class="toll-card-title">톨비 현황 (울산대교)</div><div class="toll-row"><span class="toll-key">3,600원 × '+t1+'회</span><span class="toll-val">'+(t1*cfg.toll1).toLocaleString()+'원</span></div><div class="toll-row"><span class="toll-key">2,400원 × '+t2+'회</span><span class="toll-val">'+(t2*cfg.toll2).toLocaleString()+'원</span></div><div class="toll-total-bar"><span class="toll-total-label">오늘 톨비 합계</span><span class="toll-total-val">'+tTot.toLocaleString()+'원</span></div></div><div class="shdr">메모</div><div class="field"><textarea id="fM" placeholder="특이사항, 현장명 등...">'+(log.memo||'')+'</textarea></div><div class="shdr">운행일지 사진</div><div class="parea" id="pA" onclick="document.getElementById(\'pI\').click()">'+(log.photo?'<img class="pimg" src="'+log.photo+'"><button class="pdel" onclick="rmPh(event)">✕</button>':'<div style="font-size:28px">📄</div><div style="font-size:13px;color:#64748b">탭해서 사진 첨부<br><span style="opacity:.7;font-size:11px">종이 운행일지 촬영</span></div>')+'<input type="file" id="pI" accept="image/*" capture="environment" onchange="hPh(event)" style="display:none"></div><button class="bsave" onclick="saveE()">저장</button>'+((log.calls||log.st||log.photo)?'<button class="bdel" onclick="delE()">이 날 기록 삭제</button>':'')+'</div>';}
+
+var prevKmVal=0;
+
+function rEntry(){
+  if(!sel){var t=new Date(),tk=dk(t.getFullYear(),t.getMonth(),t.getDate());document.getElementById('mc').innerHTML='<div style="padding:28px 16px;text-align:center;color:#64748b"><p style="margin-bottom:14px">달력에서 날짜를 탭하세요</p><button class="bsave" style="max-width:180px" onclick="openDay(\''+tk+'\')">오늘 기록하기</button></div>';return;}
+  var log=logs[sel]||{};
+  var pts=sel.split('-'),y=pts[0],m=pts[1],d=pts[2];
+  var dow=['일','월','화','수','목','금','토'][new Date(+y,+m-1,+d).getDay()];
+  document.getElementById('hS').textContent=y+'.'+m+'.'+d+' ('+dow+')';
+  cSt=log.st||'work';
+  ol=JSON.parse(log.ot2List||'[]');
+  wwList=JSON.parse(log.wwList||'[]');
+  repList=JSON.parse(log.repList||'[]');
+  prevFB=calcPrevFuel(sel);
+  prevKmVal=calcPrevKm(sel);
+  var kmD=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;
+  var todayFuel=parseFloat(log.fuel||0);
+  var todayUsed=+(kmD*cfg.fuelRate).toFixed(1);
+  var totalAdded=+(prevFB.totalAdded+todayFuel).toFixed(1);
+  var balance=+(prevFB.balance+todayFuel-todayUsed).toFixed(1),isPlus=balance>=0;
+  var totalKm=cfg.initKm+prevKmVal+kmD;
+  var otA=(parseFloat(log.ot)||0)*cfg.otRate;
+  var t1=parseInt(log.t1||0),t2=parseInt(log.t2||0),tTot=tollTotal(t1,t2);
+  var mFuelSaved=monthFuelUpTo(sel);
+
+  var statKeys=['work','vacation','repair','other'];
+  var statLabels=['근무','휴가','정비','기타'];
+  var statExtra=['','off-btn','rep-btn',''];
+
+  document.getElementById('mc').innerHTML='<div class="ef">'
+  +'<div class="shdr">근무 상태</div>'
+  +'<div class="btns">'+statKeys.map(function(k,i){return'<button id="stb'+i+'" class="btn'+(statExtra[i]?' '+statExtra[i]:'')+(cSt===k?' on':'')+'" onclick="setSt(\''+k+'\')">'+statLabels[i]+'</button>';}).join('')+'</div>'
+
+  +'<div class="shdr">기본 운행</div>'
+  +'<div class="r2"><div class="field"><label class="fl">바리수</label><input type="number" id="fC" value="'+(log.calls||'')+'" placeholder="0" min="0" max="30" oninput="aVol()"></div>'
+  +'<div class="field"><label class="fl">운반량 (㎥)</label><input type="number" id="fV" value="'+(log.vol||'')+'" placeholder="자동입력" step="0.5"></div></div>'
+  +'<div class="r2"><div class="field"><label class="fl">시작 km</label><input type="number" id="fSk" value="'+(log.skm||'')+'" placeholder="예: 7924" oninput="uKm()"></div>'
+  +'<div class="field"><label class="fl">종료 km</label><input type="number" id="fEk" value="'+(log.ekm||'')+'" placeholder="예: 7999" oninput="uKm()"></div></div>'
+  +'<div class="kmh" id="kmH">'+(kmD>0?'✅ 오늘 운행거리: '+kmD+'km':'종료km 입력 시 자동계산')+'</div>'
+  +'<div class="km-card" id="kmCard">'
+  +'<div class="km-card-title">전체 누적 km</div>'
+  +'<div class="fcrow"><span class="fck">기준 km</span><span class="fcv neutral">'+cfg.initKm.toLocaleString()+'km</span></div>'
+  +'<div class="fcrow"><span class="fck">이전 누적 운행</span><span class="fcv neutral">+'+prevKmVal.toLocaleString()+'km</span></div>'
+  +'<div class="fcrow"><span class="fck">오늘 운행</span><span class="fcv plus">+'+kmD+'km</span></div>'
+  +'<div class="km-total-bar"><span class="km-total-label">전체 누적 km</span><span class="km-total-val">'+totalKm.toLocaleString()+'km</span></div>'
+  +'</div>'
+
+  +'<div class="shdr">연료 주유</div>'
+  +'<div class="field"><label class="fl">당일 주유량 (L)</label><input type="number" id="fF" value="'+(log.fuel||'')+'" placeholder="0" step="10" oninput="uFuelCard()"></div>'
+  +'<div class="fuel-card" id="fuelCard">'
+  +'<div class="fuel-card-title">연료 현황</div>'
+  +'<div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div>'
+  +'<div class="fcrow" style="background:#eff6ff"><span class="fck" style="font-weight:600;color:#1d4ed8">총 주유량 <span style="font-size:10px;font-weight:400">(누적 합계)</span></span><span class="fcv blue">'+totalAdded+'L</span></div>'
+  +'<div class="fcrow"><span class="fck">누적 소비량 (총km × '+cfg.fuelRate+')</span><span class="fcv minus">−'+(+(prevFB.totalUsed+todayUsed).toFixed(1))+'L</span></div>'
+  +'<div class="fuel-balance-big"><span class="fbb-label">남은 주유 잔량</span><span class="fbb-val '+(isPlus?'plus':'minus')+'">'+balance+'L</span></div>'
+  +'</div>'
+
+  +'<div class="shdr">시간외수당 (오티)</div>'
+  +'<div class="field"><label class="fl">오티 시간 — 4시 이후</label><input type="number" id="fOt" value="'+(log.ot||'')+'" placeholder="0" step="0.5" oninput="uOT()"></div>'
+  +'<div class="chint" id="otA" style="color:#7c3aed">'+(otA>0?'💰 오티 수당: '+otA.toLocaleString()+'원':'')+'</div>'
+
+  +'<div class="shdr">2시간초과 현장</div>'
+  +'<div id="o2Con">'+mkOT2()+'</div>'
+  +'<button class="add-btn" onclick="addO2()">＋ 2시간초과 현장 추가</button>'
+
+  +'<div class="shdr">폐수처리</div>'
+  +'<div id="wwCon">'+mkWW()+'</div>'
+  +'<button class="add-btn" style="border-color:#6ee7b7;color:#065f46" onclick="addWW()">＋ 폐수처리 현장 추가</button>'
+
+  +'<div class="shdr">톨비 (울산대교)</div>'
+  +'<div class="r2"><div class="field"><label class="fl">3,600원 — 횟수</label><input type="number" id="fT1" value="'+(log.t1||'')+'" placeholder="0" min="0" oninput="uToll()"></div>'
+  +'<div class="field"><label class="fl">2,400원 — 횟수</label><input type="number" id="fT2" value="'+(log.t2||'')+'" placeholder="0" min="0" oninput="uToll()"></div></div>'
+  +'<div class="toll-card" id="tollCard">'
+  +'<div class="toll-card-title">톨비 현황 (울산대교)</div>'
+  +'<div class="toll-row"><span class="toll-key">3,600원 × '+t1+'회</span><span class="toll-val">'+(t1*cfg.toll1).toLocaleString()+'원</span></div>'
+  +'<div class="toll-row"><span class="toll-key">2,400원 × '+t2+'회</span><span class="toll-val">'+(t2*cfg.toll2).toLocaleString()+'원</span></div>'
+  +'<div class="toll-total-bar"><span class="toll-total-label">오늘 톨비 합계</span><span class="toll-total-val">'+tTot.toLocaleString()+'원</span></div>'
+  +'</div>'
+
+  +'<div class="shdr">차량 정비</div>'
+  +'<div id="repCon">'+mkRep()+'</div>'
+  +'<button class="add-btn" style="border-color:#fca5a5;color:#dc2626" onclick="addRep()">＋ 정비 내역 추가</button>'
+
+  +'<div class="shdr">메모</div>'
+  +'<div class="field"><textarea id="fM" placeholder="특이사항, 현장명 등...">'+(log.memo||'')+'</textarea></div>'
+
+  +'<div class="shdr">운행일지 사진</div>'
+  +(log.photo
+    ?'<div style="position:relative"><img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover" src="'+log.photo+'"><button class="pdel" onclick="clrPhoto()">✕</button></div>'
+    :'<div class="photo-btns"><div class="photo-btn">📷 촬영<input type="file" accept="image/*" capture="environment" onchange="hPh(event)"></div><div class="photo-btn">🖼️ 갤러리<input type="file" accept="image/*" onchange="hPh(event)"></div></div>'
+  )
+  +'<div id="photoPreview"></div>'
+
+  +'<button class="bsave" onclick="saveE()">저장</button>'
+  +((log.calls||log.st||log.photo)?'<button class="bdel" onclick="delE()">이 날 기록 삭제</button>':'')
+  +'</div>';
+}
+
 function aVol(){var c=parseInt(document.getElementById('fC').value)||0;var v=document.getElementById('fV');if(c>0&&!v.dataset.m)v.value=c*6;}
-function hPh(ev){var file=ev.target.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){var img=new Image();img.onload=function(){var canvas=document.createElement('canvas'),w=img.width,h=img.height;if(w>1200){h=Math.round(h*1200/w);w=1200;}if(h>1600){w=Math.round(w*1600/h);h=1600;}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);var data=canvas.toDataURL('image/jpeg',.75);var a=document.getElementById('pA');a.innerHTML='<img class="pimg" src="'+data+'"><button class="pdel" onclick="rmPh(event)">✕</button><input type="file" id="pI" accept="image/*" capture="environment" onchange="hPh(event)" style="display:none">';a.dataset.photo=data;};img.src=e.target.result;};r.readAsDataURL(file);}
-function rmPh(ev){ev.stopPropagation();var a=document.getElementById('pA');a.innerHTML='<div style="font-size:28px">📄</div><div style="font-size:13px;color:#64748b">탭해서 사진 첨부</div><input type="file" id="pI" accept="image/*" capture="environment" onchange="hPh(event)" style="display:none">';a.dataset.photo='';}
-function saveE(){if(!sel)return;var a=document.getElementById('pA'),ep=logs[sel]||{};logs[sel]={st:cSt,calls:document.getElementById('fC').value,vol:document.getElementById('fV').value,skm:document.getElementById('fSk').value,ekm:document.getElementById('fEk').value,fuel:document.getElementById('fF').value,ot:document.getElementById('fOt').value,ot2List:JSON.stringify(ol),ww:String(curWw),wwSite:document.getElementById('fWs').value,t1:document.getElementById('fT1').value,t2:document.getElementById('fT2').value,memo:document.getElementById('fM').value,photo:a.dataset.photo!==undefined?a.dataset.photo:ep.photo||''};sv();go('calendar');}
+
+var pendingPhoto='';
+function hPh(ev){
+  var file=ev.target.files[0];if(!file)return;
+  var r=new FileReader();
+  r.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas'),w=img.width,h=img.height;
+      if(w>1200){h=Math.round(h*1200/w);w=1200;}if(h>1600){w=Math.round(w*1600/h);h=1600;}
+      canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);
+      pendingPhoto=canvas.toDataURL('image/jpeg',.75);
+      var pv=document.getElementById('photoPreview');
+      if(pv)pv.innerHTML='<img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px" src="'+pendingPhoto+'"><button class="bdel" style="margin-top:6px" onclick="clrPhoto()">사진 취소</button>';
+    };img.src=e.target.result;
+  };r.readAsDataURL(file);
+}
+function clrPhoto(){pendingPhoto='CLEAR';var pv=document.getElementById('photoPreview');if(pv)pv.innerHTML='';var log=logs[sel]||{};if(log.photo){var mc=document.getElementById('mc');if(mc){rEntry();}}}
+
+function saveE(){
+  if(!sel)return;
+  var ep=logs[sel]||{};
+  var finalPhoto=ep.photo||'';
+  if(pendingPhoto==='CLEAR')finalPhoto='';
+  else if(pendingPhoto)finalPhoto=pendingPhoto;
+  logs[sel]={
+    st:cSt,
+    calls:document.getElementById('fC').value,
+    vol:document.getElementById('fV').value,
+    skm:document.getElementById('fSk').value,
+    ekm:document.getElementById('fEk').value,
+    fuel:document.getElementById('fF').value,
+    ot:document.getElementById('fOt').value,
+    ot2List:JSON.stringify(ol),
+    wwList:JSON.stringify(wwList),
+    t1:document.getElementById('fT1').value,
+    t2:document.getElementById('fT2').value,
+    repList:JSON.stringify(repList),
+    memo:document.getElementById('fM').value,
+    photo:finalPhoto
+  };
+  pendingPhoto='';
+  sv();go('calendar');
+}
 function delE(){if(!sel)return;delete logs[sel];sv();sel=null;go('calendar');}
-function rStats(){document.getElementById('hS').textContent='월별 통계';var y=cd.getFullYear(),m=cd.getMonth();var mp=y+'-'+String(m+1).padStart(2,'0');var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});var wd=ml.filter(function(e){return !e[1].st||e[1].st==='work';}).length;var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);var tv=ml.reduce(function(s,e){return s+(parseFloat(e[1].vol)||0);},0);var tkm=ml.reduce(function(s,e){return s+(parseInt(e[1].ekm||0)-parseInt(e[1].skm||0));},0);var tot=ml.reduce(function(s,e){return s+(parseFloat(e[1].ot)||0);},0);var totA=Math.round(tot*cfg.otRate);var tww=ml.reduce(function(s,e){return s+(parseInt(e[1].ww)||0);},0);var tt1=ml.reduce(function(s,e){return s+(parseInt(e[1].t1||0));},0);var tt2=ml.reduce(function(s,e){return s+(parseInt(e[1].t2||0));},0);var tollMon1=tt1*cfg.toll1,tollMon2=tt2*cfg.toll2,tollMonT=tollMon1+tollMon2;var ep=Math.round(wd*cfg.unitPrice/10000);var mStart=mp+'-01',startFB=calcPrevFuel(mStart),fu=fuelMonth(y,m);var endBal=+(startFB.balance+fu.mf-fu.mu).toFixed(2),isP=endBal>=0;var settA=Math.round(endBal*cfg.fuelPrice);var allTotal=Object.keys(logs).reduce(function(s,k){return s+parseFloat(logs[k].fuel||0);},0);var ot2I=[];ml.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){ot2I.push({date:e[0],site:x.site,mgr:x.mgr,type:x.type});});});var pending=ot2I.filter(function(x){return x.type==='monthly';});var h='<div class="sp"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><button class="ma" onclick="pm()">‹</button><span style="font-size:15px;font-weight:600">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div><div class="sec">이달 기본 현황</div><div class="mgrid"><div class="mc dk full"><div class="mk">예상 급여</div><div class="mv" style="color:#fff">'+ep+'<span class="mu" style="color:#94a3b8">만원</span></div></div><div class="mc"><div class="mk">근무일</div><div class="mv">'+wd+'<span class="mu">일</span></div></div><div class="mc"><div class="mk">총 공수</div><div class="mv">'+tc+'<span class="mu">콜</span></div></div><div class="mc"><div class="mk">운반량</div><div class="mv">'+tv.toFixed(1)+'<span class="mu">㎥</span></div></div><div class="mc"><div class="mk">운행거리</div><div class="mv">'+tkm+'<span class="mu">km</span></div></div></div><div class="sec">유류 정산 (월간)</div><div class="fb"><div class="fr"><span class="fk">월초 잔량</span><span class="fv">'+startFB.balance.toFixed(1)+'L</span></div><div class="fr"><span class="fk">이달 주유량</span><span class="fv" style="color:#059669">+'+fu.mf.toFixed(1)+'L</span></div><div class="fr"><span class="fk">이달 소비량</span><span class="fv" style="color:#dc2626">−'+fu.mu.toFixed(1)+'L</span></div><div class="fr"><span class="fk">누적 총 주유량</span><span class="fv">'+allTotal.toFixed(0)+'L</span></div><div class="fr"><span class="fk" style="font-weight:600;color:#1e293b">월말 잔량</span><span class="fv" style="color:'+(isP?'#059669':'#dc2626')+';font-size:15px">'+(endBal>=0?'+':'')+endBal.toFixed(1)+'L</span></div></div><div class="fsettle '+(isP?'pos':'neg')+'"><div><div class="fsl '+(isP?'pos':'neg')+'">'+(isP?'🟢 잔량 — 지급 받음':'🔴 부족 — 도급비 차감')+'</div><div style="font-size:11px;color:'+(isP?'#065f46':'#991b1b')+';margin-top:3px">'+Math.abs(endBal).toFixed(1)+'L × '+cfg.fuelPrice.toLocaleString()+'원/L</div></div><div class="fsa '+(isP?'pos':'neg')+'">'+(isP?'+':'−')+Math.abs(settA).toLocaleString()+'원</div></div><div class="sec">오티 수당</div><div class="fb"><div class="fr"><span class="fk">이달 오티 시간</span><span class="fv">'+tot+'시간</span></div><div class="fr"><span class="fk">오티 수당 합계</span><span class="fv" style="color:#7c3aed">'+totA.toLocaleString()+'원</span></div></div><div class="sec">폐수처리</div><div class="fb"><div class="fr"><span class="fk">이달 폐수처리</span><span class="fv" style="color:#059669">'+tww+'회 ('+tww+'W)</span></div></div><div class="sec">톨비 (울산대교)</div><div class="fb"><div class="fr"><span class="fk">3,600원 통행</span><span class="fv">'+tt1+'회 = '+tollMon1.toLocaleString()+'원</span></div><div class="fr"><span class="fk">2,400원 통행</span><span class="fv">'+tt2+'회 = '+tollMon2.toLocaleString()+'원</span></div><div class="fr"><span class="fk" style="font-weight:600;color:#1e293b">월 톨비 합계</span><span class="fv" style="color:#1d4ed8;font-size:15px">'+tollMonT.toLocaleString()+'원</span></div></div><div class="sec">2시간초과 현황 ('+ot2I.length+'건)</div>'+(ot2I.length?ot2I.map(function(e){var p=e.date.split('-');return'<div class="ot2i'+(e.type==='monthly'?' mo':'')+'"><div class="ot2d">'+p[1]+'월 '+p[2]+'일</div><div class="ot2n">'+(e.site||'현장 미입력')+(e.mgr?' / '+e.mgr:'')+'<span class="ot2tp '+(e.type==='monthly'?'tm':'tc')+'">'+(e.type==='monthly'?'월말결산':'영업사원')+'</span></div></div>';}).join(''):'<div class="emsg">이달 2시간초과 없음</div>')+(pending.length?'<div style="background:#fef2f2;border:0.5px solid #fca5a5;border-radius:8px;padding:9px 12px;margin-top:6px;font-size:12px;color:#991b1b">⚠️ 월말 결산 필요: '+pending.length+'건</div>':'')+'<div class="sec">설정</div><div class="sblk"><div class="srow"><span class="slbl">일당 단가</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div><div class="srow"><span class="slbl">오티 시간당</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.otRate+'" oninput="cfg.otRate=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div><div class="srow"><span class="slbl">km당 유류</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" step="0.01" value="'+cfg.fuelRate+'" oninput="cfg.fuelRate=+this.value;sv()"><span style="font-size:11px;color:#64748b">L/km</span></div></div><div class="srow"><span class="slbl">연료 정산 단가</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.fuelPrice+'" oninput="cfg.fuelPrice=+this.value;sv()"><span style="font-size:11px;color:#64748b">원/L</span></div></div><div class="srow"><span class="slbl">톨비 대형 단가</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.toll1+'" oninput="cfg.toll1=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div><div class="srow"><span class="slbl">톨비 소형 단가</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.toll2+'" oninput="cfg.toll2=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div></div></div>';document.getElementById('mc').innerHTML=h;}
+
+/* 통계 (월말결산 포함, 깔끔한 버전) */
+function rStats(){
+  document.getElementById('hS').textContent='통계 / 월말결산';
+  var y=cd.getFullYear(),m=cd.getMonth();
+  var mp=y+'-'+String(m+1).padStart(2,'0');
+  var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});
+  var wd=ml.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
+  var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
+  var tv=ml.reduce(function(s,e){return s+(parseFloat(e[1].vol)||0);},0);
+  var tkm=ml.reduce(function(s,e){return s+(parseInt(e[1].ekm||0)-parseInt(e[1].skm||0));},0);
+  var tot=ml.reduce(function(s,e){return s+(parseFloat(e[1].ot)||0);},0);
+  var totA=Math.round(tot*cfg.otRate);
+  var tww=ml.reduce(function(s,e){return s+(JSON.parse(e[1].wwList||'[]')).length;},0);
+  var tt1=ml.reduce(function(s,e){return s+(parseInt(e[1].t1||0));},0);
+  var tt2=ml.reduce(function(s,e){return s+(parseInt(e[1].t2||0));},0);
+  var tollMon1=tt1*cfg.toll1,tollMon2=tt2*cfg.toll2,tollMonT=tollMon1+tollMon2;
+  var mRepCost=ml.reduce(function(s,e){return s+(JSON.parse(e[1].repList||'[]')).reduce(function(rs,r){return rs+(parseInt(r.cost)||0);},0);},0);
+  var mStart=mp+'-01',startFB=calcPrevFuel(mStart),fu=fuelMonth(y,m);
+  var endBal=+(startFB.balance+fu.mf-fu.mu).toFixed(2),isP=endBal>=0;
+  var fuelSettle=Math.round(endBal*cfg.fuelPrice);
+  var allTotal=Object.keys(logs).reduce(function(s,k){return s+parseFloat(logs[k].fuel||0);},0);
+  var allKm=Object.keys(logs).reduce(function(s,k){return s+parseInt(logs[k].ekm||0)-parseInt(logs[k].skm||0);},0);
+  var totalOdometer=cfg.initKm+allKm;
+  var ot2I=[];
+  ml.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){ot2I.push({date:e[0],site:x.site,mgr:x.mgr,type:x.type});});});
+  var pending=ot2I.filter(function(x){return x.type==='monthly';});
+  var wwItems=[];
+  ml.forEach(function(e){JSON.parse(e[1].wwList||'[]').forEach(function(x){wwItems.push({date:e[0],site:x.site});});});
+  /* 월말 결산 합계 */
+  var base=wd*cfg.unitPrice;
+  var wwPay2=tww*cfg.wwPay;
+  var ot2Monthly=ot2I.filter(function(x){return x.type==='monthly';});
+  var ot2Pay2=ot2Monthly.length*cfg.ot2Pay;
+  var monthTotal=base+totA+wwPay2+ot2Pay2+fuelSettle+tollMonT-mRepCost;
+
+  var h='<div class="sp">'
+  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><button class="ma" onclick="pm()">‹</button><span style="font-size:15px;font-weight:600">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>'
+
+  /* 기본 현황 */
+  +'<div class="sec">이달 기본 현황</div>'
+  +'<div class="mgrid">'
+  +'<div class="mc dk full"><div class="mk">기본급</div><div class="mv" style="color:#fff">'+(base/10000).toFixed(0)+'<span class="mu" style="color:#94a3b8">만원</span></div></div>'
+  +'<div class="mc"><div class="mk">근무일</div><div class="mv">'+wd+'<span class="mu">일</span></div></div>'
+  +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+tc+'<span class="mu">바리</span></div></div>'
+  +'<div class="mc"><div class="mk">운반량</div><div class="mv">'+tv.toFixed(1)+'<span class="mu">㎥</span></div></div>'
+  +'<div class="mc"><div class="mk">운행거리</div><div class="mv">'+tkm+'<span class="mu">km</span></div></div>'
+  +'</div>'
+
+  /* 누적 km */
+  +'<div class="sec">전체 누적 km</div>'
+  +'<div class="fb">'
+  +'<div class="fr"><span class="fk">기준 km</span><span class="fv">'+cfg.initKm.toLocaleString()+'km</span></div>'
+  +'<div class="fr"><span class="fk">전체 운행 누적</span><span class="fv">+'+allKm.toLocaleString()+'km</span></div>'
+  +'<div class="fr"><span class="fk" style="font-weight:600;color:#1e293b">현재 총 km</span><span class="fv" style="color:#1d4ed8;font-size:15px">'+totalOdometer.toLocaleString()+'km</span></div>'
+  +'</div>'
+
+  /* 유류 정산 */
+  +'<div class="sec">유류 정산 (월간)</div>'
+  +'<div class="fb">'
+  +'<div class="fr"><span class="fk">월초 잔량</span><span class="fv">'+startFB.balance.toFixed(1)+'L</span></div>'
+  +'<div class="fr"><span class="fk">이달 주유량</span><span class="fv" style="color:#059669">+'+fu.mf.toFixed(1)+'L</span></div>'
+  +'<div class="fr"><span class="fk">이달 소비량</span><span class="fv" style="color:#dc2626">−'+fu.mu.toFixed(1)+'L</span></div>'
+  +'<div class="fr"><span class="fk">누적 총 주유량</span><span class="fv">'+allTotal.toFixed(0)+'L</span></div>'
+  +'<div class="fr"><span class="fk" style="font-weight:600;color:#1e293b">월말 잔량</span><span class="fv" style="color:'+(isP?'#059669':'#dc2626')+';font-size:15px">'+(endBal>=0?'+':'')+endBal.toFixed(1)+'L</span></div>'
+  +'</div>'
+  +'<div class="fsettle '+(isP?'pos':'neg')+'">'
+  +'<div><div class="fsl '+(isP?'pos':'neg')+'">'+(isP?'🟢 잔량 — 지급 받음':'🔴 부족 — 도급비 차감')+'</div>'
+  +'<div style="font-size:11px;color:'+(isP?'#065f46':'#991b1b')+';margin-top:3px">'+Math.abs(endBal).toFixed(1)+'L × '+cfg.fuelPrice.toLocaleString()+'원/L</div></div>'
+  +'<div class="fsa '+(isP?'pos':'neg')+'">'+(isP?'+':'−')+Math.abs(fuelSettle).toLocaleString()+'원</div>'
+  +'</div>'
+
+  /* 오티 */
+  +'<div class="sec">오티 수당</div>'
+  +'<div class="fb">'
+  +'<div class="fr"><span class="fk">이달 오티 시간</span><span class="fv">'+tot+'시간</span></div>'
+  +'<div class="fr"><span class="fk">오티 수당 합계</span><span class="fv" style="color:#7c3aed">'+totA.toLocaleString()+'원</span></div>'
+  +'</div>'
+
+  /* 폐수 */
+  +'<div class="sec">폐수처리 ('+tww+'건)</div>'
+  +(wwItems.length?wwItems.map(function(e){var p=e.date.split('-');return'<div class="wwi"><div class="ot2d">'+p[1]+'월 '+p[2]+'일</div><div class="ot2n">'+(e.site||'현장 미입력')+'</div></div>';}).join(''):'<div class="emsg">이달 폐수처리 없음</div>')
+
+  /* 톨비 */
+  +'<div class="sec">톨비 (울산대교)</div>'
+  +'<div class="fb">'
+  +'<div class="fr"><span class="fk">3,600원 통행</span><span class="fv">'+tt1+'회 = '+tollMon1.toLocaleString()+'원</span></div>'
+  +'<div class="fr"><span class="fk">2,400원 통행</span><span class="fv">'+tt2+'회 = '+tollMon2.toLocaleString()+'원</span></div>'
+  +'<div class="fr"><span class="fk" style="font-weight:600;color:#1e293b">월 톨비 합계</span><span class="fv" style="color:#1d4ed8;font-size:15px">'+tollMonT.toLocaleString()+'원</span></div>'
+  +'</div>'
+
+  /* 2시간초과 */
+  +'<div class="sec">2시간초과 현황 ('+ot2I.length+'건)</div>'
+  +(ot2I.length?ot2I.map(function(e){var p=e.date.split('-');return'<div class="ot2i'+(e.type==='monthly'?' mo':'')+'"><div class="ot2d">'+p[1]+'월 '+p[2]+'일</div><div class="ot2n">'+(e.site||'현장 미입력')+(e.mgr?' / '+e.mgr:'')+'<span class="ot2tp '+(e.type==='monthly'?'tm':'tc')+'">'+(e.type==='monthly'?'월말결산':'영업사원')+'</span></div></div>';}).join(''):'<div class="emsg">이달 2시간초과 없음</div>')
+  +(pending.length?'<div style="background:#fef2f2;border:0.5px solid #fca5a5;border-radius:8px;padding:9px 12px;margin-top:6px;font-size:12px;color:#991b1b">⚠️ 월말 결산 필요: '+pending.length+'건</div>':'')
+
+  +(mRepCost>0?'<div class="sec">차량 정비 비용</div><div class="fb"><div class="fr"><span class="fk">이달 정비 비용</span><span class="fv" style="color:#dc2626">'+mRepCost.toLocaleString()+'원</span></div></div>':'')
+
+  /* ★ 월말 결산 최종 합계 */
+  +'<div class="sec" style="color:#1d4ed8;margin-top:20px">📋 '+(m+1)+'월 최종 결산</div>'
+  +'<div class="fb">'
+  +'<div class="fr"><span class="fk">기본급</span><span class="fv">+'+(base/10000).toFixed(0)+'만원</span></div>'
+  +(totA>0?'<div class="fr"><span class="fk">오티 수당</span><span class="fv" style="color:#7c3aed">+'+totA.toLocaleString()+'원</span></div>':'')
+  +(wwPay2>0?'<div class="fr"><span class="fk">폐수처리 수당</span><span class="fv" style="color:#059669">+'+wwPay2.toLocaleString()+'원</span></div>':'')
+  +(ot2Pay2>0?'<div class="fr"><span class="fk">2시간초과 수당</span><span class="fv" style="color:#7c3aed">+'+ot2Pay2.toLocaleString()+'원</span></div>':'')
+  +'<div class="fr"><span class="fk">유류 정산</span><span class="fv" style="color:'+(isP?'#059669':'#dc2626')+'">'+(isP?'+':'−')+Math.abs(fuelSettle).toLocaleString()+'원</span></div>'
+  +(tollMonT>0?'<div class="fr"><span class="fk">톨비 지급</span><span class="fv" style="color:#1d4ed8">+'+tollMonT.toLocaleString()+'원</span></div>':'')
+  +(mRepCost>0?'<div class="fr"><span class="fk">정비비 차감</span><span class="fv" style="color:#dc2626">−'+mRepCost.toLocaleString()+'원</span></div>':'')
+  +'</div>'
+  +'<div style="background:'+(monthTotal>=0?'#1d4ed8':'#dc2626')+';border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+  +'<span style="font-size:13px;color:rgba(255,255,255,.8);font-weight:500">'+(m+1)+'월 수령 예정액</span>'
+  +'<span style="font-size:24px;font-weight:700;color:#fff">'+(monthTotal/10000).toFixed(1)+'만원</span>'
+  +'</div>'
+
+  /* 설정 */
+  +'<div class="sec">설정</div>'
+  +'<div class="sblk">'
+  +'<div class="srow"><span class="slbl">일당 단가</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
+  +'<div class="srow"><span class="slbl">오티 시간당</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.otRate+'" oninput="cfg.otRate=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
+  +'<div class="srow"><span class="slbl">폐수처리 건당</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.wwPay+'" placeholder="0" oninput="cfg.wwPay=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
+  +'<div class="srow"><span class="slbl">2시간초과 건당</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.ot2Pay+'" placeholder="0" oninput="cfg.ot2Pay=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
+  +'<div class="srow"><span class="slbl">km당 유류</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" step="0.01" value="'+cfg.fuelRate+'" oninput="cfg.fuelRate=+this.value;sv()"><span style="font-size:11px;color:#64748b">L/km</span></div></div>'
+  +'<div class="srow"><span class="slbl">연료 정산 단가</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.fuelPrice+'" oninput="cfg.fuelPrice=+this.value;sv()"><span style="font-size:11px;color:#64748b">원/L</span></div></div>'
+  +'<div class="srow"><span class="slbl">기준 km</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.initKm+'" oninput="cfg.initKm=+this.value;sv()"><span style="font-size:11px;color:#64748b">km</span></div></div>'
+  +'<div class="srow"><span class="slbl">톨비 대형</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.toll1+'" oninput="cfg.toll1=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
+  +'<div class="srow"><span class="slbl">톨비 소형</span><div style="display:flex;align-items:center;gap:3px"><input class="sinp" type="number" value="'+cfg.toll2+'" oninput="cfg.toll2=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
+  +'</div></div>';
+  document.getElementById('mc').innerHTML=h;
+}
+
+/* 연말 결산 탭 */
+var annualYear=new Date().getFullYear();
+function pyear(){annualYear--;rAnnual();}
+function nyear(){annualYear++;rAnnual();}
+
+function rAnnual(){
+  document.getElementById('hS').textContent=annualYear+'년 연말결산';
+  var y=annualYear;
+  var annWd=0,annCalls=0,annVol=0,annKm=0,annOT=0,annOTpay=0,annWw=0,annWwPay=0;
+  var annToll=0,annFuelAdd=0,annFuelUse=0,annRep=0,annBase=0,annFuelSettle=0,annTotal=0;
+  var rows='';
+
+  for(var mi=0;mi<12;mi++){
+    var mp=y+'-'+String(mi+1).padStart(2,'0');
+    var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});
+    if(!ml.length){
+      rows+='<tr><td style="padding:8px 10px;font-size:12px;color:#94a3b8">'+(mi+1)+'월</td>'
+        +'<td colspan="6" style="padding:8px 10px;font-size:11px;color:#cbd5e1;text-align:center">기록 없음</td></tr>';
+      continue;
+    }
+    var wd=ml.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
+    var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
+    var vol=ml.reduce(function(s,e){return s+(parseFloat(e[1].vol)||0);},0);
+    var km=ml.reduce(function(s,e){return s+(parseInt(e[1].ekm||0)-parseInt(e[1].skm||0));},0);
+    var ot=ml.reduce(function(s,e){return s+(parseFloat(e[1].ot)||0);},0);
+    var otP=Math.round(ot*cfg.otRate);
+    var ww=ml.reduce(function(s,e){return s+(JSON.parse(e[1].wwList||'[]')).length;},0);
+    var wwP=ww*cfg.wwPay;
+    var toll=ml.reduce(function(s,e){return s+(parseInt(e[1].t1||0))*cfg.toll1+(parseInt(e[1].t2||0))*cfg.toll2;},0);
+    var rep=ml.reduce(function(s,e){return s+(JSON.parse(e[1].repList||'[]')).reduce(function(rs,r){return rs+(parseInt(r.cost)||0);},0);},0);
+    var fu=fuelMonth(y,mi);
+    var mStart=mp+'-01',startFB=calcPrevFuel(mStart);
+    var endBal=+(startFB.balance+fu.mf-fu.mu).toFixed(2);
+    var fS=Math.round(endBal*cfg.fuelPrice);
+    var base=wd*cfg.unitPrice;
+    var ot2M=[];
+    ml.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){if(x.type==='monthly')ot2M.push(x);});});
+    var ot2P=ot2M.length*cfg.ot2Pay;
+    var mTotal=base+otP+wwP+ot2P+fS+toll-rep;
+
+    annWd+=wd;annCalls+=tc;annVol+=vol;annKm+=km;annOT+=ot;annOTpay+=otP;
+    annWw+=ww;annWwPay+=wwP;annToll+=toll;annFuelAdd+=fu.mf;annFuelUse+=fu.mu;
+    annRep+=rep;annBase+=base;annFuelSettle+=(fS>0?fS:0);annTotal+=mTotal;
+
+    var isMP=endBal>=0;
+    rows+='<tr style="border-bottom:0.5px solid #e2e8f0">'
+      +'<td style="padding:8px 10px;font-size:13px;font-weight:600;color:#1e293b">'+(mi+1)+'월</td>'
+      +'<td style="padding:8px 6px;font-size:12px;color:#64748b;text-align:right">'+wd+'일</td>'
+      +'<td style="padding:8px 6px;font-size:12px;color:#64748b;text-align:right">'+tc+'바리</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:right">'+(base/10000).toFixed(0)+'만</td>'
+      +'<td style="padding:8px 6px;font-size:12px;color:#7c3aed;text-align:right">'+(otP>0?'+'+(otP/10000).toFixed(1):'0')+'만</td>'
+      +'<td style="padding:8px 6px;font-size:12px;color:'+(isMP?'#059669':'#dc2626')+';text-align:right">'+(endBal>=0?'+':'')+endBal.toFixed(0)+'L</td>'
+      +'<td style="padding:8px 10px;font-size:13px;font-weight:700;color:'+(mTotal>=0?'#1d4ed8':'#dc2626')+';text-align:right">'+(mTotal/10000).toFixed(1)+'만</td>'
+      +'</tr>';
+  }
+
+  var avgWd=(annWd/12).toFixed(1);
+  var avgCalls=annWd>0?(annCalls/annWd).toFixed(1):'0';
+
+  var h='<div class="sp">'
+  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+  +'<button class="ma" onclick="pyear()">‹</button>'
+  +'<span style="font-size:18px;font-weight:700;color:#1e293b">'+y+'년 연말결산</span>'
+  +'<button class="ma" onclick="nyear()">›</button>'
+  +'</div>'
+
+  /* 연간 요약 카드 4개 */
+  +'<div class="mgrid" style="margin-bottom:12px">'
+  +'<div class="mc dk full"><div class="mk">연간 총 수령액</div><div class="mv" style="color:#fff;font-size:26px">'+(annTotal/10000).toFixed(1)+'<span class="mu" style="color:#94a3b8;font-size:14px">만원</span></div></div>'
+  +'<div class="mc"><div class="mk">총 근무일</div><div class="mv">'+annWd+'<span class="mu">일</span></div></div>'
+  +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+annCalls+'<span class="mu">바리</span></div></div>'
+  +'<div class="mc"><div class="mk">일 평균 바리</div><div class="mv">'+avgCalls+'<span class="mu">바리</span></div></div>'
+  +'<div class="mc"><div class="mk">총 운행거리</div><div class="mv">'+annKm.toLocaleString()+'<span class="mu">km</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 오티 시간</div><div class="mv">'+annOT.toFixed(1)+'<span class="mu">h</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 오티 수당</div><div class="mv" style="color:#7c3aed">'+(annOTpay/10000).toFixed(1)+'<span class="mu">만원</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 톨비 지급</div><div class="mv" style="color:#1d4ed8">'+(annToll/10000).toFixed(1)+'<span class="mu">만원</span></div></div>'
+  +'</div>'
+
+  /* 연간 유류 */
+  +'<div style="background:#f8fafc;border-radius:10px;padding:12px 14px;margin-bottom:12px;border:0.5px solid #e2e8f0">'
+  +'<div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">연간 유류 현황</div>'
+  +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:#64748b">연간 총 주유량</span><span style="font-size:13px;font-weight:600;color:#059669">+'+annFuelAdd.toFixed(0)+'L</span></div>'
+  +'<div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:#64748b">연간 총 소비량</span><span style="font-size:13px;font-weight:600;color:#dc2626">−'+annFuelUse.toFixed(0)+'L</span></div>'
+  +'</div>'
+
+  /* 월별 테이블 */
+  +'<div style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:.4px;margin-bottom:8px;text-transform:uppercase">월별 상세</div>'
+  +'<div style="background:#f8fafc;border-radius:10px;overflow:hidden;border:0.5px solid #e2e8f0;margin-bottom:10px">'
+  +'<table style="width:100%;border-collapse:collapse">'
+  +'<thead><tr style="background:#1a1a2e">'
+  +'<th style="padding:8px 10px;font-size:11px;color:#94a3b8;font-weight:600;text-align:left">월</th>'
+  +'<th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">근무</th>'
+  +'<th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">바리</th>'
+  +'<th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">기본급</th>'
+  +'<th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">오티</th>'
+  +'<th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">유류잔량</th>'
+  +'<th style="padding:8px 10px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">합계</th>'
+  +'</tr></thead>'
+  +'<tbody>'+rows+'</tbody>'
+  +'<tfoot><tr style="background:#0f172a">'
+  +'<td style="padding:10px;font-size:12px;font-weight:700;color:#fff">합계</td>'
+  +'<td style="padding:10px 6px;font-size:12px;color:#94a3b8;text-align:right">'+annWd+'일</td>'
+  +'<td style="padding:10px 6px;font-size:12px;color:#94a3b8;text-align:right">'+annCalls+'</td>'
+  +'<td style="padding:10px 6px;font-size:12px;color:#e2e8f0;text-align:right">'+(annBase/10000).toFixed(0)+'만</td>'
+  +'<td style="padding:10px 6px;font-size:12px;color:#a78bfa;text-align:right">'+(annOTpay/10000).toFixed(1)+'만</td>'
+  +'<td style="padding:10px 6px;font-size:12px;color:#94a3b8;text-align:right">—</td>'
+  +'<td style="padding:10px;font-size:14px;font-weight:700;color:#60a5fa;text-align:right">'+(annTotal/10000).toFixed(1)+'만</td>'
+  +'</tr></tfoot>'
+  +'</table></div>'
+
+  /* 연간 최종 */
+  +'<div style="background:linear-gradient(135deg,#065f46,#047857);border-radius:12px;padding:18px 16px;text-align:center;margin-bottom:16px">'
+  +'<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px">'+y+'년 연간 총 수령액</div>'
+  +'<div style="font-size:32px;font-weight:700;color:#fff">'+(annTotal/10000).toFixed(1)+'만원</div>'
+  +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:6px">월 평균 '+(annTotal/10000/12).toFixed(1)+'만원 · 총 '+annWd+'일 근무</div>'
+  +'</div>'
+  +'</div>';
+  document.getElementById('mc').innerHTML=h;
+}
 render();
 </script>
 </body>
