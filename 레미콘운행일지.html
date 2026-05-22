@@ -297,7 +297,8 @@ function rCal(){
   var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});
   var wd=ml.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
   var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
-  var ep=Math.round(tc*cfg.unitPrice/10000);
+  var ep=tc*cfg.unitPrice;
+  var epStr=ep>0?ep.toLocaleString()+'원':'0원';
   var h='<div class="mnav"><button class="ma" onclick="pm()">‹</button><span class="ml">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>';
   h+='<div class="cgrid" id="calGrid">';
   ['일','월','화','수','목','금','토'].forEach(function(d){h+='<div class="ch">'+d+'</div>';});
@@ -318,7 +319,7 @@ function rCal(){
       +'<div class="dots">'+(parseFloat(log.fuel)>0?'<div class="dot df"></div>':'')+(parseFloat(log.ot)>0?'<div class="dot dp"></div>':'')+(tollTotal(log.t1,log.t2)>0?'<div class="dot dt"></div>':'')+(log.photo?'<div class="dot dph"></div>':'')+'</div></div>';
   }
   h+='</div>';
-  h+='<div class="sbar"><div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div><div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div><div class="si"><div class="sl">예상급여</div><div class="sv" id="epVal">'+ep+'<span class="su">만원</span></div></div></div>';
+  h+='<div class="sbar"><div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div><div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div><div class="si"><div class="sl">예상급여</div><div class="sv" id="epVal" style="font-size:'+(ep>=1000000?'11px':ep>=100000?'12px':'14px')+'">'+epStr+'</div></div></div>';
   h+='<div class="legend"><div class="li"><div class="lsw" style="background:#EAF3DE"></div>1~3바리</div><div class="li"><div class="lsw" style="background:#FAEEDA"></div>4~5바리</div><div class="li"><div class="lsw" style="background:#FBEAF0"></div>6바리</div><div class="li"><div class="lsw" style="background:#FAECE7"></div>7바리</div><div class="li"><div class="lsw" style="background:#F09595"></div>8↑</div><div class="li"><div class="mbadge wbadge">W</div>폐수</div><div class="li"><div class="mbadge ot2badge">2시↑</div>초과</div><div class="li"><div class="dot df"></div>주유</div><div class="li"><div class="dot dt"></div>톨비</div><div class="li"><div class="dot dph"></div>사진</div></div>';
   document.getElementById('mc').innerHTML=h;
   // 스와이프
@@ -661,16 +662,37 @@ function doReset(){
   logs={};sv();alert('초기화 완료.');render();
 }
 
-/* ── 앱 아이콘 ─────────────────────────── */
+/* ── 앱 아이콘 (iOS 홈화면용) ─────────────────
+   iOS는 페이지 로드 시점에 apple-touch-icon을 캡처해요.
+   기존 홈화면 아이콘은 삭제 후 재추가해야 바뀌어요.
+*/
 (function(){
-  var c=document.createElement('canvas');c.width=180;c.height=180;
-  var ctx=c.getContext('2d');
-  ctx.fillStyle='#1a1a2e';
-  ctx.beginPath();ctx.moveTo(36,0);ctx.lineTo(144,0);ctx.quadraticCurveTo(180,0,180,36);ctx.lineTo(180,144);ctx.quadraticCurveTo(180,180,144,180);ctx.lineTo(36,180);ctx.quadraticCurveTo(0,180,0,144);ctx.lineTo(0,36);ctx.quadraticCurveTo(0,0,36,0);ctx.fill();
-  ctx.font='86px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🚛',90,82);
-  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='bold 20px -apple-system,sans-serif';ctx.fillText('운행일지',90,148);
-  var link=document.createElement('link');link.rel='apple-touch-icon';link.href=c.toDataURL('image/png');
-  document.head.appendChild(link);
+  try{
+    var c=document.createElement('canvas');c.width=180;c.height=180;
+    var ctx=c.getContext('2d');
+    // 배경
+    ctx.fillStyle='#1a1a2e';
+    ctx.beginPath();ctx.moveTo(36,0);ctx.lineTo(144,0);ctx.quadraticCurveTo(180,0,180,36);ctx.lineTo(180,144);ctx.quadraticCurveTo(180,180,144,180);ctx.lineTo(36,180);ctx.quadraticCurveTo(0,180,0,144);ctx.lineTo(0,36);ctx.quadraticCurveTo(0,0,36,0);ctx.fill();
+    // 트럭 이모지
+    ctx.font='78px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🚛',90,80);
+    // 하단 텍스트
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.font='bold 18px -apple-system,Arial,sans-serif';
+    ctx.fillText('운행일지',90,146);
+    // 상단 작은 텍스트
+    ctx.fillStyle='rgba(255,210,100,0.9)';
+    ctx.font='bold 11px -apple-system,Arial,sans-serif';
+    ctx.fillText('레미콘',90,22);
+    var dataUrl=c.toDataURL('image/png');
+    // 기존 apple-touch-icon 제거 후 새로 추가
+    var old=document.querySelector('link[rel="apple-touch-icon"]');
+    if(old)old.parentNode.removeChild(old);
+    var link=document.createElement('link');
+    link.rel='apple-touch-icon';
+    link.sizes='180x180';
+    link.href=dataUrl;
+    document.head.insertBefore(link,document.head.firstChild);
+  }catch(e){}
 })();
 
 render();
