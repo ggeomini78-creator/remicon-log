@@ -322,17 +322,24 @@ function rCal(){
   h+='<div class="sbar"><div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div><div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div><div class="si"><div class="sl">예상급여</div><div class="sv" id="epVal" style="font-size:'+(ep>=1000000?'11px':ep>=100000?'12px':'14px')+'">'+epStr+'</div></div></div>';
   h+='<div class="legend"><div class="li"><div class="lsw" style="background:#EAF3DE"></div>1~3바리</div><div class="li"><div class="lsw" style="background:#FAEEDA"></div>4~5바리</div><div class="li"><div class="lsw" style="background:#FBEAF0"></div>6바리</div><div class="li"><div class="lsw" style="background:#FAECE7"></div>7바리</div><div class="li"><div class="lsw" style="background:#F09595"></div>8↑</div><div class="li"><div class="mbadge wbadge">W</div>폐수</div><div class="li"><div class="mbadge ot2badge">2시↑</div>초과</div><div class="li"><div class="dot df"></div>주유</div><div class="li"><div class="dot dt"></div>톨비</div><div class="li"><div class="dot dph"></div>사진</div></div>';
   document.getElementById('mc').innerHTML=h;
-  // 스와이프
-  var mc=document.getElementById('mc');
-  mc.addEventListener('touchstart',function(e){swipeStartX=e.touches[0].clientX;swipeStartY=e.touches[0].clientY;},{passive:true});
-  mc.addEventListener('touchend',function(e){
-    var dx=e.changedTouches[0].clientX-swipeStartX;
-    var dy=e.changedTouches[0].clientY-swipeStartY;
-    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){
-      if(dx<0)nm();else pm();
-    }
-  },{passive:true});
 }
+
+/* 스와이프 — rCal 밖에서 한 번만 등록 */
+var swipeLock=false;
+document.getElementById('mc').parentNode.addEventListener('touchstart',function(e){
+  if(tab!=='calendar')return;
+  swipeStartX=e.touches[0].clientX;swipeStartY=e.touches[0].clientY;
+},{passive:true});
+document.getElementById('mc').parentNode.addEventListener('touchend',function(e){
+  if(tab!=='calendar'||swipeLock)return;
+  var dx=e.changedTouches[0].clientX-swipeStartX;
+  var dy=e.changedTouches[0].clientY-swipeStartY;
+  if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*2){
+    swipeLock=true;
+    if(dx<0)nm();else pm();
+    setTimeout(function(){swipeLock=false;},400);
+  }
+},{passive:true});
 
 function openDay(k){sel=k;go('entry');}
 
