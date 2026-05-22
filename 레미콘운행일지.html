@@ -297,7 +297,7 @@ function rCal(){
   var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});
   var wd=ml.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
   var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
-  var ep=Math.round(wd*cfg.unitPrice/10000);
+  var ep=Math.round(tc*cfg.unitPrice/10000);
   var h='<div class="mnav"><button class="ma" onclick="pm()">‹</button><span class="ml">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>';
   h+='<div class="cgrid" id="calGrid">';
   ['일','월','화','수','목','금','토'].forEach(function(d){h+='<div class="ch">'+d+'</div>';});
@@ -499,7 +499,7 @@ function rStats(){
   var ot2Monthly=ot2I.filter(function(x){return x.type==='monthly';});
   var wwItems=[];ml.forEach(function(e){JSON.parse(e[1].wwList||'[]').forEach(function(x){wwItems.push({date:e[0],site:x.site});});});
   /* 월말결산 — 유류 제외 */
-  var base=wd*cfg.unitPrice;
+  var base=tc*cfg.unitPrice;
   var ot2Pay2=ot2Monthly.length*cfg.ot2Pay;
   var monthTotal=base+totA+ot2Pay2+tollMonT-mRepCost;
 
@@ -523,7 +523,7 @@ function rStats(){
   +(mRepCost>0?'<div class="sec">차량 정비 비용</div><div class="fb"><div class="fr"><span class="fk">이달 정비 비용</span><span class="fv" style="color:#dc2626">'+mRepCost.toLocaleString()+'원</span></div></div>':'')
   /* 월말결산 최종 — 유류 제외 */
   +'<div class="sec" style="color:#1d4ed8;margin-top:20px">📋 '+(m+1)+'월 최종 결산 (유류 별도)</div>'
-  +'<div class="fb"><div class="fr"><span class="fk">기본급 ('+wd+'일 × '+cfg.unitPrice.toLocaleString()+'원)</span><span class="fv">+'+(base/10000).toFixed(0)+'만원</span></div>'
+  +'<div class="fb"><div class="fr"><span class="fk">기본급 ('+tc+'바리 × '+cfg.unitPrice.toLocaleString()+'원)</span><span class="fv">+'+(base/10000).toFixed(0)+'만원</span></div>'
   +(totA>0?'<div class="fr"><span class="fk">오티 수당</span><span class="fv" style="color:#7c3aed">+'+totA.toLocaleString()+'원</span></div>':'')
   +(ot2Pay2>0?'<div class="fr"><span class="fk">2시간초과 수당 ('+ot2Monthly.length+'건)</span><span class="fv" style="color:#7c3aed">+'+ot2Pay2.toLocaleString()+'원</span></div>':'')
   +(tollMonT>0?'<div class="fr"><span class="fk">톨비 지급</span><span class="fv" style="color:#1d4ed8">+'+tollMonT.toLocaleString()+'원</span></div>':'')
@@ -554,7 +554,7 @@ function rAnnual(){
     var ww2=ml2.reduce(function(s,e){return s+(JSON.parse(e[1].wwList||'[]')).length;},0);
     var toll2=ml2.reduce(function(s,e){return s+(parseInt(e[1].t1||0))*cfg.toll1+(parseInt(e[1].t2||0))*cfg.toll2;},0);
     var rep2=ml2.reduce(function(s,e){return s+(JSON.parse(e[1].repList||'[]')).reduce(function(rs,r){return rs+(parseInt(r.cost)||0);},0);},0);
-    var base2=wd2*cfg.unitPrice;
+    var base2=tc2*cfg.unitPrice;
     var ot2M2=[];ml2.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){if(x.type==='monthly')ot2M2.push(x);});});
     var ot2P2=ot2M2.length*cfg.ot2Pay;
     var mTot2=base2+otP2+ot2P2+toll2-rep2;
@@ -590,7 +590,7 @@ function rConfig(){
   +'</div>'
   +'<div class="cfg-sec">급여 설정</div>'
   +'<div class="sblk">'
-  +'<div class="srow"><div><span class="slbl">일당 단가</span><span class="slbl-sub">변경 시 즉시 반영</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" id="cfg_unit" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">바리당 단가</span><span class="slbl-sub">바리수 × 단가 = 기본급</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" id="cfg_unit" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">오티 시간당</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" id="cfg_ot" value="'+cfg.otRate+'" oninput="cfg.otRate=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">2시간초과 건당</span><span class="slbl-sub">월말결산 건에만 적용</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" id="cfg_ot2" value="'+cfg.ot2Pay+'" placeholder="0" oninput="cfg.ot2Pay=+this.value;sv()"><span style="font-size:11px;color:#64748b">원</span></div></div>'
   +'</div>'
