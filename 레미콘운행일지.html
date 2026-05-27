@@ -315,12 +315,14 @@ function rCal(){
     var mn='';
     if(ww>0)mn+='<div class="mbadge wbadge">'+(ww>1?ww:'')+'W</div>';
     if(ot2)mn+='<div class="mbadge ot2badge">2시↑</div>';
-    h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')"><span class="dn">'+d+'</span>'+badge+(mn?'<div class="mini-row">'+mn+'</div>':'')
+    h+='<div class="cc'+(isT?' today':'')+'" onclick="cellTap(\''+key+'\')" oncontextmenu="cellLong(event,\''+key+'\')"><span class="dn">'+d+'</span>'+badge+(mn?'<div class="mini-row">'+mn+'</div>':'')
       +'<div class="dots">'+(parseFloat(log.fuel)>0?'<div class="dot df"></div>':'')+(parseFloat(log.ot)>0?'<div class="dot dp"></div>':'')+(tollTotal(log.t1,log.t2)>0?'<div class="dot dt"></div>':'')+(log.photo?'<div class="dot dph"></div>':'')+'</div></div>';
   }
   h+='</div>';
   h+='<div class="sbar"><div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div><div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div><div class="si"><div class="sl">예상급여</div><div class="sv" id="epVal" style="font-size:'+(ep>=1000000?'11px':ep>=100000?'12px':'14px')+'">'+epStr+'</div></div></div>';
   h+='<div class="legend"><div class="li"><div class="lsw" style="background:#EAF3DE"></div>1~3바리</div><div class="li"><div class="lsw" style="background:#FAEEDA"></div>4~5바리</div><div class="li"><div class="lsw" style="background:#FBEAF0"></div>6바리</div><div class="li"><div class="lsw" style="background:#FAECE7"></div>7바리</div><div class="li"><div class="lsw" style="background:#F09595"></div>8↑</div><div class="li"><div class="mbadge wbadge">W</div>폐수</div><div class="li"><div class="mbadge ot2badge">2시↑</div>초과</div><div class="li"><div class="dot df"></div>주유</div><div class="li"><div class="dot dt"></div>톨비</div><div class="li"><div class="dot dph"></div>사진</div></div>';
+  h+='<div id="calListPanel" style="display:none;background:var(--th-bg,#fff);border-top:0.5px solid var(--th-border,#e2e8f0);border-bottom:0.5px solid var(--th-border,#e2e8f0)"></div>';
+  h+='<div style="padding:8px 16px 4px;font-size:11px;color:var(--th-muted);text-align:center">날짜 탭 → 간단보기 · 길게 탭 → 기록 수정</div>';
   document.getElementById('mc').innerHTML=h;
 }
 
@@ -342,6 +344,16 @@ document.getElementById('mc').parentNode.addEventListener('touchend',function(e)
 },{passive:true});
 
 function openDay(k){sel=k;go('entry');}
+function cellTap(k){
+  /* 기록 있으면 미리보기, 없으면 바로 기록 */
+  var log=logs[k]||{};
+  if(log.calls||log.st||log.fuel||log.ot||log.photo){
+    toggleCalList(k);
+  } else {
+    openDay(k);
+  }
+}
+function cellLong(ev,k){ev.preventDefault();openDay(k);}
 
 /* ── OT2 ─────────────────────────────── */
 function mkOT2(){
@@ -475,9 +487,83 @@ function rEntry(){
 }
 
 var pendingPhoto='';
-function hPh(ev){var file=ev.target.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){var img=new Image();img.onload=function(){var canvas=document.createElement('canvas'),w=img.width,h=img.height;if(w>1200){h=Math.round(h*1200/w);w=1200;}if(h>1600){w=Math.round(w*1600/h);h=1600;}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);pendingPhoto=canvas.toDataURL('image/jpeg',.75);var pv=document.getElementById('photoPreview');if(pv)pv.innerHTML='<img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px" src="'+pendingPhoto+'"><button class="bdel" style="margin-top:6px" onclick="clrPhoto()">사진 취소</button>';};img.src=e.target.result;};r.readAsDataURL(file);}
+function hPh(ev){
+  var file=ev.target.files[0];if(!file)return;
+  var r=new FileReader();
+  r.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas'),w=img.width,h=img.height;
+      if(w>1200){h=Math.round(h*1200/w);w=1200;}if(h>1600){w=Math.round(w*1600/h);h=1600;}
+      canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);
+      pendingPhoto=canvas.toDataURL('image/jpeg',.75);
+      var pv=document.getElementById('photoPreview');
+      if(pv)pv.innerHTML='<img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px" src="'+pendingPhoto+'"><button class="bdel" style="margin-top:6px" onclick="clrPhoto()">사진 취소</button>';
+      /* ★ 갤러리에도 저장 */
+      try{
+        var a=document.createElement('a');
+        a.href=pendingPhoto;
+        a.download='운행일지_'+sel+'.jpg';
+        document.body.appendChild(a);a.click();document.body.removeChild(a);
+      }catch(err){}
+    };img.src=e.target.result;
+  };r.readAsDataURL(file);
+}
 function clrPhoto(){pendingPhoto='CLEAR';var pv=document.getElementById('photoPreview');if(pv)pv.innerHTML='';if((logs[sel]||{}).photo)rEntry();}
-function saveE(){if(!sel)return;var ep2=logs[sel]||{};var finalPhoto=ep2.photo||'';if(pendingPhoto==='CLEAR')finalPhoto='';else if(pendingPhoto)finalPhoto=pendingPhoto;logs[sel]={st:cSt,calls:document.getElementById('fC').value,vol:document.getElementById('fV').value,skm:document.getElementById('fSk').value,ekm:document.getElementById('fEk').value,fuel:document.getElementById('fF').value,ot:document.getElementById('fOt').value,ot2List:JSON.stringify(ol),wwList:JSON.stringify(wwList),t1:document.getElementById('fT1').value,t2:document.getElementById('fT2').value,repList:JSON.stringify(repList),memo:document.getElementById('fM').value,photo:finalPhoto};pendingPhoto='';sv();go('calendar');}
+
+/* ── 달력 날짜별 기록 목록 (아래 스와이프) ── */
+var calListOpen=false;
+var calListDate=null;
+function toggleCalList(key){
+  if(calListDate===key&&calListOpen){
+    calListOpen=false;calListDate=null;
+    document.getElementById('calListPanel').style.display='none';
+    return;
+  }
+  calListDate=key;calListOpen=true;
+  showCalList(key);
+}
+function showCalList(key){
+  var panel=document.getElementById('calListPanel');
+  if(!panel)return;
+  var log=logs[key]||{};
+  if(!log.calls&&!log.st&&!log.fuel&&!log.ot){panel.style.display='none';calListOpen=false;return;}
+  var pts=key.split('-'),mm=pts[1],dd=pts[2];
+  var dow=['일','월','화','수','목','금','토'][new Date(+pts[0],+pts[1]-1,+pts[2]).getDay()];
+  var km=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;
+  var otAmt=(parseFloat(log.ot)||0)*cfg.otRate;
+  var toll=tollTotal(log.t1,log.t2);
+  var wwL=JSON.parse(log.wwList||'[]');
+  var stMap={work:'근무',vacation:'휴가',repair:'정비',other:'기타'};
+  var items=[];
+  if(log.calls)items.push('🚛 '+log.calls+'바리'+(log.vol?' ('+log.vol+'㎥)':''));
+  if(km>0)items.push('📍 운행 '+km+'km');
+  if(log.fuel)items.push('⛽ 주유 '+log.fuel+'L');
+  if(log.ot)items.push('⏰ 오티 '+log.ot+'h ('+otAmt.toLocaleString()+'원)');
+  if(wwL.length)items.push('💧 폐수처리 '+wwL.length+'건');
+  if(toll>0)items.push('🛣️ 톨비 '+toll.toLocaleString()+'원');
+  if(log.memo)items.push('📝 '+log.memo);
+  var base=(parseInt(log.calls)||0)*cfg.unitPrice;
+  panel.innerHTML='<div style="padding:12px 16px;border-bottom:0.5px solid var(--th-border,#e2e8f0);display:flex;align-items:center;justify-content:space-between">'
+    +'<span style="font-size:13px;font-weight:600;color:var(--th-text)">'+mm+'월 '+dd+'일 ('+dow+') — '+(stMap[log.st||'work']||'근무')+'</span>'
+    +'<button onclick="toggleCalList(\''+key+'\')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--th-muted)">✕</button>'
+    +'</div>'
+    +'<div style="padding:10px 16px">'
+    +items.map(function(it){return'<div style="padding:5px 0;font-size:13px;color:var(--th-text);border-bottom:0.5px solid var(--th-border,#f0f0f0)">'+(it)+'</div>';}).join('')
+    +(log.photo?'<img src="'+log.photo+'" style="width:100%;border-radius:8px;margin-top:8px;max-height:150px;object-fit:cover">':'')
+    +'</div>'
+    +'<div style="padding:8px 16px"><button class="bsave" onclick="openDay(\''+key+'\')" style="padding:10px">✏️ 수정하기</button></div>';
+  panel.style.display='block';
+}
+function saveE(){
+  if(!sel)return;
+  var ep2=logs[sel]||{};
+  var finalPhoto=ep2.photo||'';
+  if(pendingPhoto==='CLEAR')finalPhoto='';
+  else if(pendingPhoto)finalPhoto=pendingPhoto;
+  logs[sel]={st:cSt,calls:document.getElementById('fC').value,vol:document.getElementById('fV').value,skm:document.getElementById('fSk').value,ekm:document.getElementById('fEk').value,fuel:document.getElementById('fF').value,ot:document.getElementById('fOt').value,ot2List:JSON.stringify(ol),wwList:JSON.stringify(wwList),t1:document.getElementById('fT1').value,t2:document.getElementById('fT2').value,repList:JSON.stringify(repList),memo:document.getElementById('fM').value,photo:finalPhoto};
+  pendingPhoto='';sv();go('calendar');
+}
 function delE(){if(!sel)return;delete logs[sel];sv();sel=null;go('calendar');}
 
 /* ── 통계 (월말결산 포함, 유류 제외) ───────── */
@@ -491,7 +577,7 @@ function rStats(){
   var tv=ml.reduce(function(s,e){return s+(parseFloat(e[1].vol)||0);},0);
   var tkm=ml.reduce(function(s,e){return s+(parseInt(e[1].ekm||0)-parseInt(e[1].skm||0));},0);
   var tot=ml.reduce(function(s,e){return s+(parseFloat(e[1].ot)||0);},0);
-  var totA=Math.round(tot*cfg.otRate);
+  var totA=tot*cfg.otRate;
   var tww=ml.reduce(function(s,e){return s+(JSON.parse(e[1].wwList||'[]')).length;},0);
   var tt1=ml.reduce(function(s,e){return s+(parseInt(e[1].t1||0));},0);
   var tt2=ml.reduce(function(s,e){return s+(parseInt(e[1].t2||0));},0);
@@ -499,45 +585,69 @@ function rStats(){
   var mRepCost=ml.reduce(function(s,e){return s+(JSON.parse(e[1].repList||'[]')).reduce(function(rs,r){return rs+(parseInt(r.cost)||0);},0);},0);
   var fu=fuelMonth(y,m);
   var mStart=mp+'-01',startFB=calcPrevFuel(mStart);
-  var endBal=+(startFB.balance+fu.mf-fu.mu).toFixed(2),isP=endBal>=0;
+  var endBal=+(startFB.balance+fu.mf-fu.mu).toFixed(2);
+  /* ★ 유류 부호 반전: 소비>주유 → 내가 받을 돈(+), 주유>소비 → 회사에 줘야(−) 아니라
+     실제 의미: endBal>0 = 내가 기름 더 넣었으니 회사에서 받을돈
+                endBal<0 = 내가 기름 덜 넣었으니 도급비에서 차감
+     → 기존 로직 그대로인데 표시 방향을 "내가 받는 기준"으로 */
+  var fuelSettleSign=endBal>=0?1:-1; // +면 내가 받음, -면 차감
   var allKm=Object.keys(logs).reduce(function(s,k){return s+parseInt(logs[k].ekm||0)-parseInt(logs[k].skm||0);},0);
   var totalOdometer=cfg.initKm+allKm;
   var allTotalFuel=Object.keys(logs).reduce(function(s,k){return s+parseFloat(logs[k].fuel||0);},0);
   var ot2I=[];ml.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){ot2I.push({date:e[0],site:x.site,mgr:x.mgr,type:x.type});});});
   var ot2Monthly=ot2I.filter(function(x){return x.type==='monthly';});
   var wwItems=[];ml.forEach(function(e){JSON.parse(e[1].wwList||'[]').forEach(function(x){wwItems.push({date:e[0],site:x.site});});});
-  /* 월말결산 — 유류 제외 */
   var base=tc*cfg.unitPrice;
   var ot2Pay2=ot2Monthly.length*cfg.ot2Pay;
   var monthTotal=base+totA+ot2Pay2+tollMonT-mRepCost;
+  /* 유류 잔량 표시: + = 내가 받을 돈(주유>소비), - = 내가 줘야(소비>주유) */
+  var fuelBalanceLabel=endBal>=0
+    ? '🟢 잔량 '+endBal.toFixed(1)+'L — 지급 받음'
+    : '🔴 부족 '+Math.abs(endBal).toFixed(1)+'L — 도급비 차감';
+  var fuelBalanceColor=endBal>=0?'#059669':'#dc2626';
 
   var h='<div class="sp">'
   +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><button class="ma" onclick="pm()">‹</button><span style="font-size:15px;font-weight:600">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>'
   +'<div class="sec">이달 기본 현황</div>'
-  +'<div class="mgrid"><div class="mc dk full"><div class="mk">기본급</div><div class="mv" style="color:#fff">'+(base/10000).toFixed(0)+'<span class="mu" style="color:#94a3b8">만원</span></div></div><div class="mc"><div class="mk">근무일</div><div class="mv">'+wd+'<span class="mu">일</span></div></div><div class="mc"><div class="mk">총 바리수</div><div class="mv">'+tc+'<span class="mu">바리</span></div></div><div class="mc"><div class="mk">운반량</div><div class="mv">'+tv.toFixed(1)+'<span class="mu">㎥</span></div></div><div class="mc"><div class="mk">운행거리</div><div class="mv">'+tkm+'<span class="mu">km</span></div></div></div>'
+  +'<div class="mgrid">'
+  +'<div class="mc dk full"><div class="mk">기본급</div><div class="mv" style="color:#fff;font-size:'+(base>=1000000?'16px':'20px')+'">'+base.toLocaleString()+'<span class="mu" style="color:#94a3b8;font-size:11px">원</span></div></div>'
+  +'<div class="mc"><div class="mk">근무일</div><div class="mv">'+wd+'<span class="mu">일</span></div></div>'
+  +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+tc+'<span class="mu">바리</span></div></div>'
+  +'<div class="mc"><div class="mk">운반량</div><div class="mv">'+tv.toFixed(1)+'<span class="mu">㎥</span></div></div>'
+  +'<div class="mc"><div class="mk">운행거리</div><div class="mv">'+tkm+'<span class="mu">km</span></div></div>'
+  +'</div>'
   +'<div class="sec">전체 누적 km</div>'
-  +'<div class="fb"><div class="fr"><span class="fk">기준 km</span><span class="fv">'+cfg.initKm.toLocaleString()+'km</span></div><div class="fr"><span class="fk">전체 운행 누적</span><span class="fv">+'+allKm.toLocaleString()+'km</span></div><div class="fr"><span class="fk" style="font-weight:600;color:#1e293b">현재 총 km</span><span class="fv" style="color:#1d4ed8;font-size:15px">'+totalOdometer.toLocaleString()+'km</span></div></div>'
-  +'<div class="sec">유류 현황 (정산 별도)</div>'
-  +'<div class="fb"><div class="fr"><span class="fk">이달 주유량</span><span class="fv" style="color:#059669">'+fu.mf.toFixed(1)+'L</span></div><div class="fr"><span class="fk">이달 소비량</span><span class="fv" style="color:#dc2626">−'+fu.mu.toFixed(1)+'L</span></div><div class="fr"><span class="fk">이달 잔량</span><span class="fv" style="color:'+(isP?'#059669':'#dc2626')+'">'+(endBal>=0?'+':'')+endBal.toFixed(1)+'L</span></div><div class="fr"><span class="fk">누적 총 주유량</span><span class="fv">'+allTotalFuel.toFixed(0)+'L</span></div></div>'
+  +'<div class="fb"><div class="fr"><span class="fk">기준 km</span><span class="fv">'+cfg.initKm.toLocaleString()+'km</span></div><div class="fr"><span class="fk">전체 운행 누적</span><span class="fv">+'+allKm.toLocaleString()+'km</span></div><div class="fr"><span class="fk" style="font-weight:600">현재 총 km</span><span class="fv" style="color:var(--th-accent);font-size:15px">'+totalOdometer.toLocaleString()+'km</span></div></div>'
+  /* ★ 유류: 소비>주유 = 내가 돈 받음(+표시), 주유>소비 = 차감(-표시) → 내가 받는 기준 */
+  +'<div class="sec">유류 현황</div>'
+  +'<div class="fb">'
+  +'<div class="fr"><span class="fk">이달 주유량</span><span class="fv" style="color:#059669">+'+fu.mf.toFixed(1)+'L</span></div>'
+  +'<div class="fr"><span class="fk">이달 소비량</span><span class="fv" style="color:#dc2626">−'+fu.mu.toFixed(1)+'L</span></div>'
+  +'<div class="fr"><span class="fk">이달 잔량</span><span class="fv" style="color:'+fuelBalanceColor+'">'+fuelBalanceLabel+'</span></div>'
+  +'<div class="fr"><span class="fk">누적 총 주유량</span><span class="fv">'+allTotalFuel.toFixed(0)+'L</span></div>'
+  +'</div>'
   +'<div class="sec">오티 수당</div>'
   +'<div class="fb"><div class="fr"><span class="fk">이달 오티 시간</span><span class="fv">'+tot+'시간</span></div><div class="fr"><span class="fk">오티 수당 합계</span><span class="fv" style="color:#7c3aed">'+totA.toLocaleString()+'원</span></div></div>'
   +'<div class="sec">폐수처리 ('+tww+'건)</div>'
   +(wwItems.length?wwItems.map(function(e){var p=e.date.split('-');return'<div class="wwi"><div class="ot2d">'+p[1]+'월 '+p[2]+'일</div><div class="ot2n">'+(e.site||'현장 미입력')+'</div></div>';}).join(''):'<div class="emsg">이달 폐수처리 없음</div>')
   +'<div class="sec">톨비 (울산대교)</div>'
-  +'<div class="fb"><div class="fr"><span class="fk">3,600원 통행</span><span class="fv">'+tt1+'회 = '+tollMon1.toLocaleString()+'원</span></div><div class="fr"><span class="fk">2,400원 통행</span><span class="fv">'+tt2+'회 = '+tollMon2.toLocaleString()+'원</span></div><div class="fr"><span class="fk" style="font-weight:600;color:#1e293b">월 톨비 합계</span><span class="fv" style="color:#1d4ed8;font-size:15px">'+tollMonT.toLocaleString()+'원</span></div></div>'
+  +'<div class="fb"><div class="fr"><span class="fk">3,600원 통행</span><span class="fv">'+tt1+'회 = '+tollMon1.toLocaleString()+'원</span></div><div class="fr"><span class="fk">2,400원 통행</span><span class="fv">'+tt2+'회 = '+tollMon2.toLocaleString()+'원</span></div><div class="fr"><span class="fk" style="font-weight:600">월 톨비 합계</span><span class="fv" style="color:var(--th-accent);font-size:15px">'+tollMonT.toLocaleString()+'원</span></div></div>'
   +'<div class="sec">2시간초과 현황 ('+ot2I.length+'건)</div>'
   +(ot2I.length?ot2I.map(function(e){var p=e.date.split('-');return'<div class="ot2i'+(e.type==='monthly'?' mo':'')+'"><div class="ot2d">'+p[1]+'월 '+p[2]+'일</div><div class="ot2n">'+(e.site||'현장 미입력')+(e.mgr?' / '+e.mgr:'')+'<span class="ot2tp '+(e.type==='monthly'?'tm':'tc')+'">'+(e.type==='monthly'?'월말결산':'영업사원')+'</span></div></div>';}).join(''):'<div class="emsg">이달 2시간초과 없음</div>')
   +(ot2Monthly.length?'<div style="background:#fef2f2;border:0.5px solid #fca5a5;border-radius:8px;padding:9px 12px;margin-top:6px;font-size:12px;color:#991b1b">⚠️ 월말 결산 필요: '+ot2Monthly.length+'건</div>':'')
   +(mRepCost>0?'<div class="sec">차량 정비 비용</div><div class="fb"><div class="fr"><span class="fk">이달 정비 비용</span><span class="fv" style="color:#dc2626">'+mRepCost.toLocaleString()+'원</span></div></div>':'')
-  /* 월말결산 최종 — 유류 제외 */
-  +'<div class="sec" style="color:#1d4ed8;margin-top:20px">📋 '+(m+1)+'월 최종 결산 (유류 별도)</div>'
-  +'<div class="fb"><div class="fr"><span class="fk">기본급 ('+tc+'바리 × '+cfg.unitPrice.toLocaleString()+'원)</span><span class="fv">+'+(base/10000).toFixed(0)+'만원</span></div>'
+  +'<div class="sec" style="color:var(--th-accent);margin-top:20px">📋 '+(m+1)+'월 최종 결산</div>'
+  +'<div class="fb">'
+  +'<div class="fr"><span class="fk">기본급 ('+tc+'바리 × '+cfg.unitPrice.toLocaleString()+'원)</span><span class="fv">+'+base.toLocaleString()+'원</span></div>'
   +(totA>0?'<div class="fr"><span class="fk">오티 수당</span><span class="fv" style="color:#7c3aed">+'+totA.toLocaleString()+'원</span></div>':'')
   +(ot2Pay2>0?'<div class="fr"><span class="fk">2시간초과 수당 ('+ot2Monthly.length+'건)</span><span class="fv" style="color:#7c3aed">+'+ot2Pay2.toLocaleString()+'원</span></div>':'')
-  +(tollMonT>0?'<div class="fr"><span class="fk">톨비 지급</span><span class="fv" style="color:#1d4ed8">+'+tollMonT.toLocaleString()+'원</span></div>':'')
+  +(tollMonT>0?'<div class="fr"><span class="fk">톨비 지급</span><span class="fv" style="color:var(--th-accent)">+'+tollMonT.toLocaleString()+'원</span></div>':'')
   +(mRepCost>0?'<div class="fr"><span class="fk">정비비 차감</span><span class="fv" style="color:#dc2626">−'+mRepCost.toLocaleString()+'원</span></div>':'')
   +'</div>'
-  +'<div style="background:'+(monthTotal>=0?'#1d4ed8':'#dc2626')+';border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:13px;color:rgba(255,255,255,.8);font-weight:500">'+(m+1)+'월 수령 예정액</span><span style="font-size:24px;font-weight:700;color:#fff">'+(monthTotal/10000).toFixed(1)+'만원</span></div>'
+  +'<div style="background:var(--th-primary);border-radius:10px;padding:16px;text-align:center;margin-bottom:16px">'
+  +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:6px">'+(m+1)+'월 수령 예정액 (유류 별도)</div>'
+  +'<div style="font-size:'+(monthTotal>=10000000?'20px':monthTotal>=1000000?'24px':'28px')+'px;font-weight:700;color:#fff">'+monthTotal.toLocaleString()+'원</div>'
+  +'</div>'
   +'</div>';
   document.getElementById('mc').innerHTML=h;
 }
@@ -567,15 +677,30 @@ function rAnnual(){
     var ot2P2=ot2M2.length*cfg.ot2Pay;
     var mTot2=base2+otP2+ot2P2+toll2-rep2;
     annWd+=wd2;annCalls+=tc2;annKm+=km2;annOT+=ot2;annOTpay+=otP2;annWw+=ww2;annToll+=toll2;annRep+=rep2;annBase+=base2;annTotal+=mTot2;
-    rows+='<tr style="border-bottom:0.5px solid #e2e8f0"><td style="padding:8px 10px;font-size:13px;font-weight:600;color:#1e293b">'+(mi+1)+'월</td><td style="padding:8px 6px;font-size:12px;color:#64748b;text-align:right">'+wd2+'일</td><td style="padding:8px 6px;font-size:12px;color:#64748b;text-align:right">'+tc2+'</td><td style="padding:8px 6px;font-size:12px;text-align:right">'+(base2/10000).toFixed(0)+'만</td><td style="padding:8px 6px;font-size:12px;color:#7c3aed;text-align:right">'+(otP2>0?'+'+(otP2/10000).toFixed(1):'0')+'만</td><td style="padding:8px 10px;font-size:13px;font-weight:700;color:'+(mTot2>=0?'#1d4ed8':'#dc2626')+';text-align:right">'+(mTot2/10000).toFixed(1)+'만</td></tr>';
+    rows+='<tr style="border-bottom:0.5px solid var(--th-border,#e2e8f0)"><td style="padding:8px 10px;font-size:13px;font-weight:600;color:var(--th-text,#1e293b)">'+(mi+1)+'월</td><td style="padding:8px 6px;font-size:12px;color:var(--th-muted,#64748b);text-align:right">'+wd2+'일</td><td style="padding:8px 6px;font-size:12px;color:var(--th-muted,#64748b);text-align:right">'+tc2+'</td><td style="padding:8px 6px;font-size:11px;text-align:right">'+base2.toLocaleString()+'</td><td style="padding:8px 6px;font-size:11px;color:#7c3aed;text-align:right">'+(otP2>0?'+'+otP2.toLocaleString():'0')+'</td><td style="padding:8px 10px;font-size:12px;font-weight:700;color:'+(mTot2>=0?'#1d4ed8':'#dc2626')+';text-align:right">'+mTot2.toLocaleString()+'</td></tr>';
   }
   var avgCalls=annWd>0?(annCalls/annWd).toFixed(1):'0';
   var h='<div class="sp">'
-  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><button class="ma" onclick="pyear()">‹</button><span style="font-size:18px;font-weight:700;color:#1e293b">'+y+'년 연말결산</span><button class="ma" onclick="nyear()">›</button></div>'
-  +'<div class="mgrid" style="margin-bottom:12px"><div class="mc dk full"><div class="mk">연간 총 수령액 (유류 별도)</div><div class="mv" style="color:#fff;font-size:26px">'+(annTotal/10000).toFixed(1)+'<span class="mu" style="color:#94a3b8;font-size:14px">만원</span></div></div><div class="mc"><div class="mk">총 근무일</div><div class="mv">'+annWd+'<span class="mu">일</span></div></div><div class="mc"><div class="mk">총 바리수</div><div class="mv">'+annCalls+'<span class="mu">바리</span></div></div><div class="mc"><div class="mk">일 평균 바리</div><div class="mv">'+avgCalls+'<span class="mu">바리</span></div></div><div class="mc"><div class="mk">총 운행거리</div><div class="mv">'+annKm.toLocaleString()+'<span class="mu">km</span></div></div><div class="mc"><div class="mk">연간 오티</div><div class="mv" style="color:#7c3aed">'+(annOTpay/10000).toFixed(1)+'<span class="mu">만원</span></div></div><div class="mc"><div class="mk">연간 톨비</div><div class="mv" style="color:#1d4ed8">'+(annToll/10000).toFixed(1)+'<span class="mu">만원</span></div></div><div class="mc"><div class="mk">연간 정비비</div><div class="mv" style="color:#dc2626">'+(annRep/10000).toFixed(1)+'<span class="mu">만원</span></div></div></div>'
-  +'<div style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:.4px;margin-bottom:8px;text-transform:uppercase">월별 상세</div>'
-  +'<div style="background:#f8fafc;border-radius:10px;overflow:hidden;border:0.5px solid #e2e8f0;margin-bottom:12px"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1a1a2e"><th style="padding:8px 10px;font-size:11px;color:#94a3b8;font-weight:600;text-align:left">월</th><th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">근무</th><th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">바리</th><th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">기본급</th><th style="padding:8px 6px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">오티</th><th style="padding:8px 10px;font-size:10px;color:#94a3b8;font-weight:600;text-align:right">합계</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr style="background:#0f172a"><td style="padding:10px;font-size:12px;font-weight:700;color:#fff">합계</td><td style="padding:10px 6px;font-size:12px;color:#94a3b8;text-align:right">'+annWd+'일</td><td style="padding:10px 6px;font-size:12px;color:#94a3b8;text-align:right">'+annCalls+'</td><td style="padding:10px 6px;font-size:12px;color:#e2e8f0;text-align:right">'+(annBase/10000).toFixed(0)+'만</td><td style="padding:10px 6px;font-size:12px;color:#a78bfa;text-align:right">'+(annOTpay/10000).toFixed(1)+'만</td><td style="padding:10px;font-size:14px;font-weight:700;color:#60a5fa;text-align:right">'+(annTotal/10000).toFixed(1)+'만</td></tr></tfoot></table></div>'
-  +'<div style="background:linear-gradient(135deg,#065f46,#047857);border-radius:12px;padding:18px 16px;text-align:center;margin-bottom:16px"><div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px">'+y+'년 연간 총 수령액 (유류 별도)</div><div style="font-size:32px;font-weight:700;color:#fff">'+(annTotal/10000).toFixed(1)+'만원</div><div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:6px">월 평균 '+(annTotal/10000/12).toFixed(1)+'만원 · 총 '+annWd+'일 근무</div></div>'
+  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><button class="ma" onclick="pyear()">‹</button><span style="font-size:18px;font-weight:700;color:var(--th-text,#1e293b)">'+y+'년 연말결산</span><button class="ma" onclick="nyear()">›</button></div>'
+  +'<div class="mgrid" style="margin-bottom:12px">'
+  +'<div class="mc dk full"><div class="mk">연간 총 수령액 (유류 별도)</div><div class="mv" style="color:#fff;font-size:'+(annTotal>=100000000?'14px':annTotal>=10000000?'16px':'18px')+'">'+annTotal.toLocaleString()+'<span class="mu" style="color:#94a3b8;font-size:11px">원</span></div></div>'
+  +'<div class="mc"><div class="mk">총 근무일</div><div class="mv">'+annWd+'<span class="mu">일</span></div></div>'
+  +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+annCalls+'<span class="mu">바리</span></div></div>'
+  +'<div class="mc"><div class="mk">일 평균 바리</div><div class="mv">'+avgCalls+'<span class="mu">바리</span></div></div>'
+  +'<div class="mc"><div class="mk">총 운행거리</div><div class="mv">'+annKm.toLocaleString()+'<span class="mu">km</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 오티</div><div class="mv" style="color:#7c3aed;font-size:14px">'+annOTpay.toLocaleString()+'<span class="mu">원</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 톨비</div><div class="mv" style="color:var(--th-accent);font-size:14px">'+annToll.toLocaleString()+'<span class="mu">원</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 정비비</div><div class="mv" style="color:#dc2626;font-size:14px">'+annRep.toLocaleString()+'<span class="mu">원</span></div></div>'
+  +'</div>'
+  +'<div style="font-size:11px;font-weight:600;color:var(--th-muted,#64748b);letter-spacing:.4px;margin-bottom:8px;text-transform:uppercase">월별 상세</div>'
+  +'<div style="background:var(--th-bg2,#f8fafc);border-radius:10px;overflow:hidden;border:0.5px solid var(--th-border,#e2e8f0);margin-bottom:12px"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:var(--th-primary,#1a1a2e)"><th style="padding:8px 10px;font-size:11px;color:rgba(255,255,255,.6);font-weight:600;text-align:left">월</th><th style="padding:8px 4px;font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-align:right">근무</th><th style="padding:8px 4px;font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-align:right">바리</th><th style="padding:8px 4px;font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-align:right">기본급</th><th style="padding:8px 4px;font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-align:right">오티</th><th style="padding:8px 10px;font-size:10px;color:rgba(255,255,255,.6);font-weight:600;text-align:right">합계</th></tr></thead><tbody>'+rows+'</tbody>'
+  +'<tfoot><tr style="background:var(--th-primary-dark,#0f172a)"><td style="padding:10px;font-size:12px;font-weight:700;color:#fff">합계</td><td style="padding:10px 4px;font-size:11px;color:rgba(255,255,255,.6);text-align:right">'+annWd+'일</td><td style="padding:10px 4px;font-size:11px;color:rgba(255,255,255,.6);text-align:right">'+annCalls+'</td><td style="padding:10px 4px;font-size:10px;color:#e2e8f0;text-align:right">'+annBase.toLocaleString()+'</td><td style="padding:10px 4px;font-size:10px;color:#a78bfa;text-align:right">'+annOTpay.toLocaleString()+'</td><td style="padding:10px;font-size:12px;font-weight:700;color:#60a5fa;text-align:right">'+annTotal.toLocaleString()+'</td></tr></tfoot>'
+  +'</table></div>'
+  +'<div style="background:linear-gradient(135deg,#065f46,#047857);border-radius:12px;padding:18px 16px;text-align:center;margin-bottom:16px">'
+  +'<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px">'+y+'년 연간 총 수령액 (유류 별도)</div>'
+  +'<div style="font-size:'+(annTotal>=100000000?'22px':'26px')+'px;font-weight:700;color:#fff">'+annTotal.toLocaleString()+'원</div>'
+  +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:6px">월 평균 '+(annTotal/12).toLocaleString()+'원 · 총 '+annWd+'일 근무</div>'
+  +'</div>'
   +'</div>';
   document.getElementById('mc').innerHTML=h;
 }
