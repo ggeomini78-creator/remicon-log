@@ -384,18 +384,7 @@ function buildCalDetail(key){
     +'</div>';
 }
 
-function calTap(k){
-  selCal=k;
-  /* 달력 셀 선택 표시 업데이트 */
-  document.querySelectorAll('.cc.cal-sel').forEach(function(el){el.classList.remove('cal-sel');});
-  var cells=document.querySelectorAll('.cc');
-  cells.forEach(function(el){
-    if(el.getAttribute('onclick')==='calTap(\''+k+'\')')el.classList.add('cal-sel');
-  });
-  /* 하단 패널 업데이트 */
-  var det=document.getElementById('calDetail');
-  if(det)det.innerHTML=buildCalDetail(k);
-}
+function calTap(k){openDay(k);}
 
 /* 스와이프 — 한 번만 등록 */
 var swipeLock=false;
@@ -534,8 +523,11 @@ function rEntry(){
   var kmD=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;
   var todayFuel=parseFloat(log.fuel||0),todayUsed=+(kmD*cfg.fuelRate).toFixed(1);
   var totalFuel=+(prevFB.totalAdded+todayFuel).toFixed(1);
-  var totalUsed=+(prevFB.totalUsed+todayUsed).toFixed(1);
-  var remain=+(totalFuel-totalUsed).toFixed(1),isPlus=remain>=0;
+  var totalUsed2=+(prevFB.totalUsed+todayUsed).toFixed(1);
+  /* 소비>주유=받음(+), 소비<주유=차감(-) */
+  var fuelDiffE=+(totalUsed2-totalFuel).toFixed(1);
+  var fuelLabelE=fuelDiffE>=0?'🟢 초과소비 +'+fuelDiffE+'L — 지급 받음':'🔴 잔량 '+Math.abs(fuelDiffE)+'L — 도급비 차감';
+  var fuelColorE=fuelDiffE>=0?'#34d399':'#f87171';
   var totalKm=cfg.initKm+prevKmVal+kmD;
   var otA=(parseFloat(log.ot)||0)*cfg.otRate;
   var t1=parseInt(log.t1||0),t2=parseInt(log.t2||0),tTot=tollTotal(t1,t2);
@@ -551,7 +543,7 @@ function rEntry(){
   +'<div class="km-card" id="kmCard"><div class="km-card-title">전체 누적 km</div><div class="fcrow"><span class="fck">기준 km</span><span class="fcv neutral">'+cfg.initKm.toLocaleString()+'km</span></div><div class="fcrow"><span class="fck">이전 누적</span><span class="fcv neutral">+'+prevKmVal.toLocaleString()+'km</span></div><div class="fcrow"><span class="fck">오늘 운행</span><span class="fcv plus">+'+kmD+'km</span></div><div class="km-total-bar"><span class="km-total-label">전체 누적 km</span><span class="km-total-val">'+totalKm.toLocaleString()+'km</span></div></div>'
   +'<div class="shdr">연료 주유</div>'
   +'<div class="field"><label class="fl">당일 주유량 (L)</label><input type="number" id="fF" value="'+(log.fuel||'')+'" placeholder="0" step="10" oninput="uFuelCard()"></div>'
-  +'<div class="fuel-card" id="fuelCard"><div class="fuel-card-title">연료 현황</div><div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div><div class="fcrow" style="background:#eff6ff"><span class="fck" style="font-weight:600;color:#1d4ed8">총 주유량 <span style="font-size:10px;font-weight:400">(누적)</span></span><span class="fcv blue">'+totalFuel+'L</span></div><div class="fcrow"><span class="fck">누적 소비량 (총km×'+cfg.fuelRate+')</span><span class="fcv minus">−'+totalUsed+'L</span></div><div class="fuel-balance-big"><span class="fbb-label">남은 연료 잔량</span><span class="fbb-val '+(isPlus?'plus':'minus')+'">'+remain+'L</span></div></div>'
+  +'<div class="fuel-card" id="fuelCard"><div class="fuel-card-title">연료 현황</div><div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div><div class="fcrow" style="background:#eff6ff"><span class="fck" style="font-weight:600;color:#1d4ed8">총 주유량 <span style="font-size:10px;font-weight:400">(누적)</span></span><span class="fcv blue">'+totalFuel+'L</span></div><div class="fcrow"><span class="fck">누적 소비량 (km×'+cfg.fuelRate+')</span><span class="fcv minus">'+totalUsed2+'L</span></div><div class="fuel-balance-big"><span class="fbb-label">유류 정산 방향</span><span style="font-size:12px;font-weight:700;color:'+fuelColorE+'">'+fuelLabelE+'</span></div></div>'
   +'<div class="shdr">시간외수당 (오티)</div>'
   +'<div class="field"><label class="fl">오티 시간 — 4시 이후</label><input type="number" id="fOt" value="'+(log.ot||'')+'" placeholder="0" step="0.5" oninput="uOT()"></div>'
   +'<div class="chint" id="otA" style="color:#7c3aed">'+(otA>0?'💰 오티 수당: '+otA.toLocaleString()+'원':'')+'</div>'
@@ -587,6 +579,13 @@ function hPh(ev){
   };r.readAsDataURL(file);
 }
 function clrPhoto(){pendingPhoto='CLEAR';var pv=document.getElementById('photoPreview');if(pv)pv.innerHTML='';if((logs[sel]||{}).photo)rEntry();}
+function showToast(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#059669;color:#fff;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){document.body.removeChild(t);},1200);
+}
 
 function saveE(){
   if(!sel)return;
@@ -595,7 +594,9 @@ function saveE(){
   if(pendingPhoto==='CLEAR')finalPhoto='';
   else if(pendingPhoto)finalPhoto=pendingPhoto;
   logs[sel]={st:cSt,calls:document.getElementById('fC').value,vol:document.getElementById('fV').value,skm:document.getElementById('fSk').value,ekm:document.getElementById('fEk').value,fuel:document.getElementById('fF').value,ot:document.getElementById('fOt').value,ot2List:JSON.stringify(ol),wwList:JSON.stringify(wwList),t1:document.getElementById('fT1').value,t2:document.getElementById('fT2').value,repList:JSON.stringify(repList),memo:document.getElementById('fM').value,photo:finalPhoto};
-  pendingPhoto='';sv();go('calendar');
+  pendingPhoto='';sv();
+  showToast('✅ 저장됐어요!');
+  setTimeout(function(){go('calendar');},600);
 }
 function delE(){if(!sel)return;delete logs[sel];sv();sel=null;go('calendar');}
 
