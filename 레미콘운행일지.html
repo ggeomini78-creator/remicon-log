@@ -89,6 +89,8 @@ body{font-family:-apple-system,sans-serif;overscroll-behavior:none;user-select:n
 .cc{background:var(--th-bg,#fff);min-height:62px;padding:3px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
 .cc:active{opacity:.7}.cc.empty{background:var(--th-bg2,#f8fafc);cursor:default}
 .cc.today .dn{background:var(--th-primary,#1a1a2e);color:#fff;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center}
+.cc.cal-sel{background:var(--th-bg2,#eff6ff);outline:2px solid var(--th-primary,#1a1a2e);outline-offset:-2px}
+.cc.cal-sel .dn{font-weight:700}
 .cc:nth-child(7n+1) .dn{color:#e53e3e}.cc:nth-child(7n) .dn{color:#3182ce}
 .dn{font-size:11px;font-weight:500;line-height:19px;min-width:19px;text-align:center}
 .cbadge{border-radius:4px;font-size:11px;font-weight:700;min-width:22px;height:18px;padding:0 3px;display:flex;align-items:center;justify-content:center}
@@ -106,6 +108,7 @@ body{font-family:-apple-system,sans-serif;overscroll-behavior:none;user-select:n
 .legend{padding:7px 12px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:0.5px solid var(--th-border,#e2e8f0)}
 .li{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--th-muted,#64748b)}.lsw{width:14px;height:12px;border-radius:2px}
 .ef{padding:14px 16px 20px}
+.sp{padding:14px 16px 20px}
 .shdr{font-size:11px;font-weight:600;color:var(--th-muted,#64748b);letter-spacing:.4px;margin:18px 0 9px;text-transform:uppercase;border-bottom:0.5px solid var(--th-border,#e2e8f0);padding-bottom:6px}
 .shdr:first-child{margin-top:0}
 .field{margin-bottom:11px}
@@ -161,8 +164,10 @@ body{font-family:-apple-system,sans-serif;overscroll-behavior:none;user-select:n
 .photo-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .bsave{width:100%;padding:14px;background:var(--th-btn-save,#1a1a2e);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
 .bdel{width:100%;padding:11px;background:none;color:#dc2626;border:1.5px solid #dc2626;border-radius:10px;font-size:14px;cursor:pointer;margin-top:7px}
+.shdr{font-size:13px;font-weight:700;color:var(--th-text,#1e293b);letter-spacing:-.2px;margin:20px 0 10px;border-left:4px solid var(--th-primary,#1a1a2e);padding:5px 0 5px 10px;background:var(--th-bg2,#f8fafc);border-radius:0 6px 6px 0}
+.shdr:first-child{margin-top:0}
 .sp{padding:14px 16px 20px}
-.sec{font-size:11px;font-weight:600;color:var(--th-muted,#64748b);letter-spacing:.4px;margin:16px 0 8px;text-transform:uppercase;border-bottom:0.5px solid var(--th-border,#e2e8f0);padding-bottom:5px}
+.sec{font-size:13px;font-weight:700;color:var(--th-text,#1e293b);letter-spacing:-.2px;margin:18px 0 10px;border-left:4px solid var(--th-primary,#1a1a2e);padding:5px 0 5px 10px;background:var(--th-bg2,#f8fafc);border-radius:0 6px 6px 0}
 .sec:first-child{margin-top:0}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .mc{background:var(--th-bg2,#f8fafc);border-radius:10px;padding:11px 13px;border:0.5px solid var(--th-border,#e2e8f0)}
@@ -287,7 +292,7 @@ function monthFuelUpTo(targetDate){
 }
 
 /* ── 달력 ─────────────────────────────── */
-var swipeStartX=0,swipeStartY=0;
+var swipeStartX=0,swipeStartY=0,selCal=null;
 function rCal(){
   var y=cd.getFullYear(),m=cd.getMonth();
   document.getElementById('hS').textContent=y+'년 '+(m+1)+'월';
@@ -300,12 +305,13 @@ function rCal(){
   var ep=tc*cfg.unitPrice;
   var epStr=ep>0?ep.toLocaleString()+'원':'0원';
   var h='<div class="mnav"><button class="ma" onclick="pm()">‹</button><span class="ml">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>';
-  h+='<div class="cgrid" id="calGrid">';
+  h+='<div class="cgrid">';
   ['일','월','화','수','목','금','토'].forEach(function(d){h+='<div class="ch">'+d+'</div>';});
   for(var i=0;i<first;i++)h+='<div class="cc empty"></div>';
   for(var d=1;d<=days;d++){
     var key=dk(y,m,d),log=logs[key]||{};
-    var isT=key===tdk,calls=parseInt(log.calls)||0,col=cc(calls);
+    var isT=key===tdk,isSel=key===selCal;
+    var calls=parseInt(log.calls)||0,col=cc(calls);
     var ww=(JSON.parse(log.wwList||'[]')).length,ot2=(JSON.parse(log.ot2List||'[]')).length>0;
     var st=log.st||'';
     var badge='';
@@ -315,18 +321,83 @@ function rCal(){
     var mn='';
     if(ww>0)mn+='<div class="mbadge wbadge">'+(ww>1?ww:'')+'W</div>';
     if(ot2)mn+='<div class="mbadge ot2badge">2시↑</div>';
-    h+='<div class="cc'+(isT?' today':'')+'" onclick="cellTap(\''+key+'\')" oncontextmenu="cellLong(event,\''+key+'\')"><span class="dn">'+d+'</span>'+badge+(mn?'<div class="mini-row">'+mn+'</div>':'')
-      +'<div class="dots">'+(parseFloat(log.fuel)>0?'<div class="dot df"></div>':'')+(parseFloat(log.ot)>0?'<div class="dot dp"></div>':'')+(tollTotal(log.t1,log.t2)>0?'<div class="dot dt"></div>':'')+(log.photo?'<div class="dot dph"></div>':'')+'</div></div>';
+    h+='<div class="cc'+(isT?' today':'')+(isSel?' cal-sel':'')+'" onclick="calTap(\''+key+'\')">'
+      +'<span class="dn">'+d+'</span>'+badge
+      +(mn?'<div class="mini-row">'+mn+'</div>':'')
+      +'<div class="dots">'
+      +(parseFloat(log.fuel)>0?'<div class="dot df"></div>':'')
+      +(parseFloat(log.ot)>0?'<div class="dot dp"></div>':'')
+      +(tollTotal(log.t1,log.t2)>0?'<div class="dot dt"></div>':'')
+      +(log.photo?'<div class="dot dph"></div>':'')
+      +'</div></div>';
   }
   h+='</div>';
-  h+='<div class="sbar"><div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div><div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div><div class="si"><div class="sl">예상급여</div><div class="sv" id="epVal" style="font-size:'+(ep>=1000000?'11px':ep>=100000?'12px':'14px')+'">'+epStr+'</div></div></div>';
+  h+='<div class="sbar"><div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div><div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div><div class="si"><div class="sl">예상급여</div><div class="sv" style="font-size:'+(ep>=1000000?'11px':'14px')+'">'+epStr+'</div></div></div>';
   h+='<div class="legend"><div class="li"><div class="lsw" style="background:#EAF3DE"></div>1~3바리</div><div class="li"><div class="lsw" style="background:#FAEEDA"></div>4~5바리</div><div class="li"><div class="lsw" style="background:#FBEAF0"></div>6바리</div><div class="li"><div class="lsw" style="background:#FAECE7"></div>7바리</div><div class="li"><div class="lsw" style="background:#F09595"></div>8↑</div><div class="li"><div class="mbadge wbadge">W</div>폐수</div><div class="li"><div class="mbadge ot2badge">2시↑</div>초과</div><div class="li"><div class="dot df"></div>주유</div><div class="li"><div class="dot dt"></div>톨비</div><div class="li"><div class="dot dph"></div>사진</div></div>';
-  h+='<div id="calListPanel" style="display:none;background:var(--th-bg,#fff);border-top:0.5px solid var(--th-border,#e2e8f0);border-bottom:0.5px solid var(--th-border,#e2e8f0)"></div>';
-  h+='<div style="padding:8px 16px 4px;font-size:11px;color:var(--th-muted);text-align:center">날짜 탭 → 간단보기 · 길게 탭 → 기록 수정</div>';
+  /* 하단 날짜 상세 패널 */
+  h+='<div id="calDetail" style="border-top:3px solid var(--th-primary,#1a1a2e);min-height:100px">'
+    +buildCalDetail(selCal)
+    +'</div>';
   document.getElementById('mc').innerHTML=h;
 }
 
-/* 스와이프 — rCal 밖에서 한 번만 등록 */
+function buildCalDetail(key){
+  if(!key){
+    return'<div style="padding:20px 16px;text-align:center;color:var(--th-muted);font-size:13px">날짜를 탭하면 기록이 표시돼요</div>';
+  }
+  var log=logs[key]||{};
+  var pts=key.split('-'),mm=pts[1],dd=pts[2];
+  var dow=['일','월','화','수','목','금','토'][new Date(+pts[0],+pts[1]-1,+pts[2]).getDay()];
+  var km=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;
+  var otAmt=(parseFloat(log.ot)||0)*cfg.otRate;
+  var toll=tollTotal(log.t1,log.t2);
+  var wwL=JSON.parse(log.wwList||'[]');
+  var stMap={work:'🚛 근무',vacation:'🏖️ 휴가',repair:'🔧 정비',other:'기타'};
+  var hasData=log.calls||log.st||log.fuel||log.ot||log.photo;
+  if(!hasData){
+    return'<div style="padding:14px 16px">'
+      +'<div style="font-size:14px;font-weight:600;color:var(--th-text);margin-bottom:10px">'+mm+'월 '+dd+'일 ('+dow+')</div>'
+      +'<div style="font-size:13px;color:var(--th-muted);margin-bottom:12px">기록 없음</div>'
+      +'<button class="bsave" style="padding:11px" onclick="openDay(\''+key+'\')">✏️ 기록 작성</button>'
+      +'</div>';
+  }
+  var items=[];
+  if(log.st&&log.st!=='work')items.push({icon:'',text:(stMap[log.st]||log.st),color:'var(--th-primary)'});
+  if(log.calls)items.push({icon:'🚛',text:log.calls+'바리'+(log.vol?' · '+log.vol+'㎥':''),color:'var(--th-text)'});
+  if(km>0)items.push({icon:'📍',text:'운행 '+km+'km',color:'var(--th-text)'});
+  if(log.fuel)items.push({icon:'⛽',text:'주유 '+log.fuel+'L',color:'#059669'});
+  if(log.ot)items.push({icon:'⏰',text:'오티 '+log.ot+'h ('+otAmt.toLocaleString()+'원)',color:'#7c3aed'});
+  if(wwL.length)items.push({icon:'💧',text:'폐수 '+wwL.length+'건',color:'#059669'});
+  if(toll>0)items.push({icon:'🛣️',text:'톨비 '+toll.toLocaleString()+'원',color:'#1d4ed8'});
+  if(log.memo)items.push({icon:'📝',text:log.memo,color:'var(--th-muted)'});
+  return'<div style="padding:14px 16px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    +'<span style="font-size:14px;font-weight:700;color:var(--th-text)">'+mm+'월 '+dd+'일 ('+dow+')</span>'
+    +'<button onclick="openDay(\''+key+'\')" style="background:var(--th-primary);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer">✏️ 수정</button>'
+    +'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+    +items.map(function(it){
+      return'<div style="background:var(--th-bg2);border:0.5px solid var(--th-border);border-radius:8px;padding:6px 10px;font-size:12px;color:'+it.color+';font-weight:500">'+(it.icon?it.icon+' ':'')+it.text+'</div>';
+    }).join('')
+    +'</div>'
+    +(log.photo?'<img src="'+log.photo+'" style="width:100%;border-radius:8px;margin-top:10px;max-height:130px;object-fit:cover">':'')
+    +'</div>';
+}
+
+function calTap(k){
+  selCal=k;
+  /* 달력 셀 선택 표시 업데이트 */
+  document.querySelectorAll('.cc.cal-sel').forEach(function(el){el.classList.remove('cal-sel');});
+  var cells=document.querySelectorAll('.cc');
+  cells.forEach(function(el){
+    if(el.getAttribute('onclick')==='calTap(\''+k+'\')')el.classList.add('cal-sel');
+  });
+  /* 하단 패널 업데이트 */
+  var det=document.getElementById('calDetail');
+  if(det)det.innerHTML=buildCalDetail(k);
+}
+
+/* 스와이프 — 한 번만 등록 */
 var swipeLock=false;
 document.getElementById('mc').parentNode.addEventListener('touchstart',function(e){
   if(tab!=='calendar')return;
@@ -344,28 +415,37 @@ document.getElementById('mc').parentNode.addEventListener('touchend',function(e)
 },{passive:true});
 
 function openDay(k){sel=k;go('entry');}
-function cellTap(k){
-  /* 기록 있으면 미리보기, 없으면 바로 기록 */
-  var log=logs[k]||{};
-  if(log.calls||log.st||log.fuel||log.ot||log.photo){
-    toggleCalList(k);
-  } else {
-    openDay(k);
-  }
-}
-function cellLong(ev,k){ev.preventDefault();openDay(k);}
 
 /* ── OT2 ─────────────────────────────── */
 function mkOT2(){
-  if(!ol.length)return'<div style="font-size:12px;color:#64748b;padding:4px 0 8px">없음</div>';
+  if(!ol.length)return'<div style="font-size:13px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
   return ol.map(function(e,i){
-    return'<div class="item-card"><div class="item-hdr"><span class="item-title">현장 '+(i+1)+'</span><button class="item-rm" onclick="rmO2('+i+')">삭제</button></div><div class="item-fields"><div class="field"><label class="fl">현장명</label><input type="text" id="o2s'+i+'" value="'+(e.site||'')+'" placeholder="현장명" oninput="upO2('+i+')"></div><div class="field"><label class="fl">담당 영업사원</label><input type="text" id="o2m'+i+'" value="'+(e.mgr||'')+'" placeholder="이름" oninput="upO2('+i+')"></div><div class="field"><label class="fl">결산 방식</label><div class="tbts"><button id="o2ta'+i+'" class="tbt'+((e.type||'monthly')==='credit'?' on':'')+'" onclick="setO2T('+i+',\'credit\')">영업사원 콜 지급</button><button id="o2tb'+i+'" class="tbt'+((e.type||'monthly')==='monthly'?' on':'')+'" onclick="setO2T('+i+',\'monthly\')">월말 결산</button></div></div></div></div>';
+    var isSettled=e.settled===true||e.settled==='true';
+    return'<div class="item-card" style="'+(isSettled?'opacity:0.6;':'')+'border-left:3px solid '+(isSettled?'#94a3b8':'#7c3aed')+'">'
+      +'<div class="item-hdr"><span class="item-title" style="'+(isSettled?'text-decoration:line-through;color:#94a3b8;':'')+'">현장 '+(i+1)+' '+(isSettled?'✅ 정산완료':'')+'</span>'
+      +'<button class="item-rm" onclick="rmO2('+i+')">삭제</button></div>'
+      +'<div class="item-fields">'
+      +'<div class="field"><label class="fl">현장명</label><input type="text" id="o2s'+i+'" value="'+(e.site||'')+'" placeholder="현장명" oninput="upO2('+i+')" '+(isSettled?'disabled':'')+' style="'+(isSettled?'text-decoration:line-through;':'')+'"></div>'
+      +'<div class="field"><label class="fl">담당 영업사원</label><input type="text" id="o2m'+i+'" value="'+(e.mgr||'')+'" placeholder="이름" oninput="upO2('+i+')" '+(isSettled?'disabled':'')+'></div>'
+      +'<div class="field"><label class="fl">결산 방식</label><div class="tbts">'
+      +'<button id="o2ta'+i+'" class="tbt'+((e.type||'monthly')==='credit'?' on':'')+'" onclick="setO2T('+i+',\'credit\')" '+(isSettled?'disabled':'')+'>영업사원 콜 지급</button>'
+      +'<button id="o2tb'+i+'" class="tbt'+((e.type||'monthly')==='monthly'?' on':'')+'" onclick="setO2T('+i+',\'monthly\')" '+(isSettled?'disabled':'')+'>월말 결산</button>'
+      +'</div></div>'
+      +'<div class="field"><label class="fl">정산 상태</label>'
+      +'<button onclick="toggleOT2Settle('+i+')" style="width:100%;padding:9px;border-radius:8px;border:1.5px solid '+(isSettled?'#059669':'#d1d5db')+';background:'+(isSettled?'#ecfdf5':'var(--th-bg2)')+';color:'+(isSettled?'#065f46':'var(--th-muted)')+';font-size:12px;font-weight:600;cursor:pointer">'
+      +(isSettled?'✅ 정산 완료 (취소하려면 탭)':'⬜ 미정산 — 탭하면 정산완료 처리')
+      +'</button></div>'
+      +'</div></div>';
   }).join('');
 }
-function addO2(){ol.push({site:'',mgr:'',type:'monthly'});document.getElementById('o2Con').innerHTML=mkOT2();}
+function addO2(){ol.push({site:'',mgr:'',type:'monthly',settled:false});document.getElementById('o2Con').innerHTML=mkOT2();}
 function rmO2(i){ol.splice(i,1);document.getElementById('o2Con').innerHTML=mkOT2();}
 function setO2T(i,t){ol[i].type=t;document.getElementById('o2ta'+i).classList.toggle('on',t==='credit');document.getElementById('o2tb'+i).classList.toggle('on',t==='monthly');}
 function upO2(i){var s=document.getElementById('o2s'+i),mg=document.getElementById('o2m'+i);if(s&&mg){ol[i].site=s.value;ol[i].mgr=mg.value;}}
+function toggleOT2Settle(i){
+  ol[i].settled=!(ol[i].settled===true||ol[i].settled==='true');
+  document.getElementById('o2Con').innerHTML=mkOT2();
+}
 
 /* ── 폐수 ─────────────────────────────── */
 function mkWW(){
@@ -406,13 +486,17 @@ function uFuelCard(){
   var km=e2>s?e2-s:0;
   var totalFuel=+(prevFB.totalAdded+todayFuel).toFixed(1);
   var totalUsed=+(prevFB.totalUsed+(km*cfg.fuelRate)).toFixed(1);
-  var remain=+(totalFuel-totalUsed).toFixed(1);
-  var isPlus=remain>=0;
+  /* 소비>주유 = 받음(+), 소비<주유 = 차감(-) — 통계와 동일 방향 */
+  var diff=+(totalUsed-totalFuel).toFixed(1);
+  var diffLabel=diff>=0
+    ?'🟢 초과소비 +'+diff+'L — 지급 받음'
+    :'🔴 잔량 '+Math.abs(diff)+'L — 도급비 차감';
+  var diffColor=diff>=0?'#34d399':'#f87171';
   el.innerHTML='<div class="fuel-card-title">연료 현황</div>'
     +'<div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div>'
     +'<div class="fcrow" style="background:#eff6ff"><span class="fck" style="font-weight:600;color:#1d4ed8">총 주유량 <span style="font-size:10px;font-weight:400">(누적)</span></span><span class="fcv blue">'+totalFuel+'L</span></div>'
-    +'<div class="fcrow"><span class="fck">누적 소비량 (총km×'+cfg.fuelRate+')</span><span class="fcv minus">−'+totalUsed+'L</span></div>'
-    +'<div class="fuel-balance-big"><span class="fbb-label">남은 연료 잔량</span><span class="fbb-val '+(isPlus?'plus':'minus')+'">'+remain+'L</span></div>';
+    +'<div class="fcrow"><span class="fck">누적 소비량 (km×'+cfg.fuelRate+')</span><span class="fcv minus">'+totalUsed+'L</span></div>'
+    +'<div class="fuel-balance-big"><span class="fbb-label">유류 정산 방향</span><span style="font-size:12px;font-weight:700;color:'+diffColor+'">'+diffLabel+'</span></div>';
 }
 
 /* ── km 카드 ─────────────────────────── */
@@ -499,62 +583,11 @@ function hPh(ev){
       pendingPhoto=canvas.toDataURL('image/jpeg',.75);
       var pv=document.getElementById('photoPreview');
       if(pv)pv.innerHTML='<img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px" src="'+pendingPhoto+'"><button class="bdel" style="margin-top:6px" onclick="clrPhoto()">사진 취소</button>';
-      /* ★ 갤러리에도 저장 */
-      try{
-        var a=document.createElement('a');
-        a.href=pendingPhoto;
-        a.download='운행일지_'+sel+'.jpg';
-        document.body.appendChild(a);a.click();document.body.removeChild(a);
-      }catch(err){}
     };img.src=e.target.result;
   };r.readAsDataURL(file);
 }
 function clrPhoto(){pendingPhoto='CLEAR';var pv=document.getElementById('photoPreview');if(pv)pv.innerHTML='';if((logs[sel]||{}).photo)rEntry();}
 
-/* ── 달력 날짜별 기록 목록 (아래 스와이프) ── */
-var calListOpen=false;
-var calListDate=null;
-function toggleCalList(key){
-  if(calListDate===key&&calListOpen){
-    calListOpen=false;calListDate=null;
-    document.getElementById('calListPanel').style.display='none';
-    return;
-  }
-  calListDate=key;calListOpen=true;
-  showCalList(key);
-}
-function showCalList(key){
-  var panel=document.getElementById('calListPanel');
-  if(!panel)return;
-  var log=logs[key]||{};
-  if(!log.calls&&!log.st&&!log.fuel&&!log.ot){panel.style.display='none';calListOpen=false;return;}
-  var pts=key.split('-'),mm=pts[1],dd=pts[2];
-  var dow=['일','월','화','수','목','금','토'][new Date(+pts[0],+pts[1]-1,+pts[2]).getDay()];
-  var km=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;
-  var otAmt=(parseFloat(log.ot)||0)*cfg.otRate;
-  var toll=tollTotal(log.t1,log.t2);
-  var wwL=JSON.parse(log.wwList||'[]');
-  var stMap={work:'근무',vacation:'휴가',repair:'정비',other:'기타'};
-  var items=[];
-  if(log.calls)items.push('🚛 '+log.calls+'바리'+(log.vol?' ('+log.vol+'㎥)':''));
-  if(km>0)items.push('📍 운행 '+km+'km');
-  if(log.fuel)items.push('⛽ 주유 '+log.fuel+'L');
-  if(log.ot)items.push('⏰ 오티 '+log.ot+'h ('+otAmt.toLocaleString()+'원)');
-  if(wwL.length)items.push('💧 폐수처리 '+wwL.length+'건');
-  if(toll>0)items.push('🛣️ 톨비 '+toll.toLocaleString()+'원');
-  if(log.memo)items.push('📝 '+log.memo);
-  var base=(parseInt(log.calls)||0)*cfg.unitPrice;
-  panel.innerHTML='<div style="padding:12px 16px;border-bottom:0.5px solid var(--th-border,#e2e8f0);display:flex;align-items:center;justify-content:space-between">'
-    +'<span style="font-size:13px;font-weight:600;color:var(--th-text)">'+mm+'월 '+dd+'일 ('+dow+') — '+(stMap[log.st||'work']||'근무')+'</span>'
-    +'<button onclick="toggleCalList(\''+key+'\')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--th-muted)">✕</button>'
-    +'</div>'
-    +'<div style="padding:10px 16px">'
-    +items.map(function(it){return'<div style="padding:5px 0;font-size:13px;color:var(--th-text);border-bottom:0.5px solid var(--th-border,#f0f0f0)">'+(it)+'</div>';}).join('')
-    +(log.photo?'<img src="'+log.photo+'" style="width:100%;border-radius:8px;margin-top:8px;max-height:150px;object-fit:cover">':'')
-    +'</div>'
-    +'<div style="padding:8px 16px"><button class="bsave" onclick="openDay(\''+key+'\')" style="padding:10px">✏️ 수정하기</button></div>';
-  panel.style.display='block';
-}
 function saveE(){
   if(!sel)return;
   var ep2=logs[sel]||{};
