@@ -130,11 +130,11 @@ function rCal(){
     h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')">'
       +'<span class="dn">'+d+'</span>'+badge
       +(mn?'<div class="mini-row">'+mn+'</div>':'')
-      +'<div class="dots">'
-      +(parseFloat(log.fuel)>0?'<div class="dot df"></div>':'')
-      +(parseFloat(log.ot)>0?'<div class="dot dp"></div>':'')
-      +(tollTotal(log.t1,log.t2)>0?'<div class="dot dt"></div>':'')
-      +(log.photo?'<div class="dot dph"></div>':'')
+      +'<div class="mini-row" style="margin-top:1px">'
+      +(parseFloat(log.fuel)>0?'<div class="mbadge" style="background:#dcfce7;color:#065f46">주유</div>':'')
+      +(parseFloat(log.ot)>0?'<div class="mbadge" style="background:#ede9fe;color:#5b21b6">OT</div>':'')
+      +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge" style="background:#dbeafe;color:#1e40af">톨비</div>':'')
+      +(log.photo?'<div class="mbadge" style="background:#fee2e2;color:#991b1b">📷</div>':'')
       +'</div></div>';
   }
   h+='</div>';
@@ -143,7 +143,7 @@ function rCal(){
     +'<div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div>'
     +'<div class="si"><div class="sl">예상급여</div><div class="sv" style="font-size:'+(ep>=1000000?'11px':'14px')+'">'+epStr+'</div></div>'
     +'</div>';
-  h+='<div class="legend">'
+  +'<div class="legend">'
     +'<div class="li"><div class="lsw" style="background:#EAF3DE"></div>1~3바리</div>'
     +'<div class="li"><div class="lsw" style="background:#FAEEDA"></div>4~5바리</div>'
     +'<div class="li"><div class="lsw" style="background:#FBEAF0"></div>6바리</div>'
@@ -151,9 +151,10 @@ function rCal(){
     +'<div class="li"><div class="lsw" style="background:#F09595"></div>8↑</div>'
     +'<div class="li"><div class="mbadge wbadge">W</div>폐수</div>'
     +'<div class="li"><div class="mbadge ot2badge">2시↑</div>초과</div>'
-    +'<div class="li"><div class="dot df"></div>주유</div>'
-    +'<div class="li"><div class="dot dt"></div>톨비</div>'
-    +'<div class="li"><div class="dot dph"></div>사진</div>'
+    +'<div class="li"><div class="mbadge" style="background:#dcfce7;color:#065f46">주유</div></div>'
+    +'<div class="li"><div class="mbadge" style="background:#ede9fe;color:#5b21b6">OT</div></div>'
+    +'<div class="li"><div class="mbadge" style="background:#dbeafe;color:#1e40af">톨비</div></div>'
+    +'<div class="li"><div class="mbadge" style="background:#fee2e2;color:#991b1b">📷</div>사진</div>'
     +'</div>';
   document.getElementById('mc').innerHTML=h;
 }
