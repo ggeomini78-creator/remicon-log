@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="운행일지">
+<title>🚛 레미콘 운행일지</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div>
+      <div class="hdr-t">🚛 레미콘 운행일지</div>
+      <div class="hdr-s" id="hS"></div>
+    </div>
+  </div>
+  <div class="content" id="mc"></div>
+  <nav class="nav">
+    <button class="nb on" id="nbCalendar" onclick="go('calendar')"><span class="ni">📅</span>달력</button>
+    <button class="nb" id="nbEntry" onclick="go('entry')"><span class="ni">✏️</span>기록</button>
+    <button class="nb" id="nbStats" onclick="go('stats')"><span class="ni">📊</span>통계</button>
+    <button class="nb" id="nbAnnual" onclick="go('annual')"><span class="ni">🏆</span>연말결산</button>
+    <button class="nb" id="nbConfig" onclick="go('config')"><span class="ni">⚙️</span>설정</button>
+  </nav>
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>
