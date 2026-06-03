@@ -121,7 +121,7 @@ function rCal(){
     var ww=(JSON.parse(log.wwList||'[]')).length;
     var ot2=(JSON.parse(log.ot2List||'[]')).length>0;
     var badge='';
-    if(log.st==='vacation') badge='<div class="cbadge-off off-v">휴가</div>';
+    if(log.st==='vacation') badge='<div class="cbadge-off off-v">휴무</div>';
     else if(log.st==='repair') badge='<div class="cbadge-off off-r">정비</div>';
     else if(col) badge='<div class="cbadge" style="background:'+col.b+';color:'+col.t+'">'+calls+'</div>';
     var mn='';
@@ -335,7 +335,7 @@ function rEntry(){
   document.getElementById('mc').innerHTML='<div class="ef">'
   +'<div class="shdr">근무 상태</div>'
   +'<div class="btns">'+['work','vacation','repair','other'].map(function(k,i){
-    return'<button id="stb'+i+'" class="btn'+(k==='vacation'?' off-btn':'')+(k==='repair'?' rep-btn':'')+(cSt===k?' on':'')+'" onclick="setSt(\''+k+'\')">'+['근무','휴가','정비','기타'][i]+'</button>';
+    return'<button id="stb'+i+'" class="btn'+(k==='vacation'?' off-btn':'')+(k==='repair'?' rep-btn':'')+(cSt===k?' on':'')+'" onclick="setSt(\''+k+'\')">'+['근무','휴무','정비','기타'][i]+'</button>';
   }).join('')+'</div>'
   +'<div class="shdr">기본 운행</div>'
   +'<div class="r2"><div class="field"><label class="fl">바리수</label><input type="number" id="fC" value="'+(log.calls||'')+'" placeholder="0" min="0" max="30" oninput="aVol()"></div>'
