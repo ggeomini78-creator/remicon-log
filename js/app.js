@@ -85,9 +85,12 @@ function go(t){
   document.getElementById('nb'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('on');
   render();
 }
-function pm(){cd=new Date(cd.getFullYear(),cd.getMonth()-1,1);render();}
-function nm(){cd=new Date(cd.getFullYear(),cd.getMonth()+1,1);render();}
+var slideDir=0;
+function pm(){slideDir=-1;cd=new Date(cd.getFullYear(),cd.getMonth()-1,1);render();}
+function nm(){slideDir=1;cd=new Date(cd.getFullYear(),cd.getMonth()+1,1);render();}
 function render(){
+  var mc=document.getElementById('mc');
+  mc.classList.toggle('cal-mode',tab==='calendar');
   if(tab==='calendar') rCal();
   else if(tab==='entry') rEntry();
   else if(tab==='stats') rStats();
@@ -108,11 +111,19 @@ function rCal(){
   var ep=tc*cfg.unitPrice;
   var epStr=ep>0?ep.toLocaleString()+'원':'0원';
 
-  var h='<div class="mnav"><button class="ma" onclick="pm()">‹</button>'
+  var animClass=slideDir===1?'anim-left':(slideDir===-1?'anim-right':'');
+  slideDir=0;
+
+  var h='<div class="cal-page '+animClass+'">';
+  h+='<div class="mnav"><button class="ma" onclick="pm()">‹</button>'
     +'<span class="ml">'+y+'년 '+(m+1)+'월</span>'
     +'<button class="ma" onclick="nm()">›</button></div>';
-  h+='<div class="cgrid">';
+  /* 요일 헤더 (고정) */
+  h+='<div class="cweek">';
   ['일','월','화','수','목','금','토'].forEach(function(d){h+='<div class="ch">'+d+'</div>';});
+  h+='</div>';
+  /* 날짜 그리드 (꽉차게) */
+  h+='<div class="cgrid">';
   for(var i=0;i<first;i++) h+='<div class="cc empty"></div>';
   for(var d=1;d<=days;d++){
     var key=dk(y,m,d), log=logs[key]||{};
@@ -138,24 +149,13 @@ function rCal(){
       +'</div></div>';
   }
   h+='</div>';
+  /* 하단 요약 바 */
   h+='<div class="sbar">'
     +'<div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div>'
     +'<div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div>'
     +'<div class="si"><div class="sl">예상급여</div><div class="sv" style="font-size:'+(ep>=1000000?'11px':'14px')+'">'+epStr+'</div></div>'
     +'</div>';
-  +'<div class="legend">'
-    +'<div class="li"><div class="lsw" style="background:#EAF3DE"></div>1~3바리</div>'
-    +'<div class="li"><div class="lsw" style="background:#FAEEDA"></div>4~5바리</div>'
-    +'<div class="li"><div class="lsw" style="background:#FBEAF0"></div>6바리</div>'
-    +'<div class="li"><div class="lsw" style="background:#FAECE7"></div>7바리</div>'
-    +'<div class="li"><div class="lsw" style="background:#F09595"></div>8↑</div>'
-    +'<div class="li"><div class="mbadge wbadge">W</div>폐수</div>'
-    +'<div class="li"><div class="mbadge ot2badge">2시↑</div>초과</div>'
-    +'<div class="li"><div class="mbadge" style="background:#dcfce7;color:#065f46">주유</div></div>'
-    +'<div class="li"><div class="mbadge" style="background:#ede9fe;color:#5b21b6">OT</div></div>'
-    +'<div class="li"><div class="mbadge" style="background:#dbeafe;color:#1e40af">톨비</div></div>'
-    +'<div class="li"><div class="mbadge" style="background:#fee2e2;color:#991b1b">📷</div>사진</div>'
-    +'</div>';
+  h+='</div>';
   document.getElementById('mc').innerHTML=h;
 }
 
@@ -723,16 +723,23 @@ function doReset(){
   logs={};sv();showToast('🗑️ 초기화 완료','#64748b');render();
 }
 
-/* ── 앱 아이콘 (iOS) ── */
+/* ── 앱 아이콘 (iOS) — 레미콘 타이포 ── */
 (function(){
   try{
     var c=document.createElement('canvas');c.width=180;c.height=180;
     var ctx=c.getContext('2d');
-    ctx.fillStyle='#1a1a2e';
-    ctx.beginPath();ctx.moveTo(36,0);ctx.lineTo(144,0);ctx.quadraticCurveTo(180,0,180,36);ctx.lineTo(180,144);ctx.quadraticCurveTo(180,180,144,180);ctx.lineTo(36,180);ctx.quadraticCurveTo(0,180,0,144);ctx.lineTo(0,36);ctx.quadraticCurveTo(0,0,36,0);ctx.fill();
-    ctx.font='78px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🚛',90,80);
-    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font='bold 18px -apple-system,Arial,sans-serif';ctx.fillText('운행일지',90,146);
-    ctx.fillStyle='rgba(255,210,100,0.9)';ctx.font='bold 11px -apple-system,Arial,sans-serif';ctx.fillText('레미콘',90,22);
+    /* 다크 배경 */
+    ctx.fillStyle='#0f172a';
+    ctx.beginPath();ctx.moveTo(40,0);ctx.lineTo(140,0);ctx.quadraticCurveTo(180,0,180,40);ctx.lineTo(180,140);ctx.quadraticCurveTo(180,180,140,180);ctx.lineTo(40,180);ctx.quadraticCurveTo(0,180,0,140);ctx.lineTo(0,40);ctx.quadraticCurveTo(0,0,40,0);ctx.fill();
+    /* 레미콘 글자 (하늘색) */
+    ctx.fillStyle='#38bdf8';
+    ctx.font='800 40px -apple-system,Arial,sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('레미콘',90,82);
+    /* 밑줄 라인 */
+    ctx.fillStyle='#38bdf8';
+    ctx.fillRect(50,118,80,7);
+    /* 아이콘 적용 */
     var old=document.querySelector('link[rel="apple-touch-icon"]');
     if(old)old.parentNode.removeChild(old);
     var link=document.createElement('link');link.rel='apple-touch-icon';link.sizes='180x180';link.href=c.toDataURL('image/png');
