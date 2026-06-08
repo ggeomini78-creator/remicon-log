@@ -14,13 +14,13 @@ if(!cfg.theme)   cfg.theme='default';
 
 /* ── 테마 목록 ── */
 var THEMES=[
-  {id:'default',name:'네이비', color:'#1a1a2e'},
-  {id:'dark',   name:'다크',   color:'#0f172a'},
-  {id:'red',    name:'레드',   color:'#991b1b'},
-  {id:'green',  name:'그린',   color:'#065f46'},
-  {id:'orange', name:'오렌지', color:'#92400e'},
-  {id:'purple', name:'퍼플',   color:'#4c1d95'},
-  {id:'kakao',  name:'카카오', color:'#3a1d0e'},
+  {id:'default',name:'SpaceX',  color:'#000000'},
+  {id:'dark',   name:'블루',    color:'#1e40af'},
+  {id:'red',    name:'레드',    color:'#dc2626'},
+  {id:'green',  name:'그린',    color:'#059669'},
+  {id:'orange', name:'오렌지',  color:'#d97706'},
+  {id:'purple', name:'퍼플',    color:'#7c3aed'},
+  {id:'kakao',  name:'골드',    color:'#ca8a04'},
 ];
 
 /* ★ 테마 적용 — html 요소에만 class 조작 */
