@@ -1,0 +1,10 @@
+{
+  "name": "레미콘 운행일지",
+  "short_name": "운행일지",
+  "description": "레미콘 운전기사용 개인 운행일지",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "lang": "ko"
+}

@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="운행일지">
 <title>🚛 레미콘 운행일지</title>
 <link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.json">
 </head>
 <body>
 <div class="app">
@@ -27,5 +28,10 @@
   </nav>
 </div>
 <script src="js/app.js"></script>
+<script>
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
 </body>
 </html>

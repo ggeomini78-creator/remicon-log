@@ -72,7 +72,11 @@ function fuelMonthExclude(targetDate){
 function calcPrevKm(targetDate){
   var keys=Object.keys(logs).filter(function(k){return k<targetDate;}).sort();
   var t=0;
-  keys.forEach(function(k){var v=logs[k];t+=parseInt(v.ekm||0)-parseInt(v.skm||0);});
+  keys.forEach(function(k){
+    var v=logs[k];
+    t+=parseInt(v.ekm||0)-parseInt(v.skm||0);
+    JSON.parse(v.repList||'[]').forEach(function(r){t+=parseInt(r.km||0);});
+  });
   return t;
 }
 
@@ -231,14 +235,16 @@ function mkRep(){
       +'<div class="field"><label class="fl">정비 항목</label><input type="text" id="rps'+i+'" value="'+(e.item||'')+'" placeholder="예: 엔진오일 교체" oninput="upRep('+i+')"></div>'
       +'<div class="field"><label class="fl">정비소</label><input type="text" id="rpp'+i+'" value="'+(e.place||'')+'" placeholder="정비소명" oninput="upRep('+i+')"></div>'
       +'<div class="field"><label class="fl">비용 (원)</label><input type="number" id="rpc'+i+'" value="'+(e.cost||'')+'" placeholder="0" oninput="upRep('+i+')"></div>'
+      +'<div class="field"><label class="fl">이동거리 (km)</label><input type="number" id="rpk'+i+'" value="'+(e.km||'')+'" placeholder="0" oninput="upRep('+i+')"></div>'
       +'</div></div>';
   }).join('');
 }
-function addRep(){repList.push({item:'',place:'',cost:''});document.getElementById('repCon').innerHTML=mkRep();}
+function addRep(){repList.push({item:'',place:'',cost:'',km:''});document.getElementById('repCon').innerHTML=mkRep();}
 function rmRep(i){repList.splice(i,1);document.getElementById('repCon').innerHTML=mkRep();}
 function upRep(i){
-  var s=document.getElementById('rps'+i),p=document.getElementById('rpp'+i),c=document.getElementById('rpc'+i);
-  if(s)repList[i].item=s.value;if(p)repList[i].place=p.value;if(c)repList[i].cost=c.value;
+  var s=document.getElementById('rps'+i),p=document.getElementById('rpp'+i),c=document.getElementById('rpc'+i),k=document.getElementById('rpk'+i);
+  if(s)repList[i].item=s.value;if(p)repList[i].place=p.value;if(c)repList[i].cost=c.value;if(k)repList[i].km=k.value;
+  uKmCard();
 }
 
 /* ── 근무상태 버튼 ── */
@@ -276,13 +282,15 @@ function uKmCard(){
   var sk=parseInt(document.getElementById('fSk').value)||0;
   var ek=parseInt(document.getElementById('fEk').value)||0;
   var todayKm=ek>sk?ek-sk:0;
+  var repKm=repList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
   var prevKm=calcPrevKm(sel);
-  var total=cfg.initKm+prevKm+todayKm;
+  var total=cfg.initKm+prevKm+todayKm+repKm;
   if(sk&&ek&&ek>sk)document.getElementById('kmH').textContent='✅ 오늘 운행거리: '+todayKm+'km';
   el.innerHTML='<div class="km-card-title">전체 누적 km</div>'
     +'<div class="fcrow"><span class="fck">기준 km</span><span class="fcv neutral">'+cfg.initKm.toLocaleString()+'km</span></div>'
     +'<div class="fcrow"><span class="fck">이전 누적</span><span class="fcv neutral">+'+prevKm.toLocaleString()+'km</span></div>'
     +'<div class="fcrow"><span class="fck">오늘 운행</span><span class="fcv plus">+'+todayKm+'km</span></div>'
+    +(repKm>0?'<div class="fcrow"><span class="fck">오늘 정비 이동</span><span class="fcv plus">+'+repKm+'km</span></div>':'')
     +'<div class="km-total-bar"><span class="km-total-label">전체 누적 km</span><span class="km-total-val">'+total.toLocaleString()+'km</span></div>';
 }
 function uKm(){uKmCard();uFuelCard();}
@@ -319,7 +327,8 @@ function rEntry(){
 
   var kmD=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;
   var prevKm=calcPrevKm(sel);
-  var totalKm=cfg.initKm+prevKm+kmD;
+  var repKmToday=repList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
+  var totalKm=cfg.initKm+prevKm+kmD+repKmToday;
   var otA=(parseFloat(log.ot)||0)*cfg.otRate;
   var t1=parseInt(log.t1||0),t2=parseInt(log.t2||0),tTot=tollTotal(t1,t2);
 
@@ -349,6 +358,7 @@ function rEntry(){
   +'<div class="fcrow"><span class="fck">기준 km</span><span class="fcv neutral">'+cfg.initKm.toLocaleString()+'km</span></div>'
   +'<div class="fcrow"><span class="fck">이전 누적</span><span class="fcv neutral">+'+prevKm.toLocaleString()+'km</span></div>'
   +'<div class="fcrow"><span class="fck">오늘 운행</span><span class="fcv plus">+'+kmD+'km</span></div>'
+  +(repKmToday>0?'<div class="fcrow"><span class="fck">오늘 정비 이동</span><span class="fcv plus">+'+repKmToday+'km</span></div>':'')
   +'<div class="km-total-bar"><span class="km-total-label">전체 누적 km</span><span class="km-total-val">'+totalKm.toLocaleString()+'km</span></div>'
   +'</div>'
   +'<div class="shdr">연료 주유</div>'
@@ -498,7 +508,11 @@ function rStats(){
   var fuelDiff=+(fu.mu-fu.mf).toFixed(2);
   var fuelLabel=fuelDiff>=0?'🟢 초과소비 +'+fuelDiff.toFixed(1)+'L — 지급 받음':'🔴 잔량 '+Math.abs(fuelDiff).toFixed(1)+'L — 도급비 차감';
   var fuelColor=fuelDiff>=0?'#059669':'#dc2626';
-  var allKm=Object.keys(logs).reduce(function(s,k){return s+parseInt(logs[k].ekm||0)-parseInt(logs[k].skm||0);},0);
+  var allKm=Object.keys(logs).reduce(function(s,k){
+    var v=logs[k];
+    var repKm=JSON.parse(v.repList||'[]').reduce(function(rs,r){return rs+(parseInt(r.km||0));},0);
+    return s+(parseInt(v.ekm||0)-parseInt(v.skm||0))+repKm;
+  },0);
   var totalOdometer=cfg.initKm+allKm;
   var ot2I=[];ml.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){ot2I.push({date:e[0],site:x.site,mgr:x.mgr,type:x.type,settled:x.settled});});});
   var ot2Monthly=ot2I.filter(function(x){return x.type==='monthly'&&!(x.settled===true||x.settled==='true');});
