@@ -418,7 +418,6 @@ function hPh(ev){
         canvas.width=w;canvas.height=h;
         canvas.getContext('2d').drawImage(img,0,0,w,h);
         pendingPhoto=canvas.toDataURL('image/jpeg',.6);
-        dlPhoto(pendingPhoto);
         var pv=document.getElementById('photoPreview');
         if(pv)pv.innerHTML='<img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px" src="'+pendingPhoto+'"><div style="display:flex;gap:8px;margin-top:6px"><button class="bdel" onclick="clrPhoto()">사진 취소</button><button class="bsave" style="flex:1" onclick="dlPhoto(pendingPhoto)">📥 갤러리에 저장</button></div>';
       }catch(err){console.error('사진 처리 오류:',err);}
@@ -439,9 +438,14 @@ function dlPhoto(src){
     var a=document.createElement('a');
     a.href=src;
     a.download='운행일지_'+new Date().toISOString().slice(0,10)+'.jpg';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     showToast('📥 갤러리에 저장됐어요!');
-  }catch(e){showToast('갤러리 저장 실패: 사진을 길게 눌러 저장해 주세요','#dc2626');}
+  }catch(e){
+    /* iOS Safari 등 보안 정책으로 자동 저장 불가 */
+    showToast('사진을 길게 눌러 저장해 주세요','#b45309');
+  }
 }
 
 /* ★ 저장 — try-catch로 안정화 */
