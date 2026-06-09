@@ -396,7 +396,7 @@ function rEntry(){
   +'<div class="field"><textarea id="fM" placeholder="특이사항, 현장명 등...">'+(log.memo||'')+'</textarea></div>'
   +'<div class="shdr">운행일지 사진</div>'
   +(log.photo
-    ?'<div style="position:relative"><img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover" src="'+log.photo+'"><button class="pdel" onclick="clrPhoto()">✕</button></div>'
+    ?'<div><div style="position:relative"><img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover" src="'+log.photo+'"><button class="pdel" onclick="clrPhoto()">✕</button></div><div style="display:flex;gap:8px;margin-top:6px"><button class="bsave" style="flex:1" onclick="dlPhoto(logs[sel].photo)">📥 갤러리에 저장</button></div></div>'
     :'<div class="photo-btns"><div class="photo-btn">📷 촬영<input type="file" accept="image/*" capture="environment" onchange="hPh(event)"></div><div class="photo-btn">🖼️ 갤러리<input type="file" accept="image/*" onchange="hPh(event)"></div></div>')
   +'<div id="photoPreview"></div>'
   +'<button class="bsave" id="btnSave" onclick="saveE()">💾 저장</button>'
@@ -413,13 +413,14 @@ function hPh(ev){
     img.onload=function(){
       try{
         var canvas=document.createElement('canvas'),w=img.width,h=img.height;
-        if(w>1200){h=Math.round(h*1200/w);w=1200;}
-        if(h>1600){w=Math.round(w*1600/h);h=1600;}
+        if(w>800){h=Math.round(h*800/w);w=800;}
+        if(h>800){w=Math.round(w*800/h);h=800;}
         canvas.width=w;canvas.height=h;
         canvas.getContext('2d').drawImage(img,0,0,w,h);
-        pendingPhoto=canvas.toDataURL('image/jpeg',.75);
+        pendingPhoto=canvas.toDataURL('image/jpeg',.6);
+        dlPhoto(pendingPhoto);
         var pv=document.getElementById('photoPreview');
-        if(pv)pv.innerHTML='<img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px" src="'+pendingPhoto+'"><button class="bdel" style="margin-top:6px" onclick="clrPhoto()">사진 취소</button>';
+        if(pv)pv.innerHTML='<img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px" src="'+pendingPhoto+'"><div style="display:flex;gap:8px;margin-top:6px"><button class="bdel" onclick="clrPhoto()">사진 취소</button><button class="bsave" style="flex:1" onclick="dlPhoto(pendingPhoto)">📥 갤러리에 저장</button></div>';
       }catch(err){console.error('사진 처리 오류:',err);}
     };
     img.src=e.target.result;
@@ -431,6 +432,16 @@ function clrPhoto(){
   var pv=document.getElementById('photoPreview');
   if(pv)pv.innerHTML='';
   if((logs[sel]||{}).photo)rEntry();
+}
+function dlPhoto(src){
+  if(!src)return;
+  try{
+    var a=document.createElement('a');
+    a.href=src;
+    a.download='운행일지_'+new Date().toISOString().slice(0,10)+'.jpg';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    showToast('📥 갤러리에 저장됐어요!');
+  }catch(e){showToast('갤러리 저장 실패: 사진을 길게 눌러 저장해 주세요','#dc2626');}
 }
 
 /* ★ 저장 — try-catch로 안정화 */
@@ -473,7 +484,9 @@ function saveE(){
     setTimeout(function(){go('calendar');},700);
   }catch(err){
     console.error('저장 오류:',err);
-    showToast('⚠️ 저장 중 오류가 발생했어요','#dc2626');
+    var msg='⚠️ 저장 중 오류가 발생했어요';
+    if(err&&err.name==='QuotaExceededError')msg='⚠️ 저장 공간이 부족해요. 오래된 사진을 삭제해 주세요';
+    showToast(msg,'#dc2626');
     var btn=document.getElementById('btnSave');
     if(btn){btn.disabled=false;btn.textContent='💾 저장';}
   }
