@@ -3,7 +3,6 @@ var tab='calendar', cd=new Date(), sel=null;
 var cSt='work', ol=[], wwList=[], repList=[];
 var annualYear=new Date().getFullYear();
 var swipeStartX=0, swipeStartY=0, swipeLock=false;
-var pendingPhoto='';
 
 /* ── 데이터 로드 ── */
 var logs = JSON.parse(localStorage.getItem('rl9_logs')||localStorage.getItem('rl8_logs')||'{}');
@@ -149,7 +148,7 @@ function rCal(){
       +(parseFloat(log.fuel)>0?'<div class="mbadge" style="background:#dcfce7;color:#065f46">주유</div>':'')
       +(parseFloat(log.ot)>0?'<div class="mbadge" style="background:#ede9fe;color:#5b21b6">OT</div>':'')
       +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge" style="background:#dbeafe;color:#1e40af">톨비</div>':'')
-      +(log.photo?'<div class="mbadge" style="background:#fee2e2;color:#991b1b">📷</div>':'')
+      +''
       +'</div></div>';
   }
   h+='</div>';
@@ -323,8 +322,6 @@ function rEntry(){
   ol=JSON.parse(log.ot2List||'[]');
   wwList=JSON.parse(log.wwList||'[]');
   repList=JSON.parse(log.repList||'[]');
-  pendingPhoto='';
-
   var kmD=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;
   var prevKm=calcPrevKm(sel);
   var repKmToday=repList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
@@ -394,55 +391,11 @@ function rEntry(){
   +'<button class="add-btn" style="border-color:#fca5a5;color:#dc2626" onclick="addRep()">＋ 정비 내역 추가</button>'
   +'<div class="shdr">메모</div>'
   +'<div class="field"><textarea id="fM" placeholder="특이사항, 현장명 등...">'+(log.memo||'')+'</textarea></div>'
-  +'<div class="shdr">운행일지 사진</div>'
-  +(log.photo
-    ?'<div><div style="position:relative"><img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover" src="'+log.photo+'"><button class="pdel" onclick="clrPhoto()">✕</button></div><div style="display:flex;gap:8px;margin-top:6px"><button class="bsave" style="flex:1" onclick="dlPhoto(logs[sel].photo)">📥 갤러리에 저장</button></div></div>'
-    :'<div class="photo-btns"><div class="photo-btn">📷 촬영<input type="file" accept="image/*" capture="environment" onchange="hPh(event)"></div><div class="photo-btn">🖼️ 갤러리<input type="file" accept="image/*" onchange="hPh(event)"></div></div>')
-  +'<div id="photoPreview"></div>'
   +'<button class="bsave" id="btnSave" onclick="saveE()">💾 저장</button>'
-  +((log.calls||log.st||log.photo)?'<button class="bdel" onclick="delE()">이 날 기록 삭제</button>':'')
+  +((log.calls||log.st)?'<button class="bdel" onclick="delE()">이 날 기록 삭제</button>':'')
   +'</div>';
 }
 
-/* ★ 사진 처리 — 안정적으로 */
-function hPh(ev){
-  var file=ev.target.files[0];if(!file)return;
-  var r=new FileReader();
-  r.onload=function(e){
-    var img=new Image();
-    img.onload=function(){
-      try{
-        var canvas=document.createElement('canvas'),w=img.width,h=img.height;
-        if(w>800){h=Math.round(h*800/w);w=800;}
-        if(h>800){w=Math.round(w*800/h);h=800;}
-        canvas.width=w;canvas.height=h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        pendingPhoto=canvas.toDataURL('image/jpeg',.6);
-        dlPhoto(pendingPhoto);
-        var pv=document.getElementById('photoPreview');
-        if(pv)pv.innerHTML='<img style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;margin-top:8px" src="'+pendingPhoto+'"><div style="display:flex;gap:8px;margin-top:6px"><button class="bdel" onclick="clrPhoto()">사진 취소</button><button class="bsave" style="flex:1" onclick="dlPhoto(pendingPhoto)">📥 갤러리에 저장</button></div>';
-      }catch(err){console.error('사진 처리 오류:',err);}
-    };
-    img.src=e.target.result;
-  };
-  r.readAsDataURL(file);
-}
-function clrPhoto(){
-  pendingPhoto='CLEAR';
-  var pv=document.getElementById('photoPreview');
-  if(pv)pv.innerHTML='';
-  if((logs[sel]||{}).photo)rEntry();
-}
-function dlPhoto(src){
-  if(!src)return;
-  try{
-    var a=document.createElement('a');
-    a.href=src;
-    a.download='운행일지_'+new Date().toISOString().slice(0,10)+'.jpg';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    showToast('📥 갤러리에 저장됐어요!');
-  }catch(e){showToast('갤러리 저장 실패: 사진을 길게 눌러 저장해 주세요','#dc2626');}
-}
 
 /* ★ 저장 — try-catch로 안정화 */
 function showToast(msg,color){
@@ -458,10 +411,6 @@ function saveE(){
     if(!sel){showToast('날짜를 먼저 선택하세요','#dc2626');return;}
     var btn=document.getElementById('btnSave');
     if(btn){btn.disabled=true;btn.textContent='저장 중...';}
-    var ep2=logs[sel]||{};
-    var finalPhoto=ep2.photo||'';
-    if(pendingPhoto==='CLEAR')finalPhoto='';
-    else if(pendingPhoto&&pendingPhoto!=='CLEAR')finalPhoto=pendingPhoto;
     logs[sel]={
       st:cSt,
       calls:document.getElementById('fC').value,
@@ -475,17 +424,15 @@ function saveE(){
       t1:document.getElementById('fT1').value,
       t2:document.getElementById('fT2').value,
       repList:JSON.stringify(repList),
-      memo:document.getElementById('fM').value,
-      photo:finalPhoto
+      memo:document.getElementById('fM').value
     };
-    pendingPhoto='';
     sv();
     showToast('✅ 저장됐어요!');
     setTimeout(function(){go('calendar');},700);
   }catch(err){
     console.error('저장 오류:',err);
     var msg='⚠️ 저장 중 오류가 발생했어요';
-    if(err&&err.name==='QuotaExceededError')msg='⚠️ 저장 공간이 부족해요. 오래된 사진을 삭제해 주세요';
+    if(err&&err.name==='QuotaExceededError')msg='⚠️ 저장 공간이 부족해요';
     showToast(msg,'#dc2626');
     var btn=document.getElementById('btnSave');
     if(btn){btn.disabled=false;btn.textContent='💾 저장';}
