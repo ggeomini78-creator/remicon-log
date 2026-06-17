@@ -9,17 +9,12 @@ var logs = JSON.parse(localStorage.getItem('rl9_logs')||localStorage.getItem('rl
 var cfg  = JSON.parse(localStorage.getItem('rl9_cfg') ||localStorage.getItem('rl8_cfg') ||
   '{"unitPrice":74300,"fuelRate":0.55,"otRate":18000,"fuelPrice":1500,"toll1":3600,"toll2":2400,"initKm":125000,"ot2Pay":0,"theme":"default"}');
 if(!cfg.ot2Pay)  cfg.ot2Pay=0;
-if(!cfg.theme)   cfg.theme='default';
+if(!cfg.theme||['dark','red','green','orange','purple','kakao'].indexOf(cfg.theme)>=0) cfg.theme='default';
 
 /* ── 테마 목록 ── */
 var THEMES=[
   {id:'default',name:'SpaceX',  color:'#000000'},
-  {id:'dark',   name:'블루',    color:'#1e40af'},
-  {id:'red',    name:'레드',    color:'#dc2626'},
-  {id:'green',  name:'그린',    color:'#059669'},
-  {id:'orange', name:'오렌지',  color:'#d97706'},
-  {id:'purple', name:'퍼플',    color:'#7c3aed'},
-  {id:'kakao',  name:'골드',    color:'#ca8a04'},
+  {id:'white',  name:'화이트',  color:'#ffffff'},
 ];
 
 /* ★ 테마 적용 — html 요소에만 class 조작 */
@@ -669,13 +664,16 @@ function setTheme(t){
 
 function doBackup(){
   var data={logs:logs,cfg:cfg,version:'rl9',date:new Date().toISOString()};
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var json=JSON.stringify(data,null,2);
+  var filename='레미콘운행일지_백업_'+new Date().toISOString().slice(0,10)+'.json';
+  /* iOS PWA는 a.click() 다운로드가 안 돼서 새 탭으로 열어 공유/저장 유도 */
+  var blob=new Blob([json],{type:'application/json'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
-  a.href=url;a.download='레미콘운행일지_백업_'+new Date().toISOString().slice(0,10)+'.json';
+  a.href=url;a.download=filename;a.target='_blank';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('💾 백업 파일 다운로드 완료!');
+  setTimeout(function(){URL.revokeObjectURL(url);},3000);
+  showToast('💾 백업 파일을 저장해주세요!');
 }
 function doRestore(ev){
   var file=ev.target.files[0];if(!file)return;

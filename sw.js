@@ -1,4 +1,4 @@
-var CACHE = 'remicon-log-v2';
+var CACHE = 'remicon-log-v4';
 var FILES = [
   './',
   './index.html',

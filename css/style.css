@@ -51,24 +51,22 @@
   --th-btn-save:#ffffff;
 }
 
-/* ── 테마별 액센트 오버라이드 (다크 캔버스 유지, 액센트만 변경) ── */
-html.theme-dark{
-  --th-accent:#60a5fa;--th-nav-active:#60a5fa;--th-btn-save:#60a5fa;
-}
-html.theme-red{
-  --th-accent:#f87171;--th-nav-active:#f87171;--th-btn-save:#f87171;
-}
-html.theme-green{
-  --th-accent:#34d399;--th-nav-active:#34d399;--th-btn-save:#34d399;
-}
-html.theme-orange{
-  --th-accent:#fbbf24;--th-nav-active:#fbbf24;--th-btn-save:#fbbf24;
-}
-html.theme-purple{
-  --th-accent:#a78bfa;--th-nav-active:#a78bfa;--th-btn-save:#a78bfa;
-}
-html.theme-kakao{
-  --th-accent:#fcd34d;--th-nav-active:#fcd34d;--th-btn-save:#fcd34d;
+/* ── 화이트 테마 (전체 팔레트 반전) ── */
+html.theme-white{
+  --th-primary:#ffffff;
+  --th-primary-dark:#f0f0fa;
+  --th-accent:#000000;
+  --th-bg:#ffffff;
+  --th-bg2:#f0f0fa;
+  --th-border:#d0d0d8;
+  --th-text:#000000;
+  --th-muted:#5a5a5f;
+  --th-nav-active:#000000;
+  --th-btn-save:#000000;
+  --on-primary:#000000;
+  --canvas-night:#ffffff;
+  --canvas-night-soft:#f0f0fa;
+  --hairline-dark:#d0d0d8;
 }
 
 /* ── 폰트 기본 ── */
@@ -565,7 +563,7 @@ body{
 .backup-btn.danger{background:transparent;color:#f87171;border-color:#f87171}
 
 /* ── 테마 선택 (단일 팔레트로 단순화) ── */
-.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:4px 0 8px}
+.theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding:4px 0 8px}
 .theme-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
 .theme-circle{
   width:52px;
