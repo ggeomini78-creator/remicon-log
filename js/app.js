@@ -9,17 +9,12 @@ var logs = JSON.parse(localStorage.getItem('rl9_logs')||localStorage.getItem('rl
 var cfg  = JSON.parse(localStorage.getItem('rl9_cfg') ||localStorage.getItem('rl8_cfg') ||
   '{"unitPrice":74300,"fuelRate":0.55,"otRate":18000,"fuelPrice":1500,"toll1":3600,"toll2":2400,"initKm":125000,"ot2Pay":0,"theme":"default"}');
 if(!cfg.ot2Pay)  cfg.ot2Pay=0;
-if(!cfg.theme)   cfg.theme='default';
+if(!cfg.theme||['dark','red','green','orange','purple','kakao'].indexOf(cfg.theme)>=0) cfg.theme='default';
 
 /* ── 테마 목록 ── */
 var THEMES=[
   {id:'default',name:'SpaceX',  color:'#000000'},
-  {id:'dark',   name:'블루',    color:'#1e40af'},
-  {id:'red',    name:'레드',    color:'#dc2626'},
-  {id:'green',  name:'그린',    color:'#059669'},
-  {id:'orange', name:'오렌지',  color:'#d97706'},
-  {id:'purple', name:'퍼플',    color:'#7c3aed'},
-  {id:'kakao',  name:'골드',    color:'#ca8a04'},
+  {id:'white',  name:'화이트',  color:'#ffffff'},
 ];
 
 /* ★ 테마 적용 — html 요소에만 class 조작 */
