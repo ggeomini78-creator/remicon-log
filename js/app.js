@@ -539,6 +539,7 @@ function rAnnual(){
   var y=annualYear;
   var annWd=0,annCalls=0,annKm=0,annOT=0,annOTpay=0,annToll=0,annRep=0,annBase=0,annTotal=0;
   var rows='';
+  var activeMonths=0;
   for(var mi=0;mi<12;mi++){
     var mp2=y+'-'+String(mi+1).padStart(2,'0');
     var ml2=Object.entries(logs).filter(function(e){return e[0].startsWith(mp2);});
@@ -546,6 +547,7 @@ function rAnnual(){
       rows+='<tr><td style="padding:8px 10px;font-size:12px;color:var(--th-muted)">'+(mi+1)+'월</td><td colspan="5" style="padding:8px 6px;font-size:11px;color:var(--th-muted);text-align:center">기록 없음</td></tr>';
       continue;
     }
+    activeMonths++;
     var wd2=ml2.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
     var tc2=ml2.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
     var km2=ml2.reduce(function(s,e){return s+(parseInt(e[1].ekm||0)-parseInt(e[1].skm||0));},0);
@@ -568,6 +570,7 @@ function rAnnual(){
       +'</tr>';
   }
   var avgCalls=annWd>0?(annCalls/annWd).toFixed(1):'0';
+  var avgMonthly=activeMonths>0?Math.round(annTotal/activeMonths):0;
   var h='<div class="sp">'
   +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><button class="ma" onclick="pyear()">‹</button><span style="font-size:18px;font-weight:700;color:var(--th-text)">'+y+'년 연말결산</span><button class="ma" onclick="nyear()">›</button></div>'
   +'<div class="mgrid" style="margin-bottom:12px">'
@@ -602,7 +605,7 @@ function rAnnual(){
   +'<div style="background:linear-gradient(135deg,#065f46,#047857);border-radius:12px;padding:18px 16px;text-align:center;margin-bottom:16px">'
   +'<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px">'+y+'년 연간 총 수령액 (유류 별도)</div>'
   +'<div style="font-size:'+(annTotal>=100000000?'22px':'28px')+'px;font-weight:700;color:#fff">'+annTotal.toLocaleString()+'원</div>'
-  +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:6px">월 평균 '+(annTotal/12).toLocaleString()+'원 · 총 '+annWd+'일 근무</div>'
+  +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:6px">월 평균 '+avgMonthly.toLocaleString()+'원 · 총 '+annWd+'일 근무</div>'
   +'</div></div>';
   document.getElementById('mc').innerHTML=h;
 }
