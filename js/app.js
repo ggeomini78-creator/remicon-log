@@ -9,7 +9,7 @@ var logs = JSON.parse(localStorage.getItem('rl9_logs')||localStorage.getItem('rl
 var cfg  = JSON.parse(localStorage.getItem('rl9_cfg') ||localStorage.getItem('rl8_cfg') ||
   '{"unitPrice":74300,"fuelRate":0.55,"otRate":18000,"fuelPrice":1500,"toll1":3600,"toll2":2400,"initKm":125000,"ot2Pay":0,"theme":"default"}');
 if(!cfg.ot2Pay)  cfg.ot2Pay=0;
-if(!cfg.theme||['dark','red','green','orange','purple','kakao'].indexOf(cfg.theme)>=0) cfg.theme='default';
+if(!cfg.theme||['dark','red','green','orange','purple','kakao','linear'].indexOf(cfg.theme)>=0) cfg.theme='default';
 
 /* ── 테마 목록 ── */
 var THEMES=[
@@ -78,9 +78,11 @@ function calcPrevKm(targetDate){
 function go(t){
   tab=t;
   ['Calendar','Entry','Stats','Annual','Config'].forEach(function(x){
-    document.getElementById('nb'+x).classList.remove('on');
+    var btn=document.getElementById('nb'+x);
+    if(btn) btn.classList.remove('on');
   });
-  document.getElementById('nb'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('on');
+  var activeBtn=document.getElementById('nb'+t.charAt(0).toUpperCase()+t.slice(1));
+  if(activeBtn) activeBtn.classList.add('on');
   render();
 }
 var slideDir=0;
@@ -134,15 +136,15 @@ function rCal(){
     else if(log.st==='repair') badge='<div class="cbadge-off off-r">정비</div>';
     else if(col) badge='<div class="cbadge" style="background:'+col.b+';color:'+col.t+'">'+calls+'</div>';
     var mn='';
-    if(ww>0) mn+='<div class="mbadge wbadge">'+(ww>1?ww:'')+'W</div>';
-    if(ot2) mn+='<div class="mbadge ot2badge">2시↑</div>';
+    if(ww>0) mn+='<div class="mbadge ww">'+(ww>1?ww:'')+'W</div>';
+    if(ot2) mn+='<div class="mbadge ot2">2시↑</div>';
     h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')">'
       +'<span class="dn">'+d+'</span>'+badge
       +(mn?'<div class="mini-row">'+mn+'</div>':'')
       +'<div class="mini-row" style="margin-top:1px">'
-      +(parseFloat(log.fuel)>0?'<div class="mbadge" style="background:#dcfce7;color:#065f46">주유</div>':'')
-      +(parseFloat(log.ot)>0?'<div class="mbadge" style="background:#ede9fe;color:#5b21b6">OT</div>':'')
-      +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge" style="background:#dbeafe;color:#1e40af">톨비</div>':'')
+      +(parseFloat(log.fuel)>0?'<div class="mbadge fuel">주유</div>':'')
+      +(parseFloat(log.ot)>0?'<div class="mbadge ot">OT</div>':'')
+      +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge toll">톨비</div>':'')
       +''
       +'</div></div>';
   }
@@ -480,7 +482,7 @@ function rStats(){
   +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><button class="ma" onclick="pm()">‹</button><span style="font-size:15px;font-weight:600">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>'
   +'<div class="sec">이달 기본 현황</div>'
   +'<div class="mgrid">'
-  +'<div class="mc dk full"><div class="mk">기본급</div><div class="mv" style="color:#fff;font-size:'+(base>=1000000?'16px':'20px')+'">'+base.toLocaleString()+'<span class="mu" style="color:rgba(255,255,255,.6);font-size:11px">원</span></div></div>'
+  +'<div class="mc dk full"><div class="mk">기본급</div><div class="mv" style="font-size:'+(base>=1000000?'16px':'20px')+'">'+base.toLocaleString()+'<span class="mu" style="font-size:11px">원</span></div></div>'
   +'<div class="mc"><div class="mk">근무일</div><div class="mv">'+wd+'<span class="mu">일</span></div></div>'
   +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+tc+'<span class="mu">바리</span></div></div>'
   +'<div class="mc"><div class="mk">운반량</div><div class="mv">'+tv.toFixed(1)+'<span class="mu">㎥</span></div></div>'
@@ -521,9 +523,9 @@ function rStats(){
   +(tollMonT>0?'<div class="fr"><span class="fk">톨비 지급</span><span class="fv" style="color:var(--th-accent)">+'+tollMonT.toLocaleString()+'원</span></div>':'')
   +(mRepCost>0?'<div class="fr"><span class="fk">정비비 차감</span><span class="fv" style="color:#dc2626">−'+mRepCost.toLocaleString()+'원</span></div>':'')
   +'</div>'
-  +'<div style="background:var(--th-primary);border-radius:10px;padding:16px;text-align:center;margin-bottom:16px">'
-  +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:6px">'+(m+1)+'월 수령 예정액 (유류 별도)</div>'
-  +'<div style="font-size:'+(monthTotal>=10000000?'20px':monthTotal>=1000000?'24px':'28px')+'px;font-weight:700;color:#fff">'+monthTotal.toLocaleString()+'원</div>'
+  +'<div style="background:var(--th-bg2);border:1px solid var(--th-border);border-radius:10px;padding:16px;text-align:center;margin-bottom:16px">'
+  +'<div style="font-size:12px;color:var(--th-muted);margin-bottom:6px">'+(m+1)+'월 수령 예정액 (유류 별도)</div>'
+  +'<div style="font-size:'+(monthTotal>=10000000?'20px':monthTotal>=1000000?'24px':'28px')+'px;font-weight:700;color:var(--th-text)">'+monthTotal.toLocaleString()+'원</div>'
   +'</div>'
   +'</div>';
   document.getElementById('mc').innerHTML=h;
@@ -569,7 +571,7 @@ function rAnnual(){
   var h='<div class="sp">'
   +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><button class="ma" onclick="pyear()">‹</button><span style="font-size:18px;font-weight:700;color:var(--th-text)">'+y+'년 연말결산</span><button class="ma" onclick="nyear()">›</button></div>'
   +'<div class="mgrid" style="margin-bottom:12px">'
-  +'<div class="mc dk full"><div class="mk">연간 총 수령액 (유류 별도)</div><div class="mv" style="color:#fff;font-size:'+(annTotal>=100000000?'14px':annTotal>=10000000?'16px':'18px')+'">'+annTotal.toLocaleString()+'<span class="mu" style="color:rgba(255,255,255,.6);font-size:11px">원</span></div></div>'
+  +'<div class="mc dk full"><div class="mk">연간 총 수령액 (유류 별도)</div><div class="mv" style="font-size:'+(annTotal>=100000000?'14px':annTotal>=10000000?'16px':'18px')+'">'+annTotal.toLocaleString()+'<span class="mu" style="font-size:11px">원</span></div></div>'
   +'<div class="mc"><div class="mk">총 근무일</div><div class="mv">'+annWd+'<span class="mu">일</span></div></div>'
   +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+annCalls+'<span class="mu">바리</span></div></div>'
   +'<div class="mc"><div class="mk">일 평균 바리</div><div class="mv">'+avgCalls+'<span class="mu">바리</span></div></div>'
@@ -581,21 +583,21 @@ function rAnnual(){
   +'<div style="font-size:11px;font-weight:700;color:var(--th-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">월별 상세</div>'
   +'<div style="background:var(--th-bg2);border-radius:10px;overflow:hidden;border:0.5px solid var(--th-border);margin-bottom:12px">'
   +'<table style="width:100%;border-collapse:collapse">'
-  +'<thead><tr style="background:var(--th-primary)">'
-  +'<th style="padding:8px 10px;font-size:11px;color:rgba(255,255,255,.7);font-weight:600;text-align:left">월</th>'
-  +'<th style="padding:8px 4px;font-size:10px;color:rgba(255,255,255,.7);font-weight:600;text-align:right">근무</th>'
-  +'<th style="padding:8px 4px;font-size:10px;color:rgba(255,255,255,.7);font-weight:600;text-align:right">바리</th>'
-  +'<th style="padding:8px 4px;font-size:10px;color:rgba(255,255,255,.7);font-weight:600;text-align:right">기본급</th>'
-  +'<th style="padding:8px 4px;font-size:10px;color:rgba(255,255,255,.7);font-weight:600;text-align:right">오티</th>'
-  +'<th style="padding:8px 10px;font-size:10px;color:rgba(255,255,255,.7);font-weight:600;text-align:right">합계</th>'
+  +'<thead><tr style="background:var(--th-primary-dark);border-bottom:1px solid var(--th-border)">'
+  +'<th style="padding:8px 10px;font-size:11px;color:var(--th-muted);font-weight:600;text-align:left">월</th>'
+  +'<th style="padding:8px 4px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">근무</th>'
+  +'<th style="padding:8px 4px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">바리</th>'
+  +'<th style="padding:8px 4px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">기본급</th>'
+  +'<th style="padding:8px 4px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">오티</th>'
+  +'<th style="padding:8px 10px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">합계</th>'
   +'</tr></thead><tbody>'+rows+'</tbody>'
-  +'<tfoot><tr style="background:var(--th-primary)">'
-  +'<td style="padding:10px;font-size:12px;font-weight:700;color:#fff">합계</td>'
-  +'<td style="padding:10px 4px;font-size:11px;color:rgba(255,255,255,.7);text-align:right">'+annWd+'일</td>'
-  +'<td style="padding:10px 4px;font-size:11px;color:rgba(255,255,255,.7);text-align:right">'+annCalls+'</td>'
-  +'<td style="padding:10px 4px;font-size:10px;color:rgba(255,255,255,.9);text-align:right">'+annBase.toLocaleString()+'</td>'
-  +'<td style="padding:10px 4px;font-size:10px;color:#a78bfa;text-align:right">'+annOTpay.toLocaleString()+'</td>'
-  +'<td style="padding:10px;font-size:12px;font-weight:700;color:#60a5fa;text-align:right">'+annTotal.toLocaleString()+'</td>'
+  +'<tfoot><tr style="background:var(--th-primary-dark);border-top:1px solid var(--th-border)">'
+  +'<td style="padding:10px;font-size:12px;font-weight:700;color:var(--th-text)">합계</td>'
+  +'<td style="padding:10px 4px;font-size:11px;color:var(--th-muted);text-align:right">'+annWd+'일</td>'
+  +'<td style="padding:10px 4px;font-size:11px;color:var(--th-muted);text-align:right">'+annCalls+'</td>'
+  +'<td style="padding:10px 4px;font-size:10px;color:var(--th-text);text-align:right">'+annBase.toLocaleString()+'</td>'
+  +'<td style="padding:10px 4px;font-size:10px;color:#7c3aed;text-align:right">'+annOTpay.toLocaleString()+'</td>'
+  +'<td style="padding:10px;font-size:12px;font-weight:700;color:var(--th-accent);text-align:right">'+annTotal.toLocaleString()+'</td>'
   +'</tr></tfoot></table></div>'
   +'<div style="background:linear-gradient(135deg,#065f46,#047857);border-radius:12px;padding:18px 16px;text-align:center;margin-bottom:16px">'
   +'<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px">'+y+'년 연간 총 수령액 (유류 별도)</div>'
