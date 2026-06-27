@@ -726,3 +726,74 @@ function doReset(){
 
 /* ── 시작 ── */
 render();
+
+/* ── 당겨서 새로고침 (Pull to Refresh) ── */
+(function() {
+  var ptr = document.getElementById('ptr-indicator');
+  var content = document.getElementById('mc');
+  var startY = 0, startX = 0, currentY = 0, currentX = 0, isPulling = false;
+  var threshold = 70; // 당겨야 하는 최소 거리 (px)
+
+  if (!ptr || !content) return;
+
+  document.addEventListener('touchstart', function(e) {
+    if (content.scrollTop <= 0) {
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+      isPulling = true;
+      ptr.style.transition = 'none';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!isPulling) return;
+    currentY = e.touches[0].clientY;
+    currentX = e.touches[0].clientX;
+    
+    var dy = currentY - startY;
+    var dx = currentX - startX;
+
+    if (dy > 0 && Math.abs(dy) > Math.abs(dx)) {
+      var dragDistance = Math.min(dy * 0.4, threshold + 20);
+      ptr.style.transform = 'translateY(' + dragDistance + 'px)';
+      ptr.style.opacity = Math.min(dragDistance / threshold, 1);
+
+      if (dragDistance >= threshold) {
+        ptr.classList.add('active');
+        ptr.querySelector('.ptr-text').textContent = '놓아서 새로고침';
+      } else {
+        ptr.classList.remove('active');
+        ptr.querySelector('.ptr-text').textContent = '당겨서 새로고침';
+      }
+    } else if (dy < 0) {
+      isPulling = false;
+      ptr.style.transform = 'translateY(0)';
+      ptr.style.opacity = '0';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    if (!isPulling) return;
+    isPulling = false;
+    ptr.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+
+    var dy = currentY - startY;
+    var dragDistance = Math.min(dy * 0.4, threshold + 20);
+
+    if (dragDistance >= threshold) {
+      ptr.style.transform = 'translateY(' + threshold + 'px)';
+      ptr.classList.add('loading');
+      ptr.querySelector('.ptr-text').textContent = '업데이트 중...';
+      setTimeout(function() {
+        window.location.reload();
+      }, 600);
+    } else {
+      ptr.style.transform = 'translateY(0)';
+      ptr.style.opacity = '0';
+    }
+    startY = 0;
+    startX = 0;
+    currentY = 0;
+    currentX = 0;
+  });
+})();

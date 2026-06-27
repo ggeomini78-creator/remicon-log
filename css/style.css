@@ -114,6 +114,8 @@ body{
   color:var(--on-primary);
   min-height:100vh;
   min-height:100dvh;
+  position: relative;
+  overflow: hidden;
 }
 
 /* ── 헤더 ── */
@@ -602,3 +604,35 @@ body{
 }
 .theme-item.selected .theme-circle{border-color:var(--on-primary);transform:scale(1.1)}
 .theme-name{font-size:9px;color:var(--th-muted);text-align:center;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+
+/* ── 당겨서 새로고침 (Pull to Refresh) ── */
+.ptr-indicator {
+  position: absolute;
+  top: -60px;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--th-muted);
+  background: var(--canvas-night-soft);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  border-bottom: 1px solid var(--hairline-dark);
+}
+.ptr-indicator.active {
+  color: var(--th-accent);
+}
+.ptr-indicator.loading .ptr-icon {
+  animation: ptr-spin 1s linear infinite;
+}
+@keyframes ptr-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
