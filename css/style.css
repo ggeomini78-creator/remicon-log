@@ -100,6 +100,7 @@ body{
   overscroll-behavior:none;
   user-select:none;
   -webkit-user-select:none;
+  touch-action:manipulation;
   background:var(--canvas-night);
   color:var(--on-primary);
 }

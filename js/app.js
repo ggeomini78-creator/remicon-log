@@ -797,3 +797,14 @@ render();
     currentX = 0;
   });
 })();
+
+/* ── 두 손가락 확대(Pinch-to-Zoom) 및 제스처 확대 방지 ── */
+document.addEventListener('touchstart', function(e) {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+document.addEventListener('gesturestart', function(e) {
+  e.preventDefault();
+});
