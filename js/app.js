@@ -3,6 +3,7 @@ var tab='calendar', cd=new Date(), sel=null;
 var cSt='work', ol=[], wwList=[], repList=[];
 var annualYear=new Date().getFullYear();
 var swipeStartX=0, swipeStartY=0, swipeLock=false;
+var navLock=false;
 
 /* ── 데이터 로드 ── */
 var logs = JSON.parse(localStorage.getItem('rl9_logs')||localStorage.getItem('rl8_logs')||'{}');
@@ -10,6 +11,7 @@ var cfg  = JSON.parse(localStorage.getItem('rl9_cfg') ||localStorage.getItem('rl
   '{"unitPrice":74300,"fuelRate":0.55,"otRate":18000,"fuelPrice":1500,"toll1":3600,"toll2":2400,"initKm":125000,"ot2Pay":0,"theme":"default"}');
 if(!cfg.ot2Pay)  cfg.ot2Pay=0;
 if(!cfg.theme||['dark','red','green','orange','purple','kakao','linear'].indexOf(cfg.theme)>=0) cfg.theme='default';
+cfg.monthlyUnitPrices = cfg.monthlyUnitPrices || {};
 
 /* ── 테마 목록 ── */
 var THEMES=[
@@ -28,6 +30,18 @@ function applyTheme(t){
 applyTheme(cfg.theme);
 
 /* ── 유틸 ── */
+function getUnitPrice(y, m) {
+  var key = y + '-' + String(m + 1).padStart(2, '0');
+  if (cfg.monthlyUnitPrices && cfg.monthlyUnitPrices[key] !== undefined) {
+    return cfg.monthlyUnitPrices[key];
+  }
+  return cfg.unitPrice;
+}
+function setMonthlyPrice(y, m, price) {
+  cfg.monthlyUnitPrices = cfg.monthlyUnitPrices || {};
+  var key = y + '-' + String(m + 1).padStart(2, '0');
+  cfg.monthlyUnitPrices[key] = price;
+}
 function sv(){
   localStorage.setItem('rl9_logs',JSON.stringify(logs));
   localStorage.setItem('rl9_cfg', JSON.stringify(cfg));
@@ -76,6 +90,10 @@ function calcPrevKm(targetDate){
 
 /* ── 네비게이션 ── */
 function go(t){
+  if(navLock) return;
+  navLock=true;
+  setTimeout(function(){navLock=false;},300);
+
   tab=t;
   ['Calendar','Entry','Stats','Annual','Config'].forEach(function(x){
     var btn=document.getElementById('nb'+x);
@@ -108,7 +126,7 @@ function rCal(){
   var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});
   var wd=ml.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
   var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
-  var ep=tc*cfg.unitPrice;
+  var ep=tc*getUnitPrice(y,m);
   var epStr=ep>0?ep.toLocaleString()+'원':'0원';
 
   var animClass=slideDir===1?'anim-left':(slideDir===-1?'anim-right':'');
@@ -474,7 +492,8 @@ function rStats(){
   var ot2I=[];ml.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){ot2I.push({date:e[0],site:x.site,mgr:x.mgr,type:x.type,settled:x.settled});});});
   var ot2Monthly=ot2I.filter(function(x){return x.type==='monthly'&&!(x.settled===true||x.settled==='true');});
   var wwItems=[];ml.forEach(function(e){JSON.parse(e[1].wwList||'[]').forEach(function(x){wwItems.push({date:e[0],site:x.site});});});
-  var base=tc*cfg.unitPrice;
+  var monthUnitPrice=getUnitPrice(y,m);
+  var base=tc*monthUnitPrice;
   var ot2Pay2=ot2Monthly.length*cfg.ot2Pay;
   var monthTotal=base+totA+ot2Pay2+tollMonT-mRepCost;
 
@@ -517,7 +536,7 @@ function rStats(){
   +(ot2Monthly.length?'<div style="background:#fef2f2;border:0.5px solid #fca5a5;border-radius:8px;padding:9px 12px;margin-top:6px;font-size:12px;color:#991b1b">⚠️ 월말 결산 필요: '+ot2Monthly.length+'건</div>':'')
   +(mRepCost>0?'<div class="sec">차량 정비 비용</div><div class="fb"><div class="fr"><span class="fk">이달 정비 비용</span><span class="fv" style="color:#dc2626">'+mRepCost.toLocaleString()+'원</span></div></div>':'')
   +'<div class="sec" style="margin-top:24px">📋 '+(m+1)+'월 최종 결산 (유류 별도)</div>'
-  +'<div class="fb"><div class="fr"><span class="fk">기본급 ('+tc+'바리 × '+cfg.unitPrice.toLocaleString()+'원)</span><span class="fv">+'+base.toLocaleString()+'원</span></div>'
+  +'<div class="fb"><div class="fr"><span class="fk">기본급 ('+tc+'바리 × '+monthUnitPrice.toLocaleString()+'원)</span><span class="fv">+'+base.toLocaleString()+'원</span></div>'
   +(totA>0?'<div class="fr"><span class="fk">오티 수당</span><span class="fv" style="color:#7c3aed">+'+totA.toLocaleString()+'원</span></div>':'')
   +(ot2Pay2>0?'<div class="fr"><span class="fk">2시간초과 수당</span><span class="fv" style="color:#7c3aed">+'+ot2Pay2.toLocaleString()+'원</span></div>':'')
   +(tollMonT>0?'<div class="fr"><span class="fk">톨비 지급</span><span class="fv" style="color:var(--th-accent)">+'+tollMonT.toLocaleString()+'원</span></div>':'')
@@ -555,7 +574,7 @@ function rAnnual(){
     var otP2=ot2*cfg.otRate;
     var toll2=ml2.reduce(function(s,e){return s+(parseInt(e[1].t1||0))*cfg.toll1+(parseInt(e[1].t2||0))*cfg.toll2;},0);
     var rep2=ml2.reduce(function(s,e){return s+(JSON.parse(e[1].repList||'[]')).reduce(function(rs,r){return rs+(parseInt(r.cost)||0);},0);},0);
-    var base2=tc2*cfg.unitPrice;
+    var base2=tc2*getUnitPrice(y,mi);
     var ot2M2=[];ml2.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){if(x.type==='monthly'&&!(x.settled===true||x.settled==='true'))ot2M2.push(x);});});
     var ot2P2=ot2M2.length*cfg.ot2Pay;
     var mTot2=base2+otP2+ot2P2+toll2-rep2;
@@ -619,15 +638,18 @@ function rConfig(){
       +'<span class="theme-name">'+t.name+'</span>'
       +'</div>';
   }).join('');
+  var cy = cd.getFullYear(), cm = cd.getMonth();
+  var curMonthPrice = getUnitPrice(cy, cm);
   var h='<div class="cfg-page">'
   +'<div class="cfg-sec">🎨 테마 색상</div>'
   +'<div style="background:var(--th-bg2);border-radius:10px;padding:12px 14px;margin-bottom:12px;border:0.5px solid var(--th-border)">'
   +'<p style="font-size:12px;color:var(--th-muted);margin-bottom:12px">테마를 선택하면 앱 전체 색이 바뀌어요</p>'
   +'<div class="theme-grid">'+themeHtml+'</div>'
   +'</div>'
-  +'<div class="cfg-sec">급여 설정</div>'
+  +'<div class="cfg-sec">급여 설정 (' + (cm + 1) + '월 기준)</div>'
   +'<div class="sblk">'
-  +'<div class="srow"><div><span class="slbl">바리당 단가</span><span class="slbl-sub">바리수 × 단가 = 기본급</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">' + (cm + 1) + '월 바리당 단가</span><span class="slbl-sub">선택된 월에만 적용되는 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="' + curMonthPrice + '" oninput="setMonthlyPrice(' + cy + ',' + cm + ', +this.value);sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">기본 바리당 단가</span><span class="slbl-sub">신규 월 시작 시 기본값</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">오티 시간당</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.otRate+'" oninput="cfg.otRate=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">2시간초과 건당</span><span class="slbl-sub">미정산 건에만 적용</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.ot2Pay+'" placeholder="0" oninput="cfg.ot2Pay=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
   +'</div>'
@@ -737,7 +759,7 @@ render();
   if (!ptr || !content) return;
 
   document.addEventListener('touchstart', function(e) {
-    if (content.scrollTop <= 0) {
+    if (tab === 'calendar' && content.scrollTop <= 0) {
       startY = e.touches[0].clientY;
       startX = e.touches[0].clientX;
       isPulling = true;
@@ -746,7 +768,7 @@ render();
   }, { passive: true });
 
   document.addEventListener('touchmove', function(e) {
-    if (!isPulling) return;
+    if (tab !== 'calendar' || !isPulling) return;
     currentY = e.touches[0].clientY;
     currentX = e.touches[0].clientX;
     
@@ -773,7 +795,7 @@ render();
   }, { passive: true });
 
   document.addEventListener('touchend', function(e) {
-    if (!isPulling) return;
+    if (tab !== 'calendar' || !isPulling) return;
     isPulling = false;
     ptr.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
 
