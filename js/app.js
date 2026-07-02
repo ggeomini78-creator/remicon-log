@@ -12,6 +12,7 @@ var cfg  = JSON.parse(localStorage.getItem('rl9_cfg') ||localStorage.getItem('rl
 if(!cfg.ot2Pay)  cfg.ot2Pay=0;
 if(!cfg.theme||['dark','red','green','orange','purple','kakao','linear'].indexOf(cfg.theme)>=0) cfg.theme='default';
 cfg.monthlyUnitPrices = cfg.monthlyUnitPrices || {};
+if(cfg.wwRate===undefined) cfg.wwRate=0;
 
 /* ── 테마 목록 ── */
 var THEMES=[
@@ -331,6 +332,12 @@ function rEntry(){
   }
   var log=logs[sel]||{};
   var pts=sel.split('-'),y=pts[0],m=pts[1],d=pts[2];
+  var prevEkm = '';
+  var prevDate = new Date(+y, +m - 1, +d - 1);
+  var prevKey = dk(prevDate.getFullYear(), prevDate.getMonth(), prevDate.getDate());
+  if (logs[prevKey] && logs[prevKey].ekm) {
+    prevEkm = logs[prevKey].ekm;
+  }
   var dow=['일','월','화','수','목','금','토'][new Date(+y,+m-1,+d).getDay()];
   document.getElementById('hS').textContent=y+'.'+m+'.'+d+' ('+dow+')';
   cSt=log.st||'work';
@@ -362,7 +369,7 @@ function rEntry(){
   +'<div class="shdr">기본 운행</div>'
   +'<div class="r2"><div class="field"><label class="fl">바리수</label><input type="number" id="fC" value="'+(log.calls||'')+'" placeholder="0" min="0" max="30" oninput="aVol()"></div>'
   +'<div class="field"><label class="fl">운반량 (㎥)</label><input type="number" id="fV" value="'+(log.vol||'')+'" placeholder="자동입력" step="0.5"></div></div>'
-  +'<div class="r2"><div class="field"><label class="fl">시작 km</label><input type="number" id="fSk" value="'+(log.skm||'')+'" placeholder="7924" oninput="uKm()"></div>'
+  +'<div class="r2"><div class="field"><label class="fl">시작 km</label><input type="number" id="fSk" value="'+(log.skm||prevEkm||'')+'" placeholder="'+(prevEkm||'7924')+'" oninput="uKm()"></div>'
   +'<div class="field"><label class="fl">종료 km</label><input type="number" id="fEk" value="'+(log.ekm||'')+'" placeholder="7999" oninput="uKm()"></div></div>'
   +'<div class="kmh" id="kmH">'+(kmD>0?'✅ 오늘 운행거리: '+kmD+'km':'종료km 입력 시 자동계산')+'</div>'
   +'<div class="km-card" id="kmCard">'
@@ -479,6 +486,40 @@ function rStats(){
   var tollMon1=tt1*cfg.toll1,tollMon2=tt2*cfg.toll2,tollMonT=tollMon1+tollMon2;
   var mRepCost=ml.reduce(function(s,e){return s+(JSON.parse(e[1].repList||'[]')).reduce(function(rs,r){return rs+(parseInt(r.cost)||0);},0);},0);
   var fu=fuelMonth(y,m);
+
+  var tollDays = [];
+  ml.forEach(function(e) {
+    var log = e[1];
+    var t1 = parseInt(log.t1 || 0);
+    var t2 = parseInt(log.t2 || 0);
+    var tot = tollTotal(t1, t2);
+    if (tot > 0) {
+      var pts = e[0].split('-');
+      tollDays.push({
+        day: parseInt(pts[2]),
+        t1: t1,
+        t2: t2,
+        total: tot
+      });
+    }
+  });
+  tollDays.sort(function(a, b) { return a.day - b.day; });
+
+  var tollDetailHtml = '';
+  if (tollDays.length > 0) {
+    tollDetailHtml = '<div class="toll-detail-list" style="margin-top:8px; border-top:1px dashed var(--th-border); padding-top:8px; font-size:12px; color:var(--th-muted);">';
+    tollDays.forEach(function(td) {
+      var detail = [];
+      if (td.t1 > 0) detail.push('3,600원 ' + td.t1 + '회');
+      if (td.t2 > 0) detail.push('2,400원 ' + td.t2 + '회');
+      tollDetailHtml += '<div style="display:flex; justify-content:space-between; margin-bottom:4px;">'
+        + '<span>' + td.day + '일 (' + detail.join(', ') + ')</span>'
+        + '<span>' + td.total.toLocaleString() + '원</span>'
+        + '</div>';
+    });
+    tollDetailHtml += '</div>';
+  }
+
   /* ★ 유류: 소비>주유=받음, 소비<주유=차감 */
   var fuelDiff=+(fu.mu-fu.mf).toFixed(2);
   var fuelLabel=fuelDiff>=0?'🟢 초과소비 +'+fuelDiff.toFixed(1)+'L — 지급 받음':'🔴 잔량 '+Math.abs(fuelDiff).toFixed(1)+'L — 도급비 차감';
@@ -495,7 +536,8 @@ function rStats(){
   var monthUnitPrice=getUnitPrice(y,m);
   var base=tc*monthUnitPrice;
   var ot2Pay2=ot2Monthly.length*cfg.ot2Pay;
-  var monthTotal=base+totA+ot2Pay2+tollMonT-mRepCost;
+  var wwPay=tww*(cfg.wwRate||0);
+  var monthTotal=base+totA+ot2Pay2+tollMonT+wwPay-mRepCost;
 
   var h='<div class="sp">'
   +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><button class="ma" onclick="pm()">‹</button><span style="font-size:15px;font-weight:600">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>'
@@ -518,12 +560,13 @@ function rStats(){
   +'<div class="sec">오티 수당</div>'
   +'<div class="fb"><div class="fr"><span class="fk">이달 오티 시간</span><span class="fv">'+tot+'시간</span></div>'
   +'<div class="fr"><span class="fk">오티 수당 합계</span><span class="fv" style="color:#7c3aed">'+totA.toLocaleString()+'원</span></div></div>'
-  +'<div class="sec">폐수처리 ('+tww+'건)</div>'
+  +'<div class="sec">폐수처리 ('+tww+'건 / 합계 '+wwPay.toLocaleString()+'원)</div>'
   +(wwItems.length?wwItems.map(function(e){var p=e.date.split('-');return'<div class="wwi"><div class="ot2d">'+p[1]+'월 '+p[2]+'일</div><div class="ot2n">'+(e.site||'현장 미입력')+'</div></div>';}).join(''):'<div class="emsg">이달 폐수처리 없음</div>')
   +'<div class="sec">톨비 (울산대교)</div>'
   +'<div class="fb"><div class="fr"><span class="fk">3,600원 통행</span><span class="fv">'+tt1+'회 = '+tollMon1.toLocaleString()+'원</span></div>'
   +'<div class="fr"><span class="fk">2,400원 통행</span><span class="fv">'+tt2+'회 = '+tollMon2.toLocaleString()+'원</span></div>'
-  +'<div class="fr"><span class="fk" style="font-weight:700">월 톨비 합계</span><span class="fv" style="color:var(--th-accent);font-size:15px">'+tollMonT.toLocaleString()+'원</span></div></div>'
+  +'<div class="fr"><span class="fk" style="font-weight:700">월 톨비 합계</span><span class="fv" style="color:var(--th-accent);font-size:15px">'+tollMonT.toLocaleString()+'원</span></div>'
+  +tollDetailHtml+'</div>'
   +'<div class="sec">2시간초과 현황 ('+ot2I.length+'건)</div>'
   +(ot2I.length?ot2I.map(function(e){
     var p=e.date.split('-');
@@ -539,6 +582,7 @@ function rStats(){
   +'<div class="fb"><div class="fr"><span class="fk">기본급 ('+tc+'바리 × '+monthUnitPrice.toLocaleString()+'원)</span><span class="fv">+'+base.toLocaleString()+'원</span></div>'
   +(totA>0?'<div class="fr"><span class="fk">오티 수당</span><span class="fv" style="color:#7c3aed">+'+totA.toLocaleString()+'원</span></div>':'')
   +(ot2Pay2>0?'<div class="fr"><span class="fk">2시간초과 수당</span><span class="fv" style="color:#7c3aed">+'+ot2Pay2.toLocaleString()+'원</span></div>':'')
+  +(wwPay>0?'<div class="fr"><span class="fk">폐수 수당</span><span class="fv" style="color:#059669">+'+wwPay.toLocaleString()+'원</span></div>':'')
   +(tollMonT>0?'<div class="fr"><span class="fk">톨비 지급</span><span class="fv" style="color:var(--th-accent)">+'+tollMonT.toLocaleString()+'원</span></div>':'')
   +(mRepCost>0?'<div class="fr"><span class="fk">정비비 차감</span><span class="fv" style="color:#dc2626">−'+mRepCost.toLocaleString()+'원</span></div>':'')
   +'</div>'
@@ -577,7 +621,9 @@ function rAnnual(){
     var base2=tc2*getUnitPrice(y,mi);
     var ot2M2=[];ml2.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x){if(x.type==='monthly'&&!(x.settled===true||x.settled==='true'))ot2M2.push(x);});});
     var ot2P2=ot2M2.length*cfg.ot2Pay;
-    var mTot2=base2+otP2+ot2P2+toll2-rep2;
+    var ww2=ml2.reduce(function(s,e){return s+(JSON.parse(e[1].wwList||'[]')).length;},0);
+    var wwP2=ww2*(cfg.wwRate||0);
+    var mTot2=base2+otP2+ot2P2+toll2+wwP2-rep2;
     annWd+=wd2;annCalls+=tc2;annKm+=km2;annOT+=ot2;annOTpay+=otP2;annToll+=toll2;annRep+=rep2;annBase+=base2;annTotal+=mTot2;
     rows+='<tr style="border-bottom:0.5px solid var(--th-border)">'
       +'<td style="padding:8px 10px;font-size:13px;font-weight:600;color:var(--th-text)">'+(mi+1)+'월</td>'
@@ -652,6 +698,7 @@ function rConfig(){
   +'<div class="srow"><div><span class="slbl">기본 바리당 단가</span><span class="slbl-sub">신규 월 시작 시 기본값</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">오티 시간당</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.otRate+'" oninput="cfg.otRate=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">2시간초과 건당</span><span class="slbl-sub">미정산 건에만 적용</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.ot2Pay+'" placeholder="0" oninput="cfg.ot2Pay=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">폐수 건당 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+(cfg.wwRate||0)+'" oninput="cfg.wwRate=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
   +'</div>'
   +'<div class="cfg-sec">유류 설정</div>'
   +'<div class="sblk">'
@@ -762,6 +809,8 @@ render();
     if (tab === 'calendar' && content.scrollTop <= 0) {
       startY = e.touches[0].clientY;
       startX = e.touches[0].clientX;
+      currentY = startY;
+      currentX = startX;
       isPulling = true;
       ptr.style.transition = 'none';
     }
