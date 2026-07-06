@@ -333,10 +333,14 @@ function rEntry(){
   var log=logs[sel]||{};
   var pts=sel.split('-'),y=pts[0],m=pts[1],d=pts[2];
   var prevEkm = '';
-  var prevDate = new Date(+y, +m - 1, +d - 1);
-  var prevKey = dk(prevDate.getFullYear(), prevDate.getMonth(), prevDate.getDate());
-  if (logs[prevKey] && logs[prevKey].ekm) {
-    prevEkm = logs[prevKey].ekm;
+  /* 주말이나 연휴 등으로 기록 작성을 며칠 건너뛴 경우에도 이전의 마지막 운행 기록 종료 km를 
+     자동으로 시작 km에 채워주기 위해, 현재 날짜 이전 중 가장 최근에 작성된 로그의 종료 km를 조회합니다. */
+  var pastKeys = Object.keys(logs).filter(function(k) { return k < sel; }).sort();
+  if (pastKeys.length > 0) {
+    var lastKey = pastKeys[pastKeys.length - 1];
+    if (logs[lastKey] && logs[lastKey].ekm) {
+      prevEkm = logs[lastKey].ekm;
+    }
   }
   var dow=['일','월','화','수','목','금','토'][new Date(+y,+m-1,+d).getDay()];
   document.getElementById('hS').textContent=y+'.'+m+'.'+d+' ('+dow+')';
@@ -520,6 +524,35 @@ function rStats(){
     tollDetailHtml += '</div>';
   }
 
+  /* 각 날짜별 오티 수당 상세 내역(몇일 몇시간 얼마)을 조회하여 정렬하고,
+     통계 탭의 오티 수당 섹션 하단에 리스트로 표기하기 위해 마크업을 동적으로 생성합니다. */
+  var otDays = [];
+  ml.forEach(function(e) {
+    var log = e[1];
+    var ot = parseFloat(log.ot || 0);
+    if (ot > 0) {
+      var pts = e[0].split('-');
+      otDays.push({
+        day: parseInt(pts[2]),
+        ot: ot,
+        amount: ot * cfg.otRate
+      });
+    }
+  });
+  otDays.sort(function(a, b) { return a.day - b.day; });
+
+  var otDetailHtml = '';
+  if (otDays.length > 0) {
+    otDetailHtml = '<div class="ot-detail-list" style="margin-top:8px; border-top:1px dashed var(--th-border); padding-top:8px; font-size:12px; color:var(--th-muted);">';
+    otDays.forEach(function(od) {
+      otDetailHtml += '<div style="display:flex; justify-content:space-between; margin-bottom:4px;">'
+        + '<span>' + od.day + '일 (' + od.ot + '시간)</span>'
+        + '<span>' + od.amount.toLocaleString() + '원</span>'
+        + '</div>';
+    });
+    otDetailHtml += '</div>';
+  }
+
   /* ★ 유류: 소비>주유=받음, 소비<주유=차감 */
   var fuelDiff=+(fu.mu-fu.mf).toFixed(2);
   var fuelLabel=fuelDiff>=0?'🟢 초과소비 +'+fuelDiff.toFixed(1)+'L — 지급 받음':'🔴 잔량 '+Math.abs(fuelDiff).toFixed(1)+'L — 도급비 차감';
@@ -559,7 +592,8 @@ function rStats(){
   +'<div class="fr"><span class="fk" style="font-weight:700">이달 유류 정산</span><span class="fv" style="color:'+fuelColor+'">'+fuelLabel+'</span></div></div>'
   +'<div class="sec">오티 수당</div>'
   +'<div class="fb"><div class="fr"><span class="fk">이달 오티 시간</span><span class="fv">'+tot+'시간</span></div>'
-  +'<div class="fr"><span class="fk">오티 수당 합계</span><span class="fv" style="color:#7c3aed">'+totA.toLocaleString()+'원</span></div></div>'
+  +'<div class="fr"><span class="fk">오티 수당 합계</span><span class="fv" style="color:#7c3aed">'+totA.toLocaleString()+'원</span></div>'
+  +otDetailHtml+'</div>'
   +'<div class="sec">폐수처리 ('+tww+'건 / 합계 '+wwPay.toLocaleString()+'원)</div>'
   +(wwItems.length?wwItems.map(function(e){var p=e.date.split('-');return'<div class="wwi"><div class="ot2d">'+p[1]+'월 '+p[2]+'일</div><div class="ot2n">'+(e.site||'현장 미입력')+'</div></div>';}).join(''):'<div class="emsg">이달 폐수처리 없음</div>')
   +'<div class="sec">톨비 (울산대교)</div>'
