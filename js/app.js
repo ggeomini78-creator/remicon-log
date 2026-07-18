@@ -120,7 +120,7 @@ function render(){
 /* ── 달력 ── */
 function rCal(){
   var y=cd.getFullYear(),m=cd.getMonth();
-  document.getElementById('hS').textContent=y+'년 '+(m+1)+'월';
+  document.getElementById('hS').textContent='';
   var days=new Date(y,m+1,0).getDate(), first=new Date(y,m,1).getDay();
   var td=new Date(), tdk=dk(td.getFullYear(),td.getMonth(),td.getDate());
   var mp=y+'-'+String(m+1).padStart(2,'0');

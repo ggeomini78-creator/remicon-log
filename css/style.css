@@ -134,18 +134,16 @@ body{
   background:var(--canvas-night);
 }
 .hdr-t{
-  font-size:13px;
+  font-size:20px;
   font-weight:700;
-  letter-spacing:1.17px;
-  text-transform:uppercase;
+  letter-spacing:0.5px;
   color:var(--on-primary);
 }
 .hdr-s{
-  font-size:10px;
+  font-size:12px;
   color:var(--on-primary-mute);
-  margin-top:2px;
+  margin-top:4px;
   letter-spacing:0.5px;
-  text-transform:uppercase;
 }
 
 /* ── 컨텐츠 영역 ── */
