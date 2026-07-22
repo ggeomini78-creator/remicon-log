@@ -6,19 +6,19 @@
 
 /* ── 디자인 토큰 (SpaceX 팔레트) ── */
 :root{
-  /* Surface */
-  --canvas-night:#000000;
-  --canvas-night-soft:#0a0a0a;
+  /* Surface — 순수 블랙 대신 층이 보이는 다크 그레이 */
+  --canvas-night:#0c0f14;
+  --canvas-night-soft:#171c24;
   --canvas-light:#ffffff;
-  --canvas-cool:#f0f0fa;
+  --canvas-cool:#f4f5f7;
 
   /* Hairline */
-  --hairline-dark:#3a3a3f;
-  --hairline-light:#e0e0e8;
+  --hairline-dark:#2c333e;
+  --hairline-light:#e3e6ea;
 
   /* Text */
-  --on-primary:#ffffff;
-  --on-primary-mute:#f0f0fa;
+  --on-primary:#f2f5f8;
+  --on-primary-mute:#c3cad4;
   --ink:#000000;
   --ink-mute:#5a5a5f;
 
@@ -39,47 +39,47 @@
   --r-pill:32px;
 
   /* Theme alias — 기존 --th-* 참조 코드와 호환 */
-  --th-primary:#000000;
-  --th-primary-dark:#0a0a0a;
+  --th-primary:#0c0f14;
+  --th-primary-dark:#171c24;
   --th-accent:#ffffff;
-  --th-bg:#000000;
-  --th-bg2:#0a0a0a;
-  --th-border:#3a3a3f;
-  --th-text:#ffffff;
-  --th-muted:#8a8a90;
+  --th-bg:#0c0f14;
+  --th-bg2:#171c24;
+  --th-border:#2c333e;
+  --th-text:#f2f5f8;
+  --th-muted:#9aa3b0;
   --th-nav-active:#ffffff;
   --th-btn-save:#ffffff;
 
-  /* Badges - Dark Mode (Default) */
-  --badge-fuel-bg: rgba(52, 211, 153, 0.12);
-  --badge-fuel-text: #34d399;
-  --badge-ot-bg: rgba(167, 139, 250, 0.15);
-  --badge-ot-text: #a78bfa;
-  --badge-toll-bg: rgba(96, 165, 250, 0.15);
-  --badge-toll-text: #60a5fa;
-  --badge-ww-bg: rgba(5, 150, 105, 0.15);
-  --badge-ww-text: #34d399;
-  --badge-ot2-bg: rgba(249, 115, 22, 0.15);
-  --badge-ot2-text: #f97316;
+  /* Badges - Dark Mode (Default) — 대비 강화 */
+  --badge-fuel-bg: rgba(52, 211, 153, 0.22);
+  --badge-fuel-text: #52e5ae;
+  --badge-ot-bg: rgba(167, 139, 250, 0.24);
+  --badge-ot-text: #c4b0fc;
+  --badge-toll-bg: rgba(96, 165, 250, 0.24);
+  --badge-toll-text: #8fc0ff;
+  --badge-ww-bg: rgba(16, 185, 129, 0.24);
+  --badge-ww-text: #4be3b0;
+  --badge-ot2-bg: rgba(251, 146, 60, 0.24);
+  --badge-ot2-text: #ffab5e;
 }
 
 /* ── 화이트 테마 (전체 팔레트 반전) ── */
 html.theme-white{
   --th-primary:#ffffff;
-  --th-primary-dark:#f0f0fa;
-  --th-accent:#000000;
+  --th-primary-dark:#f4f5f7;
+  --th-accent:#111418;
   --th-bg:#ffffff;
-  --th-bg2:#f0f0fa;
-  --th-border:#d0d0d8;
-  --th-text:#000000;
-  --th-muted:#3a3a3f;
-  --th-nav-active:#000000;
-  --th-btn-save:#000000;
-  --on-primary:#000000;
-  --on-primary-mute:#3a3a3f;
+  --th-bg2:#f4f5f7;
+  --th-border:#e0e3e8;
+  --th-text:#111418;
+  --th-muted:#667080;
+  --th-nav-active:#111418;
+  --th-btn-save:#111418;
+  --on-primary:#111418;
+  --on-primary-mute:#495261;
   --canvas-night:#ffffff;
-  --canvas-night-soft:#f0f0fa;
-  --hairline-dark:#d0d0d8;
+  --canvas-night-soft:#f4f5f7;
+  --hairline-dark:#e0e3e8;
 
   /* Badges - Light Mode */
   --badge-fuel-bg: #e6f4ea;
@@ -115,6 +115,8 @@ body{
   color:var(--on-primary);
   min-height:100vh;
   min-height:100dvh;
+  height:100vh;
+  height:100dvh;
   position: relative;
   overflow: hidden;
 }
@@ -171,22 +173,26 @@ body{
 }
 .nb{
   flex:1;
-  padding:9px 0 7px;
+  padding:8px 0 6px;
   background:none;
   border:none;
   cursor:pointer;
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:2px;
+  gap:3px;
   color:var(--th-muted);
-  font-size:8px;
+  font-size:10px;
   font-weight:700;
-  letter-spacing:0.6px;
-  text-transform:uppercase;
+  letter-spacing:0.2px;
   font-family:'Inter','Arial Narrow',Arial,sans-serif;
+  opacity:.75;
 }
-.nb.on{color:var(--th-nav-active)}.ni{font-size:16px}
+.nb.on{color:var(--th-nav-active);opacity:1}
+.ni{display:flex;align-items:center;justify-content:center}
+.ni svg{width:21px;height:21px;display:block}
+.hdr-t{display:flex;align-items:center;gap:8px}
+.hdr-ic{width:24px;height:24px;flex-shrink:0}
 
 /* ── 달력 ── */
 .mnav{
@@ -218,8 +224,10 @@ body{
 .ma:active{background:rgba(255,255,255,.08)}
 
 /* 캘린더 꽉차게 */
-.content.cal-mode{display:flex;flex-direction:column;overflow:hidden;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
-.cal-page{flex:1;display:flex;flex-direction:column;min-height:0}
+.content.cal-mode{display:flex;flex-direction:column;overflow:hidden;min-height:0;padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+.cal-page{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.cgrid{min-height:0}
+.cc{min-height:0}
 .cweek{display:grid;grid-template-columns:repeat(7,1fr);background:var(--hairline-dark);gap:1px;border-top:1px solid var(--hairline-dark)}
 .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--hairline-dark);flex:1;grid-auto-rows:1fr;overflow:hidden}
 .ch{

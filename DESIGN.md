@@ -9,26 +9,32 @@ This document defines the visual theme, design tokens, and components for the Re
 ## 2. Color Palette & Roles
 
 ### SpaceX Dark (Default)
-- `--th-primary`: `#000000` (pure black)
-- `--th-bg`: `#000000`
-- `--th-bg2`: `#0a0a0a` (near black surface)
-- `--th-border`: `#3a3a3f`
-- `--th-text`: `#ffffff`
-- `--th-muted`: `#8a8a90`
+순수 블랙(#000) 대신 표면 층이 구분되는 다크 그레이 스케일 사용 (시안성 개선, 2026-07).
+- `--th-primary`: `#0c0f14` (base)
+- `--th-bg`: `#0c0f14`
+- `--th-bg2`: `#171c24` (raised surface)
+- `--th-border`: `#2c333e`
+- `--th-text`: `#f2f5f8`
+- `--th-muted`: `#9aa3b0`
 - `--th-accent`: `#ffffff`
 - `--th-nav-active`: `#ffffff`
 - `--th-btn-save`: `#ffffff`
 
 ### White Theme
+보라끼 없는 중성 그레이 스케일.
 - `--th-primary`: `#ffffff`
 - `--th-bg`: `#ffffff`
-- `--th-bg2`: `#f0f0fa`
-- `--th-border`: `#d0d0d8`
-- `--th-text`: `#000000`
-- `--th-muted`: `#3a3a3f`
-- `--th-accent`: `#000000`
-- `--th-nav-active`: `#000000`
-- `--th-btn-save`: `#000000`
+- `--th-bg2`: `#f4f5f7`
+- `--th-border`: `#e0e3e8`
+- `--th-text`: `#111418`
+- `--th-muted`: `#667080`
+- `--th-accent`: `#111418`
+- `--th-nav-active`: `#111418`
+- `--th-btn-save`: `#111418`
+
+### Icons
+- 하단 탭·헤더 아이콘은 이모지가 아닌 인라인 SVG(stroke: currentColor, 1.8px) 사용 — 테마 색을 그대로 따른다.
+- 달력의 바리수 뱃지는 히트맵 규칙: 1~2 파랑, 3~4 초록, 5~6 노랑/주황, 7~8 주황/빨강, 9+ 진빨강 (`cc()` 함수).
 
 ## 3. Calendar Status Badges Color System
 
