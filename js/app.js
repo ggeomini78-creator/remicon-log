@@ -117,7 +117,34 @@ function render(){
   else if(tab==='stats') rStats();
   else if(tab==='annual') rAnnual();
   else rConfig();
+  fit1();
 }
+
+/* ── 한 줄 맞춤 ──
+   글자를 키우면서 금액·수치가 두 줄로 넘어갈 수 있어,
+   넘치는 값만 한 줄에 들어갈 때까지 폰트를 0.5px씩 줄인다.
+   원래 크기는 data-fit-base에 보관해 다시 커질 수 있게 한다. */
+var FIT_SEL='.hdr-t,.mv,.sv,.fv,.fcv,.toll-val,.fbb-val,.km-total-val,.toll-total-val,.ot2n';
+function fit1(){
+  var els=document.querySelectorAll(FIT_SEL);
+  for(var i=0;i<els.length;i++){
+    var el=els[i];
+    var base=el.getAttribute('data-fit-base');
+    if(base===null){
+      base=window.getComputedStyle(el).fontSize;
+      el.setAttribute('data-fit-base',base);
+    }
+    el.style.fontSize=base;
+    var size=parseFloat(base);
+    if(!size) continue;
+    var min=Math.max(10,size*0.6), guard=0;
+    while(el.scrollWidth>el.clientWidth+1 && size>min && guard<40){
+      size-=0.5; guard++;
+      el.style.fontSize=size+'px';
+    }
+  }
+}
+window.addEventListener('resize',fit1);
 
 /* ── 달력 ── */
 function rCal(){
@@ -174,7 +201,7 @@ function rCal(){
   h+='<div class="sbar">'
     +'<div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div>'
     +'<div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div>'
-    +'<div class="si"><div class="sl">예상급여</div><div class="sv" style="font-size:'+(ep>=1000000?'11px':'14px')+'">'+epStr+'</div></div>'
+    +'<div class="si"><div class="sl">예상급여</div><div class="sv" style="font-size:'+(ep>=1000000?'14px':'18px')+'">'+epStr+'</div></div>'
     +'</div>';
   h+='</div>';
   document.getElementById('mc').innerHTML=h;
@@ -200,7 +227,7 @@ document.getElementById('mc').parentNode.addEventListener('touchend',function(e)
 
 /* ── OT2 (2시간 초과) ── */
 function mkOT2(){
-  if(!ol.length)return'<div style="font-size:13px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
+  if(!ol.length)return'<div style="font-size:16px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
   return ol.map(function(e,i){
     var isS=e.settled===true||e.settled==='true';
     return'<div class="item-card" style="border-left:3px solid '+(isS?'#94a3b8':'#7c3aed')+';">'
@@ -216,7 +243,7 @@ function mkOT2(){
       +'<button id="o2tb'+i+'" class="tbt'+((e.type||'monthly')==='monthly'?' on':'')+'" onclick="setO2T('+i+',\'monthly\')"'+(isS?' disabled':'')+'>월말 결산</button>'
       +'</div></div>'
       +'<div class="field"><label class="fl">정산 상태</label>'
-      +'<button onclick="toggleOT2Settle('+i+')" style="width:100%;padding:9px;border-radius:8px;border:1.5px solid '+(isS?'#059669':'#d1d5db')+';background:'+(isS?'#ecfdf5':'var(--th-bg2)')+';color:'+(isS?'#065f46':'var(--th-muted)')+';font-size:12px;font-weight:600;cursor:pointer">'
+      +'<button onclick="toggleOT2Settle('+i+')" style="width:100%;padding:9px;border-radius:8px;border:1.5px solid '+(isS?'#059669':'#d1d5db')+';background:'+(isS?'#ecfdf5':'var(--th-bg2)')+';color:'+(isS?'#065f46':'var(--th-muted)')+';font-size:15px;font-weight:600;cursor:pointer">'
       +(isS?'✅ 정산완료 (취소하려면 탭)':'⬜ 미정산 — 탭하면 정산완료')
       +'</button></div>'
       +'</div></div>';
@@ -239,7 +266,7 @@ function stToggleOT2(date,i){
 
 /* ── 폐수 ── */
 function mkWW(){
-  if(!wwList.length)return'<div style="font-size:13px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
+  if(!wwList.length)return'<div style="font-size:16px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
   return wwList.map(function(e,i){
     return'<div class="item-card" style="border-left:3px solid #059669">'
       +'<div class="item-hdr"><span class="item-title" style="color:#065f46">폐수 '+(i+1)+'</span><button class="item-rm" onclick="rmWW('+i+')">삭제</button></div>'
@@ -253,7 +280,7 @@ function upWW(i){var el=document.getElementById('wws'+i);if(el)wwList[i].site=el
 
 /* ── 정비 ── */
 function mkRep(){
-  if(!repList.length)return'<div style="font-size:13px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
+  if(!repList.length)return'<div style="font-size:16px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
   return repList.map(function(e,i){
     return'<div class="item-card" style="border-left:3px solid #dc2626">'
       +'<div class="item-hdr"><span class="item-title" style="color:#991b1b">정비 '+(i+1)+'</span><button class="item-rm" onclick="rmRep('+i+')">삭제</button></div>'
@@ -275,7 +302,7 @@ function upRep(i){
 
 /* ── 일반현장 현금거래 (잔량 판매) ── */
 function mkCash(){
-  if(!cashList.length)return'<div style="font-size:13px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
+  if(!cashList.length)return'<div style="font-size:16px;color:var(--th-muted);padding:4px 0 8px">없음</div>';
   return cashList.map(function(e,i){
     return'<div class="item-card" style="border-left:3px solid #0891b2">'
       +'<div class="item-hdr"><span class="item-title" style="color:#0891b2">거래 '+(i+1)+'</span><button class="item-rm" onclick="rmCash('+i+')">삭제</button></div>'
@@ -322,7 +349,7 @@ function uFuelCard(){
     +'<div class="fcrow" style="background:rgba(29,78,216,.08)"><span class="fck" style="font-weight:600;color:var(--th-accent)">이달 총 주유량</span><span class="fcv blue">'+mTotalFuel+'L</span></div>'
     +'<div class="fcrow"><span class="fck">이달 소비량 (km×'+cfg.fuelRate+')</span><span class="fcv minus">'+mTotalUsed+'L</span></div>'
     +'<div class="fuel-balance-big"><span class="fbb-label">이달 유류 정산 방향</span>'
-    +'<span style="font-size:12px;font-weight:700;color:'+diffColor+'">'+diffLabel+'</span></div>';
+    +'<span style="font-size:15px;font-weight:700;color:'+diffColor+'">'+diffLabel+'</span></div>';
 }
 
 function uKmCard(){
@@ -429,7 +456,7 @@ function rEntry(){
   +'<div class="fcrow" style="background:rgba(29,78,216,.08)"><span class="fck" style="font-weight:600;color:var(--th-accent)">이달 총 주유량</span><span class="fcv blue">'+mTotalFuel+'L</span></div>'
   +'<div class="fcrow"><span class="fck">이달 소비량 (km×'+cfg.fuelRate+')</span><span class="fcv minus">'+mTotalUsed+'L</span></div>'
   +'<div class="fuel-balance-big"><span class="fbb-label">이달 유류 정산 방향</span>'
-  +'<span style="font-size:12px;font-weight:700;color:'+fuelColor+'">'+fuelLabel+'</span></div>'
+  +'<span style="font-size:15px;font-weight:700;color:'+fuelColor+'">'+fuelLabel+'</span></div>'
   +'</div>'
   +'<div class="shdr">시간외수당 (오티)</div>'
   +'<div class="field"><label class="fl">오티 시간 — 4시 이후</label><input type="number" id="fOt" value="'+(log.ot||'')+'" placeholder="0" step="0.5" oninput="uOT()"></div>'
@@ -453,7 +480,7 @@ function rEntry(){
   +'<div id="repCon">'+mkRep()+'</div>'
   +'<button class="add-btn" onclick="addRep()">＋ 정비 내역 추가</button>'
   +'<div class="shdr">일반현장 현금거래</div>'
-  +'<div style="font-size:11px;color:var(--th-muted);margin-bottom:6px">잔량 판매 기록 (참고용 · 이동거리만 전체 km에 반영)</div>'
+  +'<div style="font-size:14px;color:var(--th-muted);margin-bottom:6px">잔량 판매 기록 (참고용 · 이동거리만 전체 km에 반영)</div>'
   +'<div id="cashCon">'+mkCash()+'</div>'
   +'<button class="add-btn" onclick="addCash()">＋ 현금거래 추가</button>'
   +'<div class="shdr">메모</div>'
@@ -467,7 +494,7 @@ function rEntry(){
 /* ★ 저장 — try-catch로 안정화 */
 function showToast(msg,color){
   var t=document.createElement('div');
-  t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:'+(color||'#059669')+';color:#fff;padding:14px 24px;border-radius:12px;font-size:15px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap';
+  t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:'+(color||'#059669')+';color:#fff;padding:14px 24px;border-radius:12px;font-size:18px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap';
   t.textContent=msg;
   document.body.appendChild(t);
   setTimeout(function(){if(document.body.contains(t))document.body.removeChild(t);},1400);
@@ -553,7 +580,7 @@ function rStats(){
 
   var tollDetailHtml = '';
   if (tollDays.length > 0) {
-    tollDetailHtml = '<div class="toll-detail-list" style="margin-top:8px; border-top:1px dashed var(--th-border); padding-top:8px; font-size:12px; color:var(--th-muted);">';
+    tollDetailHtml = '<div class="toll-detail-list" style="margin-top:8px; border-top:1px dashed var(--th-border); padding-top:8px; font-size:15px; color:var(--th-muted);">';
     tollDays.forEach(function(td) {
       var detail = [];
       if (td.t1 > 0) detail.push('3,600원 ' + td.t1 + '회');
@@ -585,7 +612,7 @@ function rStats(){
 
   var otDetailHtml = '';
   if (otDays.length > 0) {
-    otDetailHtml = '<div class="ot-detail-list" style="margin-top:8px; border-top:1px dashed var(--th-border); padding-top:8px; font-size:12px; color:var(--th-muted);">';
+    otDetailHtml = '<div class="ot-detail-list" style="margin-top:8px; border-top:1px dashed var(--th-border); padding-top:8px; font-size:15px; color:var(--th-muted);">';
     otDays.forEach(function(od) {
       otDetailHtml += '<div style="display:flex; justify-content:space-between; margin-bottom:4px;">'
         + '<span>' + od.day + '일 (' + od.ot + '시간)</span>'
@@ -618,10 +645,10 @@ function rStats(){
   var monthTotal=base+totA+ot2Pay2+tollMonT+wwPay-mRepCost;
 
   var h='<div class="sp">'
-  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><button class="ma" onclick="pm()">‹</button><span style="font-size:15px;font-weight:600">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>'
+  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><button class="ma" onclick="pm()">‹</button><span style="font-size:19px;font-weight:600">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>'
   +'<div class="sec">이달 기본 현황</div>'
   +'<div class="mgrid">'
-  +'<div class="mc dk full"><div class="mk">기본급</div><div class="mv" style="font-size:'+(base>=1000000?'16px':'20px')+'">'+base.toLocaleString()+'<span class="mu" style="font-size:11px">원</span></div></div>'
+  +'<div class="mc dk full"><div class="mk">기본급</div><div class="mv" style="font-size:'+(base>=1000000?'20px':'25px')+'">'+base.toLocaleString()+'<span class="mu" style="font-size:14px">원</span></div></div>'
   +'<div class="mc"><div class="mk">근무일</div><div class="mv">'+wd+'<span class="mu">일</span></div></div>'
   +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+tc+'<span class="mu">바리</span></div></div>'
   +'<div class="mc"><div class="mk">운반량</div><div class="mv">'+tv.toFixed(1)+'<span class="mu">㎥</span></div></div>'
@@ -630,7 +657,7 @@ function rStats(){
   +'<div class="sec">전체 누적 km</div>'
   +'<div class="fb"><div class="fr"><span class="fk">기준 km</span><span class="fv">'+cfg.initKm.toLocaleString()+'km</span></div>'
   +'<div class="fr"><span class="fk">전체 운행 누적</span><span class="fv">+'+allKm.toLocaleString()+'km</span></div>'
-  +'<div class="fr"><span class="fk" style="font-weight:700">현재 총 km</span><span class="fv" style="color:var(--th-accent);font-size:15px">'+totalOdometer.toLocaleString()+'km</span></div></div>'
+  +'<div class="fr"><span class="fk" style="font-weight:700">현재 총 km</span><span class="fv" style="color:var(--th-accent);font-size:19px">'+totalOdometer.toLocaleString()+'km</span></div></div>'
   +'<div class="sec">유류 현황 (이달 / 정산 별도)</div>'
   +'<div class="fb"><div class="fr"><span class="fk">이달 주유량</span><span class="fv" style="color:#059669">+'+fu.mf.toFixed(1)+'L</span></div>'
   +'<div class="fr"><span class="fk">이달 소비량</span><span class="fv" style="color:#dc2626">'+fu.mu.toFixed(1)+'L</span></div>'
@@ -644,10 +671,10 @@ function rStats(){
   +'<div class="sec">톨비 (울산대교)</div>'
   +'<div class="fb"><div class="fr"><span class="fk">3,600원 통행</span><span class="fv">'+tt1+'회 = '+tollMon1.toLocaleString()+'원</span></div>'
   +'<div class="fr"><span class="fk">2,400원 통행</span><span class="fv">'+tt2+'회 = '+tollMon2.toLocaleString()+'원</span></div>'
-  +'<div class="fr"><span class="fk" style="font-weight:700">월 톨비 합계</span><span class="fv" style="color:var(--th-accent);font-size:15px">'+tollMonT.toLocaleString()+'원</span></div>'
+  +'<div class="fr"><span class="fk" style="font-weight:700">월 톨비 합계</span><span class="fv" style="color:var(--th-accent);font-size:19px">'+tollMonT.toLocaleString()+'원</span></div>'
   +tollDetailHtml+'</div>'
   +'<div class="sec">2시간초과 현황 ('+ot2I.length+'건)</div>'
-  +(ot2I.length?'<div style="font-size:11px;color:var(--th-muted);margin-bottom:6px">항목을 탭하면 정산완료/취소로 바뀝니다</div>'+ot2I.map(function(e){
+  +(ot2I.length?'<div style="font-size:14px;color:var(--th-muted);margin-bottom:6px">항목을 탭하면 정산완료/취소로 바뀝니다</div>'+ot2I.map(function(e){
     var p=e.date.split('-');
     var isS=e.settled===true||e.settled==='true';
     return'<div class="ot2i'+(e.type==='monthly'?' mo':'')+'" style="cursor:pointer;'+(isS?'opacity:.5':'')+'" onclick="stToggleOT2(\''+e.date+'\','+e.idx+')">'
@@ -655,7 +682,7 @@ function rStats(){
       +'<div class="ot2n" style="'+(isS?'text-decoration:line-through':'')+'">'+( e.site||'현장 미입력')+(e.mgr?' / '+e.mgr:'')
       +'<span class="ot2tp '+(e.type==='monthly'?'tm':'tc')+'">'+(e.type==='monthly'?'월말결산':'영업사원')+'</span></div></div>';
   }).join(''):'<div class="emsg">이달 2시간초과 없음</div>')
-  +(ot2Monthly.length?'<div style="background:#fef2f2;border:0.5px solid #fca5a5;border-radius:8px;padding:9px 12px;margin-top:6px;font-size:12px;color:#991b1b">⚠️ 월말 결산 필요: '+ot2Monthly.length+'건</div>':'')
+  +(ot2Monthly.length?'<div style="background:#fef2f2;border:0.5px solid #fca5a5;border-radius:8px;padding:9px 12px;margin-top:6px;font-size:15px;color:#991b1b">⚠️ 월말 결산 필요: '+ot2Monthly.length+'건</div>':'')
   +(mRepCost>0?'<div class="sec">차량 정비 비용</div><div class="fb"><div class="fr"><span class="fk">이달 정비 비용</span><span class="fv" style="color:#dc2626">'+mRepCost.toLocaleString()+'원</span></div></div>':'')
   +(cashI.length?'<div class="sec">일반현장 현금거래 ('+cashI.length+'건 / 합계 '+cashSum.toLocaleString()+'원 — 참고용)</div>'
     +cashI.map(function(e){
@@ -674,8 +701,8 @@ function rStats(){
   +(mRepCost>0?'<div class="fr"><span class="fk">정비비 차감</span><span class="fv" style="color:#dc2626">−'+mRepCost.toLocaleString()+'원</span></div>':'')
   +'</div>'
   +'<div style="background:var(--th-bg2);border:1px solid var(--th-border);border-radius:10px;padding:16px;text-align:center;margin-bottom:16px">'
-  +'<div style="font-size:12px;color:var(--th-muted);margin-bottom:6px">'+(m+1)+'월 수령 예정액 (유류 별도)</div>'
-  +'<div style="font-size:'+(monthTotal>=10000000?'20px':monthTotal>=1000000?'24px':'28px')+'px;font-weight:700;color:var(--th-text)">'+monthTotal.toLocaleString()+'원</div>'
+  +'<div style="font-size:15px;color:var(--th-muted);margin-bottom:6px">'+(m+1)+'월 수령 예정액 (유류 별도)</div>'
+  +'<div style="font-size:'+(monthTotal>=10000000?'24px':monthTotal>=1000000?'28px':'32px')+';font-weight:700;color:var(--th-text)">'+monthTotal.toLocaleString()+'원</div>'
   +'</div>'
   +'</div>';
   document.getElementById('mc').innerHTML=h;
@@ -694,7 +721,7 @@ function rAnnual(){
     var mp2=y+'-'+String(mi+1).padStart(2,'0');
     var ml2=Object.entries(logs).filter(function(e){return e[0].startsWith(mp2);});
     if(!ml2.length){
-      rows+='<tr><td style="padding:8px 10px;font-size:12px;color:var(--th-muted)">'+(mi+1)+'월</td><td colspan="5" style="padding:8px 6px;font-size:11px;color:var(--th-muted);text-align:center">기록 없음</td></tr>';
+      rows+='<tr><td style="padding:8px 10px;font-size:14px;color:var(--th-muted)">'+(mi+1)+'월</td><td colspan="5" style="padding:8px 6px;font-size:13px;color:var(--th-muted);text-align:center">기록 없음</td></tr>';
       continue;
     }
     activeMonths++;
@@ -713,51 +740,51 @@ function rAnnual(){
     var mTot2=base2+otP2+ot2P2+toll2+wwP2-rep2;
     annWd+=wd2;annCalls+=tc2;annKm+=km2;annOT+=ot2;annOTpay+=otP2;annToll+=toll2;annRep+=rep2;annBase+=base2;annTotal+=mTot2;
     rows+='<tr style="border-bottom:0.5px solid var(--th-border)">'
-      +'<td style="padding:8px 10px;font-size:13px;font-weight:600;color:var(--th-text)">'+(mi+1)+'월</td>'
-      +'<td style="padding:8px 6px;font-size:12px;color:var(--th-muted);text-align:right">'+wd2+'일</td>'
-      +'<td style="padding:8px 6px;font-size:12px;color:var(--th-muted);text-align:right">'+tc2+'</td>'
-      +'<td style="padding:8px 6px;font-size:11px;text-align:right">'+base2.toLocaleString()+'</td>'
-      +'<td style="padding:8px 6px;font-size:11px;color:#7c3aed;text-align:right">'+(otP2>0?'+'+otP2.toLocaleString():'0')+'</td>'
-      +'<td style="padding:8px 10px;font-size:12px;font-weight:700;color:'+(mTot2>=0?'var(--th-accent)':'#dc2626')+';text-align:right">'+mTot2.toLocaleString()+'</td>'
+      +'<td style="padding:8px 10px;font-size:15px;font-weight:600;color:var(--th-text)">'+(mi+1)+'월</td>'
+      +'<td style="padding:8px 6px;font-size:14px;color:var(--th-muted);text-align:right">'+wd2+'일</td>'
+      +'<td style="padding:8px 6px;font-size:14px;color:var(--th-muted);text-align:right">'+tc2+'</td>'
+      +'<td style="padding:8px 6px;font-size:13px;text-align:right">'+base2.toLocaleString()+'</td>'
+      +'<td style="padding:8px 6px;font-size:13px;color:#7c3aed;text-align:right">'+(otP2>0?'+'+otP2.toLocaleString():'0')+'</td>'
+      +'<td style="padding:8px 10px;font-size:14px;font-weight:700;color:'+(mTot2>=0?'var(--th-accent)':'#dc2626')+';text-align:right">'+mTot2.toLocaleString()+'</td>'
       +'</tr>';
   }
   var avgCalls=annWd>0?(annCalls/annWd).toFixed(1):'0';
   var avgMonthly=activeMonths>0?Math.round(annTotal/activeMonths):0;
   var h='<div class="sp">'
-  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><button class="ma" onclick="pyear()">‹</button><span style="font-size:18px;font-weight:700;color:var(--th-text)">'+y+'년 연말결산</span><button class="ma" onclick="nyear()">›</button></div>'
+  +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><button class="ma" onclick="pyear()">‹</button><span style="font-size:22px;font-weight:700;color:var(--th-text)">'+y+'년 연말결산</span><button class="ma" onclick="nyear()">›</button></div>'
   +'<div class="mgrid" style="margin-bottom:12px">'
-  +'<div class="mc dk full"><div class="mk">연간 총 수령액 (유류 별도)</div><div class="mv" style="font-size:'+(annTotal>=100000000?'14px':annTotal>=10000000?'16px':'18px')+'">'+annTotal.toLocaleString()+'<span class="mu" style="font-size:11px">원</span></div></div>'
+  +'<div class="mc dk full"><div class="mk">연간 총 수령액 (유류 별도)</div><div class="mv" style="font-size:'+(annTotal>=100000000?'17px':annTotal>=10000000?'20px':'22px')+'">'+annTotal.toLocaleString()+'<span class="mu" style="font-size:14px">원</span></div></div>'
   +'<div class="mc"><div class="mk">총 근무일</div><div class="mv">'+annWd+'<span class="mu">일</span></div></div>'
   +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+annCalls+'<span class="mu">바리</span></div></div>'
   +'<div class="mc"><div class="mk">일 평균 바리</div><div class="mv">'+avgCalls+'<span class="mu">바리</span></div></div>'
   +'<div class="mc"><div class="mk">총 운행거리</div><div class="mv">'+annKm.toLocaleString()+'<span class="mu">km</span></div></div>'
-  +'<div class="mc"><div class="mk">연간 오티</div><div class="mv" style="color:#7c3aed;font-size:15px">'+annOTpay.toLocaleString()+'<span class="mu">원</span></div></div>'
-  +'<div class="mc"><div class="mk">연간 톨비</div><div class="mv" style="color:var(--th-accent);font-size:15px">'+annToll.toLocaleString()+'<span class="mu">원</span></div></div>'
-  +'<div class="mc"><div class="mk">연간 정비비</div><div class="mv" style="color:#dc2626;font-size:15px">'+annRep.toLocaleString()+'<span class="mu">원</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 오티</div><div class="mv" style="color:#7c3aed;font-size:19px">'+annOTpay.toLocaleString()+'<span class="mu">원</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 톨비</div><div class="mv" style="color:var(--th-accent);font-size:19px">'+annToll.toLocaleString()+'<span class="mu">원</span></div></div>'
+  +'<div class="mc"><div class="mk">연간 정비비</div><div class="mv" style="color:#dc2626;font-size:19px">'+annRep.toLocaleString()+'<span class="mu">원</span></div></div>'
   +'</div>'
-  +'<div style="font-size:11px;font-weight:700;color:var(--th-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">월별 상세</div>'
-  +'<div style="background:var(--th-bg2);border-radius:10px;overflow:hidden;border:0.5px solid var(--th-border);margin-bottom:12px">'
-  +'<table style="width:100%;border-collapse:collapse">'
+  +'<div style="font-size:14px;font-weight:700;color:var(--th-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">월별 상세</div>'
+  +'<div style="background:var(--th-bg2);border-radius:10px;overflow-x:auto;border:0.5px solid var(--th-border);margin-bottom:12px">'
+  +'<table style="width:100%;border-collapse:collapse;white-space:nowrap">'
   +'<thead><tr style="background:var(--th-primary-dark);border-bottom:1px solid var(--th-border)">'
-  +'<th style="padding:8px 10px;font-size:11px;color:var(--th-muted);font-weight:600;text-align:left">월</th>'
-  +'<th style="padding:8px 4px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">근무</th>'
-  +'<th style="padding:8px 4px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">바리</th>'
-  +'<th style="padding:8px 4px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">기본급</th>'
-  +'<th style="padding:8px 4px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">오티</th>'
-  +'<th style="padding:8px 10px;font-size:10px;color:var(--th-muted);font-weight:600;text-align:right">합계</th>'
+  +'<th style="padding:8px 10px;font-size:13px;color:var(--th-muted);font-weight:600;text-align:left">월</th>'
+  +'<th style="padding:8px 4px;font-size:12px;color:var(--th-muted);font-weight:600;text-align:right">근무</th>'
+  +'<th style="padding:8px 4px;font-size:12px;color:var(--th-muted);font-weight:600;text-align:right">바리</th>'
+  +'<th style="padding:8px 4px;font-size:12px;color:var(--th-muted);font-weight:600;text-align:right">기본급</th>'
+  +'<th style="padding:8px 4px;font-size:12px;color:var(--th-muted);font-weight:600;text-align:right">오티</th>'
+  +'<th style="padding:8px 10px;font-size:12px;color:var(--th-muted);font-weight:600;text-align:right">합계</th>'
   +'</tr></thead><tbody>'+rows+'</tbody>'
   +'<tfoot><tr style="background:var(--th-primary-dark);border-top:1px solid var(--th-border)">'
-  +'<td style="padding:10px;font-size:12px;font-weight:700;color:var(--th-text)">합계</td>'
-  +'<td style="padding:10px 4px;font-size:11px;color:var(--th-muted);text-align:right">'+annWd+'일</td>'
-  +'<td style="padding:10px 4px;font-size:11px;color:var(--th-muted);text-align:right">'+annCalls+'</td>'
-  +'<td style="padding:10px 4px;font-size:10px;color:var(--th-text);text-align:right">'+annBase.toLocaleString()+'</td>'
-  +'<td style="padding:10px 4px;font-size:10px;color:#7c3aed;text-align:right">'+annOTpay.toLocaleString()+'</td>'
-  +'<td style="padding:10px;font-size:12px;font-weight:700;color:var(--th-accent);text-align:right">'+annTotal.toLocaleString()+'</td>'
+  +'<td style="padding:10px;font-size:14px;font-weight:700;color:var(--th-text)">합계</td>'
+  +'<td style="padding:10px 4px;font-size:13px;color:var(--th-muted);text-align:right">'+annWd+'일</td>'
+  +'<td style="padding:10px 4px;font-size:13px;color:var(--th-muted);text-align:right">'+annCalls+'</td>'
+  +'<td style="padding:10px 4px;font-size:12px;color:var(--th-text);text-align:right">'+annBase.toLocaleString()+'</td>'
+  +'<td style="padding:10px 4px;font-size:12px;color:#7c3aed;text-align:right">'+annOTpay.toLocaleString()+'</td>'
+  +'<td style="padding:10px;font-size:14px;font-weight:700;color:var(--th-accent);text-align:right">'+annTotal.toLocaleString()+'</td>'
   +'</tr></tfoot></table></div>'
   +'<div style="background:linear-gradient(135deg,#065f46,#047857);border-radius:12px;padding:18px 16px;text-align:center;margin-bottom:16px">'
-  +'<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px">'+y+'년 연간 총 수령액 (유류 별도)</div>'
-  +'<div style="font-size:'+(annTotal>=100000000?'22px':'28px')+'px;font-weight:700;color:#fff">'+annTotal.toLocaleString()+'원</div>'
-  +'<div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:6px">월 평균 '+avgMonthly.toLocaleString()+'원 · 총 '+annWd+'일 근무</div>'
+  +'<div style="font-size:15px;color:rgba(255,255,255,.7);margin-bottom:6px">'+y+'년 연간 총 수령액 (유류 별도)</div>'
+  +'<div style="font-size:'+(annTotal>=100000000?'26px':'32px')+';font-weight:700;color:#fff">'+annTotal.toLocaleString()+'원</div>'
+  +'<div style="font-size:15px;color:rgba(255,255,255,.6);margin-top:6px">월 평균 '+avgMonthly.toLocaleString()+'원 · 총 '+annWd+'일 근무</div>'
   +'</div></div>';
   document.getElementById('mc').innerHTML=h;
 }
@@ -776,40 +803,40 @@ function rConfig(){
   var h='<div class="cfg-page">'
   +'<div class="cfg-sec">테마 색상</div>'
   +'<div style="background:var(--th-bg2);border-radius:10px;padding:12px 14px;margin-bottom:12px;border:0.5px solid var(--th-border)">'
-  +'<p style="font-size:12px;color:var(--th-muted);margin-bottom:12px">테마를 선택하면 앱 전체 색이 바뀌어요</p>'
+  +'<p style="font-size:15px;color:var(--th-muted);margin-bottom:12px">테마를 선택하면 앱 전체 색이 바뀌어요</p>'
   +'<div class="theme-grid">'+themeHtml+'</div>'
   +'</div>'
   +'<div class="cfg-sec">급여 설정 (' + (cm + 1) + '월 기준)</div>'
   +'<div class="sblk">'
-  +'<div class="srow"><div><span class="slbl">' + (cm + 1) + '월 바리당 단가</span><span class="slbl-sub">선택된 월에만 적용되는 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="' + curMonthPrice + '" oninput="setMonthlyPrice(' + cy + ',' + cm + ', +this.value);sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
-  +'<div class="srow"><div><span class="slbl">기본 바리당 단가</span><span class="slbl-sub">신규 월 시작 시 기본값</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
-  +'<div class="srow"><div><span class="slbl">오티 시간당</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.otRate+'" oninput="cfg.otRate=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
-  +'<div class="srow"><div><span class="slbl">2시간초과 건당</span><span class="slbl-sub">미정산 건에만 적용</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.ot2Pay+'" placeholder="0" oninput="cfg.ot2Pay=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
-  +'<div class="srow"><div><span class="slbl">폐수 건당 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+(cfg.wwRate||0)+'" oninput="cfg.wwRate=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">' + (cm + 1) + '월 바리당 단가</span><span class="slbl-sub">선택된 월에만 적용되는 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="' + curMonthPrice + '" oninput="setMonthlyPrice(' + cy + ',' + cm + ', +this.value);sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">기본 바리당 단가</span><span class="slbl-sub">신규 월 시작 시 기본값</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">오티 시간당</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.otRate+'" oninput="cfg.otRate=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">2시간초과 건당</span><span class="slbl-sub">미정산 건에만 적용</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.ot2Pay+'" placeholder="0" oninput="cfg.ot2Pay=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">폐수 건당 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+(cfg.wwRate||0)+'" oninput="cfg.wwRate=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'</div>'
   +'<div class="cfg-sec">유류 설정</div>'
   +'<div class="sblk">'
-  +'<div class="srow"><div><span class="slbl">km당 유류 소모</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" step="0.01" value="'+cfg.fuelRate+'" oninput="cfg.fuelRate=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">L/km</span></div></div>'
-  +'<div class="srow"><div><span class="slbl">연료 정산 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.fuelPrice+'" oninput="cfg.fuelPrice=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원/L</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">km당 유류 소모</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" step="0.01" value="'+cfg.fuelRate+'" oninput="cfg.fuelRate=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">L/km</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">연료 정산 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.fuelPrice+'" oninput="cfg.fuelPrice=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원/L</span></div></div>'
   +'</div>'
   +'<div class="cfg-sec">차량 설정</div>'
   +'<div class="sblk">'
-  +'<div class="srow"><div><span class="slbl">기준 km</span><span class="slbl-sub">앱 시작 시점 차량 km</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.initKm+'" oninput="cfg.initKm=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">km</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">기준 km</span><span class="slbl-sub">앱 시작 시점 차량 km</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.initKm+'" oninput="cfg.initKm=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">km</span></div></div>'
   +'</div>'
   +'<div class="cfg-sec">톨비 설정</div>'
   +'<div class="sblk">'
-  +'<div class="srow"><div><span class="slbl">대형 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.toll1+'" oninput="cfg.toll1=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
-  +'<div class="srow"><div><span class="slbl">소형 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.toll2+'" oninput="cfg.toll2=+this.value;sv()"><span style="font-size:11px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">대형 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.toll1+'" oninput="cfg.toll1=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">소형 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.toll2+'" oninput="cfg.toll2=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'</div>'
   +'<div class="cfg-sec">데이터 백업 / 복원</div>'
   +'<div style="background:var(--th-bg2);border-radius:10px;padding:14px;margin-bottom:12px;border:0.5px solid var(--th-border)">'
-  +'<p style="font-size:12px;color:var(--th-muted);margin-bottom:12px;line-height:1.6">백업 파일을 저장해두면 폰을 바꿔도 데이터를 복원할 수 있어요.</p>'
+  +'<p style="font-size:15px;color:var(--th-muted);margin-bottom:12px;line-height:1.6">백업 파일을 저장해두면 폰을 바꿔도 데이터를 복원할 수 있어요.</p>'
   +'<button class="backup-btn dl" onclick="doBackup()">⬇️ 데이터 백업 (다운로드)</button>'
   +'<button class="backup-btn ul" onclick="document.getElementById(\'restoreFile\').click()">⬆️ 데이터 복원 (파일 선택)<input type="file" id="restoreFile" accept=".json" style="display:none" onchange="doRestore(event)"></button>'
   +'</div>'
   +'<div class="cfg-sec" style="color:#dc2626">위험 구역</div>'
   +'<div style="background:#fef2f2;border-radius:10px;padding:14px;border:0.5px solid #fca5a5">'
-  +'<p style="font-size:12px;color:#991b1b;margin-bottom:12px">모든 운행 데이터가 삭제돼요. 복구 불가능해요.</p>'
+  +'<p style="font-size:15px;color:#991b1b;margin-bottom:12px">모든 운행 데이터가 삭제돼요. 복구 불가능해요.</p>'
   +'<button class="backup-btn danger" onclick="doReset()">전체 데이터 초기화</button>'
   +'</div></div>';
   document.getElementById('mc').innerHTML=h;
