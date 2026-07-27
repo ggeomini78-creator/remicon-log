@@ -124,7 +124,7 @@ function render(){
    글자를 키우면서 금액·수치가 두 줄로 넘어갈 수 있어,
    넘치는 값만 한 줄에 들어갈 때까지 폰트를 0.5px씩 줄인다.
    원래 크기는 data-fit-base에 보관해 다시 커질 수 있게 한다. */
-var FIT_SEL='.hdr-t,.mv,.fv,.fcv,.toll-val,.fbb-val,.km-total-val,.toll-total-val,.ot2n';
+var FIT_SEL='.hdr-t,.mv,.sv,.fv,.fcv,.toll-val,.fbb-val,.km-total-val,.toll-total-val,.ot2n';
 function fit1(){
   var els=document.querySelectorAll(FIT_SEL);
   for(var i=0;i<els.length;i++){
@@ -201,7 +201,7 @@ function rCal(){
   h+='<div class="sbar">'
     +'<div class="si"><div class="sl">이달 바리수</div><div class="sv">'+tc+'<span class="su">바리</span></div></div>'
     +'<div class="si"><div class="sl">근무일</div><div class="sv">'+wd+'<span class="su">일</span></div></div>'
-    +'<div class="si"><div class="sl">예상급여</div><div class="sv" style="font-size:'+(ep>=1000000?'11px':'14px')+'">'+epStr+'</div></div>'
+    +'<div class="si"><div class="sl">예상급여</div><div class="sv" style="font-size:'+(ep>=1000000?'14px':'18px')+'">'+epStr+'</div></div>'
     +'</div>';
   h+='</div>';
   document.getElementById('mc').innerHTML=h;

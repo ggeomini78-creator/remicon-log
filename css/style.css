@@ -287,8 +287,8 @@ body{
 /* 하단 요약 바 */
 .sbar{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hairline-dark);flex-shrink:0}
 .si{padding:8px 4px;text-align:center;border-right:1px solid var(--hairline-dark)}.si:last-child{border-right:none}
-.sl{font-size:10px;color:var(--th-muted);margin-bottom:2px;letter-spacing:0.6px;text-transform:uppercase;font-weight:700}
-.sv{font-size:16px;font-weight:700;color:var(--on-primary)}.su{font-size:11px;color:var(--th-muted);margin-left:1px}
+.sl{font-size:13px;color:var(--th-muted);margin-bottom:2px;letter-spacing:0.6px;text-transform:uppercase;font-weight:700}
+.sv{font-size:20px;font-weight:700;color:var(--on-primary);white-space:nowrap}.su{font-size:14px;color:var(--th-muted);margin-left:1px}
 .legend{padding:6px 12px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--hairline-dark)}
 .li{display:flex;align-items:center;gap:3px;font-size:9px;color:var(--th-muted);letter-spacing:0.3px}.lsw{width:12px;height:10px;border-radius:2px}
 
