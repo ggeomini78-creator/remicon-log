@@ -1,8 +1,9 @@
-var CACHE = 'remicon-log-v9';
+var CACHE = 'remicon-log-v10';
 var FILES = [
   './',
   './index.html',
   './css/style.css',
+  './js/kcal.js',
   './js/app.js'
 ];
 
