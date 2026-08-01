@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="운행일지">
 <title>🚛 레미콘 운행일지</title>
-<link rel="stylesheet" href="css/style.css?v=12">
+<link rel="stylesheet" href="css/style.css?v=13">
 <link rel="manifest" href="manifest.json">
 </head>
 <body>
@@ -31,10 +31,23 @@
   </nav>
 </div>
 <script src="js/kcal.js?v=1"></script>
-<script src="js/app.js?v=15"></script>
+<script src="js/app.js?v=16"></script>
 <script>
 if('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js');
+  navigator.serviceWorker.register('./sw.js').then(function(reg) {
+    /* 새 버전을 다 받아두면 하단에 띠를 띄운다.
+       controller 가 있다는 건 이미 쓰던 앱이 있다는 뜻 — 최초 설치는 제외된다.
+       자동 새로고침은 하지 않는다 (기록 쓰던 중이면 입력이 날아간다) */
+    reg.addEventListener('updatefound', function() {
+      var sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener('statechange', function() {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+          if (window.showUpdateBar) window.showUpdateBar();
+        }
+      });
+    });
+  }).catch(function(){});
 }
 </script>
 </body>

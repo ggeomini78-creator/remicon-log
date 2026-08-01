@@ -447,6 +447,63 @@ body{
 .toll-row:last-child{border-bottom:none}
 .toll-key{font-size:14px;color:var(--th-muted)}.toll-val{font-size:16px;font-weight:700;color:var(--on-primary)}
 
+/* ── 업데이트 알림 팝업 · 내역 ──
+   showToast 가 z-index:9999 라 그 아래인 9998 을 쓴다 */
+.wn-bg{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,.6);
+  z-index:9998;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  animation:wnIn .18s ease;
+}
+@keyframes wnIn{from{opacity:0}to{opacity:1}}
+.wn{
+  background:var(--th-bg2);
+  border:1px solid var(--th-border);
+  border-radius:14px;
+  padding:20px;
+  width:100%;max-width:340px;max-height:70vh;
+  overflow-y:auto;
+  box-shadow:0 12px 40px rgba(0,0,0,.45);
+}
+.wn-ver{font-size:13px;font-weight:700;color:var(--th-muted);letter-spacing:0.4px}
+.wn-t{font-size:19px;font-weight:700;color:var(--on-primary);margin:4px 0 12px;line-height:1.4}
+.wn-list{list-style:none;padding:0;margin:0}
+.wn-list li{
+  font-size:15px;line-height:1.6;color:var(--on-primary-mute);
+  padding-left:14px;position:relative;margin-bottom:7px;
+}
+.wn-list li:before{content:'·';position:absolute;left:3px;color:var(--th-muted);font-weight:700}
+.wn-btn{margin-top:16px;margin-bottom:0}
+/* 설정탭 내역 목록 */
+.cl-item{padding:12px 0;border-bottom:1px solid var(--hairline-dark)}
+.cl-item:last-child{border-bottom:none;padding-bottom:2px}
+.cl-t{font-size:16px;font-weight:700;color:var(--on-primary);margin:3px 0 8px;line-height:1.4}
+
+/* ── 새 버전 알림 띠 ── 하단 탭바 위에 둔다 (상단은 헤더·당겨서새로고침이 쓴다) */
+.upbar{
+  position:fixed;left:0;right:0;
+  bottom:calc(84px + env(safe-area-inset-bottom));
+  z-index:9998;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:0 12px;padding:11px 14px;
+  background:var(--th-bg2);
+  border:1px solid var(--th-border);
+  border-radius:var(--r-sm);
+  box-shadow:0 6px 24px rgba(0,0,0,.4);
+  animation:upIn .22s ease;
+}
+@keyframes upIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.upbar span{font-size:15px;font-weight:600;color:var(--on-primary)}
+.upbar button{
+  flex-shrink:0;
+  background:var(--th-btn-save);color:var(--th-bg);
+  border:none;border-radius:var(--r-pill);
+  padding:8px 15px;font-size:14px;font-weight:700;cursor:pointer;
+  font-family:inherit;
+}
+
 /* ── 항목 카드 ── */
 .item-card{
   background:var(--canvas-night-soft);

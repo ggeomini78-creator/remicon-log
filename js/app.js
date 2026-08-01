@@ -19,6 +19,26 @@ if(cfg.showHoliday===undefined) cfg.showHoliday=true;
 if(cfg.showTerm===undefined)    cfg.showTerm=false;   /* 절기는 칸이 좁아 기본 꺼둠 */
 cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar}] */
 
+/* ── 업데이트 내역 ──
+   새 항목은 맨 위에 추가한다. APP_VERSION 은 여기서 따라오므로 따로 손댈 필요 없다.
+   문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
+   ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
+var CHANGELOG=[
+  {v:'1.2.0', d:'2026-08-01', t:'업데이트 알림 추가, 달력 스와이프 문제 수정', items:[
+    '앱이 새로 바뀌면 이렇게 팝업으로 알려드려요',
+    '지난 업데이트 내역은 설정 맨 아래에서 언제든 다시 볼 수 있어요',
+    '달력을 옆으로 쓸면 앱이 꺼지고 오류 화면이 뜨던 문제를 고쳤어요',
+    '백업을 누르면 공유창이 떠서 파일에 저장하거나 카톡으로 보낼 수 있어요'
+  ]},
+  {v:'1.1.0', d:'2026-08-01', t:'달력에 공휴일과 음력 표시', items:[
+    '공휴일은 날짜가 빨갛게 되고 이름이 같이 나와요 (대체공휴일도요)',
+    '음력 초하루와 보름을 날짜 옆에 작게 표시해요',
+    '설정에서 생신·기일을 음력으로 등록하면 해마다 알아서 표시돼요',
+    '날짜를 누르면 그날 음력과 무슨 날인지 위에 나와요'
+  ]}
+];
+var APP_VERSION=CHANGELOG[0].v;
+
 /* ── 테마 목록 ── */
 var THEMES=[
   {id:'default',name:'SpaceX',  color:'#000000'},
@@ -876,6 +896,17 @@ function rConfig(){
   +'<div class="srow"><div><span class="slbl">대형 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.toll1+'" oninput="cfg.toll1=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">소형 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.toll2+'" oninput="cfg.toll2=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'</div>'
+  +'<div class="cfg-sec">업데이트 내역</div>'
+  +'<div class="sblk" style="padding:4px 14px 12px">'
+  +'<p style="font-size:14px;color:var(--th-muted);margin:10px 0 4px">현재 버전 v'+esc(APP_VERSION)+'</p>'
+  +CHANGELOG.map(function(e){
+    return'<div class="cl-item">'
+      +'<div class="wn-ver">'+wnDate(e)+'</div>'
+      +'<div class="cl-t">'+esc(e.t)+'</div>'
+      +'<ul class="wn-list">'+wnItems(e)+'</ul>'
+      +'</div>';
+  }).join('')
+  +'</div>'
   +'<div class="cfg-sec">데이터 백업 / 복원</div>'
   +'<div style="background:var(--th-bg2);border-radius:10px;padding:14px;margin-bottom:12px;border:0.5px solid var(--th-border)">'
   +'<p style="font-size:15px;color:var(--th-muted);margin-bottom:12px;line-height:1.6">백업 파일을 저장해두면 폰을 바꿔도 데이터를 복원할 수 있어요.</p>'
@@ -1045,8 +1076,59 @@ function doReset(){
   }catch(e){}
 })();
 
+/* ── 업데이트 알림 ── */
+
+/* 변경 내역 항목 하나를 목록 HTML 로.
+   문구는 CHANGELOG 에서 오지만 HTML을 + 로 이어붙이므로 esc() 를 태운다 */
+function wnItems(e){
+  return e.items.map(function(s){return'<li>'+esc(s)+'</li>';}).join('');
+}
+function wnDate(e){
+  var p=e.d.split('-');
+  return 'v'+esc(e.v)+' · '+(+p[1])+'월 '+(+p[2])+'일';
+}
+
+function showWhatsNew(e){
+  var bg=document.createElement('div');
+  bg.className='wn-bg'; bg.id='wnBg';
+  bg.innerHTML='<div class="wn" onclick="event.stopPropagation()">'
+    +'<div class="wn-ver">'+wnDate(e)+'</div>'
+    +'<div class="wn-t">🎉 '+esc(e.t)+'</div>'
+    +'<ul class="wn-list">'+wnItems(e)+'</ul>'
+    +'<button class="backup-btn dl wn-btn" onclick="closeWhatsNew()">확인</button>'
+    +'</div>';
+  bg.onclick=closeWhatsNew;          /* 배경을 눌러도 닫힌다 */
+  document.body.appendChild(bg);
+}
+function closeWhatsNew(){
+  cfg.seenVersion=APP_VERSION; sv();
+  var bg=document.getElementById('wnBg');
+  if(bg&&bg.parentNode) bg.parentNode.removeChild(bg);
+}
+/* 앱을 열 때 한 번 — 버전이 달라졌으면 최신 항목 하나만 띄운다 */
+function checkWhatsNew(){
+  if(cfg.seenVersion===APP_VERSION) return;
+  /* 갓 설치한 사람에게는 안 띄운다 (기록이 하나도 없으면 신규로 본다) */
+  if(cfg.seenVersion===undefined&&!Object.keys(logs).length){
+    cfg.seenVersion=APP_VERSION; sv(); return;
+  }
+  showWhatsNew(CHANGELOG[0]);
+}
+
+/* 서비스워커가 새 버전을 받아두면 index.html 이 이걸 부른다.
+   자동 새로고침은 하지 않는다 — 기록을 쓰던 중이면 입력이 날아간다 */
+function showUpdateBar(){
+  if(document.getElementById('upBar')) return;
+  var d=document.createElement('div');
+  d.className='upbar'; d.id='upBar';
+  d.innerHTML='<span>새 버전이 준비됐어요</span>'
+    +'<button onclick="location.reload()">새로고침</button>';
+  document.body.appendChild(d);
+}
+
 /* ── 시작 ── */
 render();
+checkWhatsNew();
 
 /* ── 당겨서 새로고침 (Pull to Refresh) ── */
 (function() {
