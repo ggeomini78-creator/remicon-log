@@ -2,7 +2,7 @@
 var tab='calendar', cd=new Date(), sel=null;
 var cSt='work', ol=[], wwList=[], repList=[], cashList=[];
 var annualYear=new Date().getFullYear();
-var swipeStartX=0, swipeStartY=0, swipeLock=false;
+var swipeStartX=0, swipeStartY=0, swipeLock=false, swipeH=false;
 var navLock=false;
 
 /* ── 데이터 로드 ── */
@@ -232,8 +232,18 @@ function openDay(k){sel=k;go('entry');}
 /* 스와이프 (한 번만 등록) */
 document.getElementById('mc').parentNode.addEventListener('touchstart',function(e){
   if(tab!=='calendar')return;
-  swipeStartX=e.touches[0].clientX; swipeStartY=e.touches[0].clientY;
+  swipeStartX=e.touches[0].clientX; swipeStartY=e.touches[0].clientY; swipeH=false;
 },{passive:true});
+/* 가로 스와이프로 확정되면 기본 동작을 막는다 — standalone PWA에서 가장자리 가로
+   스와이프는 iOS의 뒤로/앞으로 가기라, 안 막으면 달력을 넘기다 앱 밖으로 나간다.
+   달력 탭은 세로 스크롤이 없고(.cgrid{overflow:hidden}) 가로로 12px 넘게 움직인
+   뒤에만 막으므로, 날짜 탭과 '당겨서 새로고침'(세로)은 그대로 동작한다. */
+document.getElementById('mc').parentNode.addEventListener('touchmove',function(e){
+  if(tab!=='calendar'||e.touches.length>1)return;
+  var dx=e.touches[0].clientX-swipeStartX, dy=e.touches[0].clientY-swipeStartY;
+  if(!swipeH&&Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)) swipeH=true;
+  if(swipeH) e.preventDefault();
+},{passive:false});
 document.getElementById('mc').parentNode.addEventListener('touchend',function(e){
   if(tab!=='calendar'||swipeLock)return;
   var dx=e.changedTouches[0].clientX-swipeStartX;
@@ -960,11 +970,33 @@ function doBackup(){
   var data={logs:logs,cfg:cfg,version:'rl9',date:new Date().toISOString()};
   var json=JSON.stringify(data,null,2);
   var filename='레미콘운행일지_백업_'+new Date().toISOString().slice(0,10)+'.json';
-  /* iOS PWA는 a.click() 다운로드가 안 돼서 새 탭으로 열어 공유/저장 유도 */
-  var blob=new Blob([json],{type:'application/json'});
-  var url=URL.createObjectURL(blob);
+
+  /* ★ iOS PWA에서 blob URL로 화면을 이동시키면 안 된다.
+     예전엔 a.target='_blank' 로 새 탭을 열었는데, 그러면 그 주소가 히스토리에 남고
+     3초 뒤 revokeObjectURL() 로 blob이 해제되면서 죽은 항목이 된다. standalone PWA는
+     가장자리 가로 스와이프가 뒤로/앞으로 가기라, 달력을 넘기다 그 죽은 주소로 돌아가
+     'WebKitBlobResource 오류 1' 화면이 떴다. (2026-08-01)
+     공유 시트는 화면 이동이 없어서 이 문제가 생기지 않는다. */
+  var file=null;
+  try{ file=new File([json],filename,{type:'application/json'}); }catch(e){}
+
+  if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:filename})
+      .then(function(){showToast('💾 백업 파일을 저장했어요!');})
+      .catch(function(err){
+        if(err&&err.name==='AbortError')return;   /* 사용자가 공유창을 닫음 — 조용히 */
+        dlBackup(json,filename);
+      });
+    return;
+  }
+  dlBackup(json,filename);
+}
+/* 공유 시트를 못 쓰는 브라우저(PC 등)용 다운로드.
+   ★ target 을 주지 말 것 — 위 주석의 iOS 히스토리 문제가 그대로 재발한다 */
+function dlBackup(json,filename){
+  var url=URL.createObjectURL(new Blob([json],{type:'application/json'}));
   var a=document.createElement('a');
-  a.href=url;a.download=filename;a.target='_blank';
+  a.href=url;a.download=filename;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(url);},3000);
   showToast('💾 백업 파일을 저장해주세요!');
