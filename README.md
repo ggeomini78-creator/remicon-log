@@ -210,6 +210,18 @@ remicon-log/
 - **하단 탭바**: `env(safe-area-inset-bottom)`으로 홈 인디케이터 영역 회피.
 - **사진**: 카메라 촬영 시 OS가 갤러리 자동 저장. 앱은 base64로 리사이즈 저장.
 
+### ⚠️ iOS PWA에서 절대 하지 말 것 — blob URL로 화면 이동
+
+`display:standalone` 이라 **가장자리 가로 스와이프가 iOS의 뒤로/앞으로 가기**다.
+`a.target='_blank'` 로 `blob:` URL을 열면 그 주소가 히스토리에 남고,
+`revokeObjectURL()` 후엔 죽은 항목이 되어 달력을 넘기다 되돌아가면
+`WebKitBlobResource 오류 1` 화면이 뜬다. (2026-08-01 수정)
+
+- **백업은 `navigator.share({files})` 공유 시트를 쓴다** — 화면 이동이 없다.
+  폴백 `dlBackup()` 도 **`target` 을 주지 않는다** (`app.js` 참조).
+- 달력 가로 스와이프는 `touchmove` `{passive:false}` + `preventDefault()` 로 iOS
+  제스처를 막는다. 단, 화면 맨 끝에서 시작한 스와이프는 못 막을 수 있다 — 보조 장치일 뿐.
+
 ---
 
 ## 🐛 알려진 제약
