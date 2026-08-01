@@ -154,10 +154,19 @@ function kcSolar(ly, lm, ld, leap){
   return dt.getUTCFullYear() + '-' + kcPad(dt.getUTCMonth() + 1) + '-' + kcPad(dt.getUTCDate());
 }
 
-/* 달력 칸에 쓸 짧은 음력 문자열. '6.18' / 윤달이면 '윤6.18' */
+/* 짧은 음력 문자열. '6.18' / 윤달이면 '윤6.18' */
 function kcLunarStr(y, m, d){
   var l = kcLunar(y, m, d);
   if(!l) return '';
+  return (l.leap ? '윤' : '') + l.lm + '.' + l.ld;
+}
+
+/* 달력 칸용 — 초하루(음 1일)와 보름(음 15일)에만 돌려준다.
+   매일 찍으면 칸이 빽빽해져서, 달이 바뀌는 날과 한가운데만 남긴다.
+   양력 한 달에 보통 두 번(드물게 세 번) 나온다. */
+function kcLunarMark(y, m, d){
+  var l = kcLunar(y, m, d);
+  if(!l || (l.ld !== 1 && l.ld !== 15)) return '';
   return (l.leap ? '윤' : '') + l.lm + '.' + l.ld;
 }
 

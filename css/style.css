@@ -278,7 +278,8 @@ body{
 
 /* ── 음력 · 공휴일 (반드시 위 nth-child 규칙 뒤에 둘 것 — 특정도가 같아 순서로 이긴다) ── */
 .dtop{display:flex;align-items:baseline;justify-content:center;gap:2px;max-width:100%;flex-shrink:0}
-.lun{font-size:9px;font-weight:600;line-height:1;color:var(--th-lunar);letter-spacing:-0.3px;flex-shrink:0}
+/* 초하루·보름에만 나오므로 매일 찍을 때보다 조금 키웠다 */
+.lun{font-size:10px;font-weight:700;line-height:1;color:var(--th-lunar);letter-spacing:-0.3px;flex-shrink:0}
 .dsub{
   font-size:9px;font-weight:600;line-height:1.1;letter-spacing:-0.5px;
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;

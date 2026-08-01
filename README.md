@@ -185,7 +185,8 @@ remicon-log/
 
 주요 함수:
 - `kcLunar(y, m, d)` → `{ly, lm, ld, leap}` — **m 은 1-based** (`rCal()` 의 `m` 은 0-based이니 `m+1` 로 넘길 것)
-- `kcLunarStr(y, m, d)` → `'6.18'` / `'윤6.18'`
+- `kcLunarStr(y, m, d)` → `'6.18'` / `'윤6.18'` — 상세 화면용 (모든 날)
+- `kcLunarMark(y, m, d)` → **초하루(음 1일)·보름(음 15일)에만** 문자열, 그 외엔 `''` — 달력 칸용
 - `kcSolar(ly, lm, ld, leap)` → `'YYYY-MM-DD'`
 - `kcMark(key)` → `{name, kind}` — 칸에 쓸 대표 이름. kind: `event` > `holi` > `term` 순
 - `kcMarkAll(key)` → 배열 — 상세 헤더용 (기념일과 공휴일이 겹치면 둘 다)

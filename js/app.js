@@ -200,8 +200,9 @@ function rCal(){
       +(parseFloat(log.ot)>0?'<div class="mbadge ot">OT</div>':'')
       +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge toll">톨비</div>':'');
     /* 공휴일 / 음력 / 절기·기념일 */
-    /* rCal 의 m 은 0-based, kcLunarStr 은 1-based 월을 받는다 */
-    var mk=kcMark(key), lu=cfg.showLunar!==false?kcLunarStr(y,m+1,d):'';
+    /* rCal 의 m 은 0-based, kcLunarMark 는 1-based 월을 받는다.
+       칸에는 초하루·보름만 찍는다 (전체 음력은 날짜를 눌러 상세에서) */
+    var mk=kcMark(key), lu=cfg.showLunar!==false?kcLunarMark(y,m+1,d):'';
     var red=cfg.showHoliday!==false&&kcIsHoliday(key);
     /* 칸 높이가 정해져 있어 넘치는 내용은 잘린다. 기록 줄이 이미 두 줄 이상이면
        이름 줄은 생략하고 날짜 색으로만 알린다 (이름은 날짜를 눌러 상세에서 확인) */
@@ -831,7 +832,7 @@ function rConfig(){
   +'</div>'
   +'<div class="cfg-sec">달력 표시</div>'
   +'<div class="sblk">'
-  +cfgToggle('음력 날짜','날짜 옆에 작게 음력을 표시','showLunar')
+  +cfgToggle('음력 날짜','초하루·보름에만 표시. 그 외 날짜는 눌러서 확인','showLunar')
   +cfgToggle('공휴일','빨간날과 공휴일 이름을 표시','showHoliday')
   +cfgToggle('절기·기념일','입춘·복날·어버이날 등. 칸이 좁아 기본 꺼둠','showTerm')
   +'</div>'
