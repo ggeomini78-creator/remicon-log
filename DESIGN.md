@@ -32,6 +32,21 @@ This document defines the visual theme, design tokens, and components for the Re
 - `--th-nav-active`: `#111418`
 - `--th-btn-save`: `#111418`
 
+### Calendar Day Colors
+달력 날짜 숫자와 그 아래 이름 줄에 쓰는 색. 예전엔 주말 색이 `.cc:nth-child()` 안에
+하드코딩돼 있었는데, 공휴일이 임의 요일에 오면서 변수로 뺐다 (2026-08).
+
+| 변수 | 쓰임 | Dark | White |
+|---|---|---|---|
+| `--th-holiday` | 일요일 · 공휴일 (`.dn.holi`, `.dsub.holi`) | `#e05555` | `#d32f2f` |
+| `--th-sat` | 토요일 | `#5588dd` | `#1a5fb4` |
+| `--th-lunar` | 음력(`.lun`) · 절기·기념일(`.dsub`) | `#7d8794` | `#8a94a3` |
+| `--th-event` | 내가 등록한 음력 기념일 (`.dsub.event`) | `#e8a33d` | `#b06000` |
+
+- 오늘 날짜는 `.cc.today .dn` 이 `color:!important` 로 알약을 칠하므로, 오늘이 공휴일이면
+  글자색 대신 **알약 자체를 빨갛게** 한다 (`.cc.today .dn.holi`).
+- `.dn.holi` 규칙은 `.cc:nth-child(7n+1) .dn` 보다 **뒤에** 와야 한다. 특정도가 같아 순서로 이긴다.
+
 ### Icons
 - 하단 탭·헤더 아이콘은 이모지가 아닌 인라인 SVG(stroke: currentColor, 1.8px) 사용 — 테마 색을 그대로 따른다.
 - 달력의 바리수 뱃지는 히트맵 규칙: 1~2 파랑, 3~4 초록, 5~6 노랑/주황, 7~8 주황/빨강, 9+ 진빨강 (`cc()` 함수).

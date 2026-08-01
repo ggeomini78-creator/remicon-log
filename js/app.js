@@ -13,6 +13,11 @@ if(!cfg.ot2Pay)  cfg.ot2Pay=0;
 if(!cfg.theme||['dark','red','green','orange','purple','kakao','linear'].indexOf(cfg.theme)>=0) cfg.theme='default';
 cfg.monthlyUnitPrices = cfg.monthlyUnitPrices || {};
 if(cfg.wwRate===undefined) cfg.wwRate=0;
+/* 달력 표시 (음력·공휴일·절기) */
+if(cfg.showLunar===undefined)   cfg.showLunar=true;
+if(cfg.showHoliday===undefined) cfg.showHoliday=true;
+if(cfg.showTerm===undefined)    cfg.showTerm=false;   /* 절기는 칸이 좁아 기본 꺼둠 */
+cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar}] */
 
 /* ── 테마 목록 ── */
 var THEMES=[
@@ -48,6 +53,11 @@ function sv(){
   localStorage.setItem('rl9_cfg', JSON.stringify(cfg));
 }
 function dk(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+/* HTML 문자열을 + 로 이어붙이므로, 사용자가 입력한 이름은 반드시 이스케이프한다 */
+function esc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function cc(n){
   /* 히트맵: 1~2 파랑, 3~4 초록, 5~6 노랑/주황, 7~8 주황/빨강, 9+ 진빨강 */
   var C=[null,{b:'#E3EEFC',t:'#1B5FC2'},{b:'#CFE3FA',t:'#14509F'},{b:'#DDF4E7',t:'#0E7A4A'},
@@ -186,15 +196,25 @@ function rCal(){
     var mn='';
     if(ww>0) mn+='<div class="mbadge ww">'+(ww>1?ww:'')+'W</div>';
     if(ot2) mn+='<div class="mbadge ot2">2시↑</div>';
-    h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')">'
-      +'<span class="dn">'+d+'</span>'+badge
-      +(mn?'<div class="mini-row">'+mn+'</div>':'')
-      +'<div class="mini-row" style="margin-top:1px">'
-      +(parseFloat(log.fuel)>0?'<div class="mbadge fuel">주유</div>':'')
+    var mn2=(parseFloat(log.fuel)>0?'<div class="mbadge fuel">주유</div>':'')
       +(parseFloat(log.ot)>0?'<div class="mbadge ot">OT</div>':'')
-      +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge toll">톨비</div>':'')
-      +''
-      +'</div></div>';
+      +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge toll">톨비</div>':'');
+    /* 공휴일 / 음력 / 절기·기념일 */
+    /* rCal 의 m 은 0-based, kcLunarMark 는 1-based 월을 받는다.
+       칸에는 초하루·보름만 찍는다 (전체 음력은 날짜를 눌러 상세에서) */
+    var mk=kcMark(key), lu=cfg.showLunar!==false?kcLunarMark(y,m+1,d):'';
+    var red=cfg.showHoliday!==false&&kcIsHoliday(key);
+    /* 칸 높이가 정해져 있어 넘치는 내용은 잘린다. 기록 줄이 이미 두 줄 이상이면
+       이름 줄은 생략하고 날짜 색으로만 알린다 (이름은 날짜를 눌러 상세에서 확인) */
+    var rows=(badge?1:0)+(mn?1:0)+(mn2?1:0);
+    var sub=(mk&&rows<2)?'<div class="dsub '+mk.kind+'">'+esc(mk.name.split('·')[0])+'</div>':'';
+    h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')">'
+      +'<div class="dtop"><span class="dn'+(red?' holi':'')+'">'+d+'</span>'
+      +(lu?'<span class="lun">'+lu+'</span>':'')+'</div>'
+      +sub+badge
+      +(mn?'<div class="mini-row">'+mn+'</div>':'')
+      +(mn2?'<div class="mini-row" style="margin-top:1px">'+mn2+'</div>':'')
+      +'</div>';
   }
   h+='</div>';
   /* 하단 요약 바 */
@@ -404,7 +424,11 @@ function rEntry(){
     if (pv && pv.ekm) { prevEkm = pv.ekm; break; }
   }
   var dow=['일','월','화','수','목','금','토'][new Date(+y,+m-1,+d).getDay()];
-  document.getElementById('hS').textContent=y+'.'+m+'.'+d+' ('+dow+')';
+  /* 달력 칸에서 생략됐더라도 상세에서는 음력·공휴일 이름을 항상 보여준다 */
+  var luS=kcLunarStr(+y,+m,+d);
+  var mkS=kcMarkAll(sel).map(function(x){return x.name;}).join(' · ');
+  document.getElementById('hS').textContent=y+'.'+m+'.'+d+' ('+dow+')'
+    +(luS?' · 음 '+luS:'')+(mkS?' · '+mkS:'');
   cSt=log.st||'work';
   ol=JSON.parse(log.ot2List||'[]');
   wwList=JSON.parse(log.wwList||'[]');
@@ -806,6 +830,20 @@ function rConfig(){
   +'<p style="font-size:15px;color:var(--th-muted);margin-bottom:12px">테마를 선택하면 앱 전체 색이 바뀌어요</p>'
   +'<div class="theme-grid">'+themeHtml+'</div>'
   +'</div>'
+  +'<div class="cfg-sec">달력 표시</div>'
+  +'<div class="sblk">'
+  +cfgToggle('음력 날짜','초하루·보름에만 표시. 그 외 날짜는 눌러서 확인','showLunar')
+  +cfgToggle('공휴일','빨간날과 공휴일 이름을 표시','showHoliday')
+  +cfgToggle('절기·기념일','입춘·복날·어버이날 등. 칸이 좁아 기본 꺼둠','showTerm')
+  +'</div>'
+  +'<div class="cfg-sec">음력 기념일</div>'
+  +'<div class="sblk" style="padding:12px 14px">'
+  +'<p style="font-size:14px;color:var(--th-muted);margin-bottom:10px;line-height:1.6">'
+  +'생일·기일을 음력으로 등록해두면 해마다 바뀌는 양력 날짜에 자동으로 표시돼요.<br>'
+  +'달력 데이터는 '+KL_MIN+'~'+KL_MAX+'년까지 들어있어요.</p>'
+  +'<div id="leCon">'+mkLE()+'</div>'
+  +'<button class="add-btn" onclick="addLE()">+ 기념일 추가</button>'
+  +'</div>'
   +'<div class="cfg-sec">급여 설정 (' + (cm + 1) + '월 기준)</div>'
   +'<div class="sblk">'
   +'<div class="srow"><div><span class="slbl">' + (cm + 1) + '월 바리당 단가</span><span class="slbl-sub">선택된 월에만 적용되는 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="' + curMonthPrice + '" oninput="setMonthlyPrice(' + cy + ',' + cm + ', +this.value);sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
@@ -840,6 +878,74 @@ function rConfig(){
   +'<button class="backup-btn danger" onclick="doReset()">전체 데이터 초기화</button>'
   +'</div></div>';
   document.getElementById('mc').innerHTML=h;
+}
+
+/* ── 달력 표시 토글 ── */
+function cfgToggle(label,sub,key){
+  var on=cfg[key]===true;   /* 로드 시 세 플래그 모두 boolean 으로 정규화된다 */
+  return'<div class="srow"><div><span class="slbl">'+label+'</span><span class="slbl-sub">'+sub+'</span></div>'
+    +'<div class="btns tgl">'
+    +'<button class="btn'+(on?' on':'')+'" onclick="setCfgFlag(\''+key+'\',true)">켜기</button>'
+    +'<button class="btn'+(on?'':' on')+'" onclick="setCfgFlag(\''+key+'\',false)">끄기</button>'
+    +'</div></div>';
+}
+function setCfgFlag(k,v){cfg[k]=v;sv();rConfig();}
+
+/* ── 음력 기념일 (생일·기일) ── */
+function mkLE(){
+  var L=cfg.lunarEvents;
+  if(!L.length)return'<div style="font-size:16px;color:var(--th-muted);padding:4px 0 10px">등록된 기념일이 없어요</div>';
+  var ty=new Date().getFullYear();
+  return L.map(function(e,i){
+    var s=e.solar?null:kcSolar(ty,e.lm,e.ld,e.leap);
+    var when=e.solar?('양력 '+e.lm+'월 '+e.ld+'일')
+      :(s?('올해 '+(+s.slice(5,7))+'월 '+(+s.slice(8,10))+'일'):'올해 날짜 없음');
+    var mo=[];
+    for(var k=1;k<=12;k++) mo.push('<option value="'+k+'"'+(e.lm===k?' selected':'')+'>'+k+'월</option>');
+    /* 음력은 한 달이 최대 30일, 양력은 31일 */
+    var dy=[], maxD=e.solar?31:30;
+    for(k=1;k<=maxD;k++) dy.push('<option value="'+k+'"'+(e.ld===k?' selected':'')+'>'+k+'일</option>');
+    return'<div class="item-card" style="border-left:3px solid var(--th-event)">'
+      +'<div class="item-hdr"><span class="item-title" style="color:var(--th-event)">'+when+'</span>'
+      +'<button class="item-rm" onclick="rmLE('+i+')">삭제</button></div>'
+      +'<div class="item-fields">'
+      +'<div class="field"><label class="fl">이름</label>'
+      +'<input type="text" id="len'+i+'" value="'+esc(e.name)+'" placeholder="예: 아버지 생신" oninput="upLEName('+i+')"></div>'
+      +'<div class="field"><label class="fl">날짜</label><div style="display:flex;gap:5px">'
+      +'<select id="leb'+i+'" onchange="upLEDate('+i+')" style="flex:1">'
+      +'<option value="0"'+(e.solar?'':' selected')+'>음력</option>'
+      +'<option value="1"'+(e.solar?' selected':'')+'>양력</option></select>'
+      +'<select id="lem'+i+'" onchange="upLEDate('+i+')" style="flex:1">'+mo.join('')+'</select>'
+      +'<select id="led'+i+'" onchange="upLEDate('+i+')" style="flex:1">'+dy.join('')+'</select>'
+      +'</div></div>'
+      +'<div class="field"><label class="fl">윤달</label>'
+      +'<select id="lel'+i+'" onchange="upLEDate('+i+')"'+(e.solar?' disabled':'')+'>'
+      +'<option value="0"'+(e.leap?'':' selected')+'>평달</option>'
+      +'<option value="1"'+(e.leap?' selected':'')+'>윤달</option></select></div>'
+      +'</div></div>';
+  }).join('');
+}
+function addLE(){
+  cfg.lunarEvents.push({name:'',lm:1,ld:1,leap:false,solar:false});
+  sv();rConfig();
+}
+function rmLE(i){cfg.lunarEvents.splice(i,1);sv();rConfig();}
+/* 이름 입력 — 입력 중 포커스가 날아가면 안 되므로 다시 그리지 않는다 */
+function upLEName(i){
+  var n=document.getElementById('len'+i);
+  if(n){cfg.lunarEvents[i].name=n.value;sv();}
+}
+/* 날짜·윤달 변경 — 카드 제목의 '올해 양력' 이 바뀌므로 목록을 다시 그린다 */
+function upLEDate(i){
+  var e=cfg.lunarEvents[i];
+  var b=document.getElementById('leb'+i), m=document.getElementById('lem'+i),
+      d=document.getElementById('led'+i), l=document.getElementById('lel'+i);
+  if(b) e.solar=b.value==='1';
+  if(m) e.lm=+m.value;
+  if(d) e.ld=+d.value;
+  e.leap=!e.solar&&!!l&&l.value==='1';
+  sv();
+  document.getElementById('leCon').innerHTML=mkLE();
 }
 
 /* ★ 테마 적용 및 저장 */

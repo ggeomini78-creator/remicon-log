@@ -18,6 +18,7 @@ remicon-log/
 ├── css/
 │   └── style.css     # 전체 스타일 + 테마 CSS 변수 (--th-*)
 ├── js/
+│   ├── kcal.js       # 한국 달력 데이터 (음력·공휴일·절기, 2024~2035) — app.js 보다 먼저 로드
 │   └── app.js        # 전체 기능 코드 (단일 파일, 전역 함수 기반)
 ├── DESIGN.md         # 디자인 토큰/테마 정의 문서
 └── .github/
@@ -46,7 +47,15 @@ remicon-log/
   toll2: 2400,        // 톨비 소형 (원)
   initKm: 125000,     // 기준 km (앱 시작 시점 차량 누적 km)
   ot2Pay: 0,          // 2시간초과 건당 단가 (원)
-  theme: "default"    // 테마 ID
+  wwRate: 0,          // 폐수 건당 단가 (원)
+  theme: "default",   // 테마 ID
+  monthlyUnitPrices: {},  // { "YYYY-MM": 단가 } — 해당 월에만 적용. getUnitPrice(y,m) 로 조회
+
+  // 달력 표시
+  showLunar: true,    // 날짜 옆 음력
+  showHoliday: true,  // 빨간날 + 공휴일 이름
+  showTerm: false,    // 절기·기념일 (칸이 좁아 기본 꺼둠)
+  lunarEvents: []     // 내가 등록한 기념일 [{name, lm, ld, leap, solar}]
 }
 ```
 
@@ -156,6 +165,40 @@ remicon-log/
 - 상세 토큰/뱃지 색상 정의는 `DESIGN.md` 참조.
 
 주요 변수: `--th-primary`, `--th-accent`, `--th-bg`, `--th-bg2`, `--th-border`, `--th-text`, `--th-muted`, `--th-nav-active`, `--th-btn-save`.
+
+달력 날짜 색: `--th-holiday`(일요일·공휴일), `--th-sat`(토요일), `--th-lunar`(음력·절기), `--th-event`(등록한 기념일).
+
+---
+
+## 📅 달력 데이터 (js/kcal.js)
+
+**2024~2035년 12년치를 앱에 내장한다. 네트워크를 쓰지 않는다.**
+네이버 캘린더는 외부 앱이 읽어갈 공개 API가 없고, 공공데이터포털 특일정보 API·구글
+공휴일 캘린더는 API 키와 CORS가 필요하며 오프라인에서 동작하지 않는다.
+
+| 데이터 | 저장 형태 | 출처 |
+|---|---|---|
+| 음력 | `KLUNAR` — 연도별 `{설날 양력, 윤달 번호, 월별 일수 비트열}` | KASI 기반 `korean_lunar_calendar` |
+| 공휴일 | `KHOLI` — 연도별 `'MMDD이름,…'` 문자열 | `holidays` (SouthKorea). 대체·임시공휴일, 선거일, 2026 제헌절 재지정 포함 |
+| 24절기 | `KTERM` — 연도별 일(日) 24개 | 태양 황경 15° 간격 (KST) |
+| 한식·삼복 | `KMISC` | 동지+105일 / 하지·입추 기준 庚일 |
+
+주요 함수:
+- `kcLunar(y, m, d)` → `{ly, lm, ld, leap}` — **m 은 1-based** (`rCal()` 의 `m` 은 0-based이니 `m+1` 로 넘길 것)
+- `kcLunarStr(y, m, d)` → `'6.18'` / `'윤6.18'` — 상세 화면용 (모든 날)
+- `kcLunarMark(y, m, d)` → **초하루(음 1일)·보름(음 15일)에만** 문자열, 그 외엔 `''` — 달력 칸용
+- `kcSolar(ly, lm, ld, leap)` → `'YYYY-MM-DD'`
+- `kcMark(key)` → `{name, kind}` — 칸에 쓸 대표 이름. kind: `event` > `holi` > `term` 순
+- `kcMarkAll(key)` → 배열 — 상세 헤더용 (기념일과 공휴일이 겹치면 둘 다)
+- `kcIsHoliday(key)` → 빨간날 여부 (설정 토글과 무관하게 사실을 답한다)
+
+**범위 밖(2023 이하 / 2036 이상)은 예외를 던지지 않고 빈 값/`null` 을 돌려준다.** 표시만 생략된다.
+2036년 이후를 지원하려면 `KLUNAR`·`KHOLI`·`KTERM`·`KMISC` 에 연도를 추가하고 `KL_MAX`,
+`KLUNAR_END` 를 올린다.
+
+### 데이터를 손대면 반드시
+
+콘솔에서 `kcSelfTest()` 를 돌린다. 월일수 합·양음력 왕복 4370일·명절 36건을 검사한다.
 
 ---
 

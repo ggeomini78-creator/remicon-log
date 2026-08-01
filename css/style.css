@@ -50,6 +50,12 @@
   --th-nav-active:#ffffff;
   --th-btn-save:#ffffff;
 
+  /* 달력 날짜 색 — 일요일·공휴일 / 토요일 / 음력·절기 / 등록 기념일 */
+  --th-holiday:#e05555;
+  --th-sat:#5588dd;
+  --th-lunar:#7d8794;
+  --th-event:#e8a33d;
+
   /* Badges - Dark Mode (Default) — 대비 강화 */
   --badge-fuel-bg: rgba(52, 211, 153, 0.22);
   --badge-fuel-text: #52e5ae;
@@ -80,6 +86,12 @@ html.theme-white{
   --canvas-night:#ffffff;
   --canvas-night-soft:#f4f5f7;
   --hairline-dark:#e0e3e8;
+
+  /* 달력 날짜 색 — 흰 배경에서 대비가 나오도록 어둡게 */
+  --th-holiday:#d32f2f;
+  --th-sat:#1a5fb4;
+  --th-lunar:#8a94a3;
+  --th-event:#b06000;
 
   /* Badges - Light Mode */
   --badge-fuel-bg: #e6f4ea;
@@ -240,7 +252,7 @@ body{
   padding:7px 0;
   color:var(--th-muted);
 }
-.ch:first-child{color:#e05555}.ch:last-child{color:#5588dd}
+.ch:first-child{color:var(--th-holiday)}.ch:last-child{color:var(--th-sat)}
 .cc{
   background:var(--canvas-night);
   padding:4px 2px;
@@ -248,7 +260,7 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:2px;
+  gap:1px;
   overflow:hidden;
 }
 .cc:active{opacity:.6}.cc.empty{background:var(--canvas-night-soft);cursor:default}
@@ -257,12 +269,27 @@ body{
   background:var(--th-accent);
   color:var(--canvas-night)!important;
   border-radius:50%;
-  width:26px;height:26px;
+  width:22px;height:22px;
   display:flex;align-items:center;justify-content:center;
   font-weight:700;
 }
-.cc:nth-child(7n+1) .dn{color:#e05555}.cc:nth-child(7n) .dn{color:#5588dd}
-.dn{font-size:15px;font-weight:700;line-height:26px;min-width:26px;text-align:center;letter-spacing:0}
+.cc:nth-child(7n+1) .dn{color:var(--th-holiday)}.cc:nth-child(7n) .dn{color:var(--th-sat)}
+.dn{font-size:15px;font-weight:700;line-height:22px;min-width:22px;text-align:center;letter-spacing:0}
+
+/* ── 음력 · 공휴일 (반드시 위 nth-child 규칙 뒤에 둘 것 — 특정도가 같아 순서로 이긴다) ── */
+.dtop{display:flex;align-items:baseline;justify-content:center;gap:2px;max-width:100%;flex-shrink:0}
+/* 초하루·보름에만 나오므로 매일 찍을 때보다 조금 키웠다 */
+.lun{font-size:10px;font-weight:700;line-height:1;color:var(--th-lunar);letter-spacing:-0.3px;flex-shrink:0}
+.dsub{
+  font-size:9px;font-weight:600;line-height:1.1;letter-spacing:-0.5px;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;
+  color:var(--th-lunar);
+}
+.dsub.holi{color:var(--th-holiday)}
+.dsub.event{color:var(--th-event)}
+.cgrid .cc .dn.holi{color:var(--th-holiday)}
+/* 오늘이 공휴일이면 흰 알약 대신 빨간 알약 */
+.cc.today .dn.holi{background:var(--th-holiday);color:#fff!important}
 
 /* 스와이프 애니메이션 */
 @keyframes slideFromRight{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:translateX(0)}}
@@ -316,7 +343,7 @@ body{
   letter-spacing:0.8px;
   text-transform:uppercase;
 }
-.field input,.field textarea{
+.field input,.field textarea,.field select{
   width:100%;
   padding:11px var(--sp-md);
   border:1px solid var(--hairline-dark);
@@ -330,13 +357,23 @@ body{
   -webkit-user-select:text;
   font-family:'Inter','Arial Narrow',Arial,sans-serif;
 }
-.field input:focus,.field textarea:focus{border-color:rgba(255,255,255,.5)}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(255,255,255,.5)}
 .field textarea{resize:none;min-height:60px;font-size:16px}
+/* 드롭다운도 입력칸과 같은 모양으로 (기본 브라우저 스타일이 테마와 어긋난다) */
+.field select{
+  font-size:16px;padding-right:26px;cursor:pointer;
+  background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%239aa3b0' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 9px center;background-size:11px;
+}
+.field select:disabled{opacity:.45;cursor:default}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .kmh{font-size:14px;color:var(--th-muted);margin-top:3px}
 
 /* ── 토글 버튼 그룹 ── */
 .btns{display:flex;gap:5px}
+/* 설정 행(.srow) 안의 켜기/끄기 — 폭을 주지 않으면 동그랗게 찌그러진다 */
+.btns.tgl{width:120px;flex-shrink:0}
+.btns.tgl .btn{padding:8px 0;font-size:14px}
 .btn{
   flex:1;
   padding:9px 4px;
