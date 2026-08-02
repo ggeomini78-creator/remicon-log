@@ -24,6 +24,12 @@ cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
+  {v:'1.2.1', d:'2026-08-02', t:'운행거리·유류량이 마이너스로 나오던 문제 수정', items:[
+    '종료 km를 아직 안 넣은 날은 그날 운행거리를 0으로 봐요',
+    '전에는 시작 km만 넣으면 그 숫자만큼 마이너스로 잡혀서 운행거리가 −2,446km처럼 나왔어요',
+    '운행거리가 틀리면 유류 소비량도 같이 틀어져서, 이제 유류 정산도 제대로 나와요',
+    '종료 km가 시작 km보다 작게 들어간 날도 0으로 처리해요'
+  ]},
   {v:'1.2.0', d:'2026-08-01', t:'업데이트 알림 추가, 달력 스와이프 문제 수정', items:[
     '앱이 새로 바뀌면 이렇게 팝업으로 알려드려요',
     '지난 업데이트 내역은 설정 맨 아래에서 언제든 다시 볼 수 있어요',
@@ -88,12 +94,20 @@ function cc(n){
 }
 function tollTotal(t1,t2){return(parseInt(t1)||0)*cfg.toll1+(parseInt(t2)||0)*cfg.toll2;}
 
+/* ★ 하루 운행거리: 시작/종료 km이 둘 다 있고 종료>시작일 때만 계산.
+   종료 km 미입력 시 0으로 처리해야 시작 km이 통째로 마이너스로 잡히지 않는다. */
+function dayKm(v){
+  if(!v||!v.skm||!v.ekm)return 0;
+  var sk=parseInt(v.skm)||0,ek=parseInt(v.ekm)||0;
+  return ek>sk?ek-sk:0;
+}
+
 /* ── 연료: 이달 데이터만 (월별 리셋) ── */
 function fuelMonth(y,m){
   var mp=y+'-'+String(m+1).padStart(2,'0');
   var mf=0,mu=0;
   Object.keys(logs).filter(function(k){return k.startsWith(mp);}).forEach(function(k){
-    var v=logs[k],km=parseInt(v.ekm||0)-parseInt(v.skm||0);
+    var v=logs[k],km=dayKm(v);
     mf+=parseFloat(v.fuel||0); mu+=km*cfg.fuelRate;
   });
   return{mf:+mf.toFixed(2),mu:+mu.toFixed(2)};
@@ -103,7 +117,7 @@ function fuelMonthExclude(targetDate){
   var mp=targetDate.substring(0,7);
   var mf=0,mu=0;
   Object.keys(logs).filter(function(k){return k.startsWith(mp)&&k!==targetDate;}).forEach(function(k){
-    var v=logs[k],km=parseInt(v.ekm||0)-parseInt(v.skm||0);
+    var v=logs[k],km=dayKm(v);
     mf+=parseFloat(v.fuel||0); mu+=km*cfg.fuelRate;
   });
   return{mf:+mf.toFixed(2),mu:+mu.toFixed(2)};
@@ -114,7 +128,7 @@ function calcPrevKm(targetDate){
   var t=0;
   keys.forEach(function(k){
     var v=logs[k];
-    t+=parseInt(v.ekm||0)-parseInt(v.skm||0);
+    t+=dayKm(v);
     JSON.parse(v.repList||'[]').forEach(function(r){t+=parseInt(r.km||0);});
     JSON.parse(v.cashList||'[]').forEach(function(r){t+=parseInt(r.km||0);});
   });
@@ -464,7 +478,7 @@ function rEntry(){
   wwList=JSON.parse(log.wwList||'[]');
   repList=JSON.parse(log.repList||'[]');
   cashList=JSON.parse(log.cashList||'[]');
-  var kmD=(log.skm&&log.ekm)?parseInt(log.ekm)-parseInt(log.skm):0;
+  var kmD=dayKm(log);
   var prevKm=calcPrevKm(sel);
   var repKmToday=repList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
   var cashKmToday=cashList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
@@ -604,7 +618,7 @@ function rStats(){
   var wd=ml.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
   var tc=ml.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
   var tv=ml.reduce(function(s,e){return s+(parseFloat(e[1].vol)||0);},0);
-  var tkm=ml.reduce(function(s,e){return s+(parseInt(e[1].ekm||0)-parseInt(e[1].skm||0));},0);
+  var tkm=ml.reduce(function(s,e){return s+dayKm(e[1]);},0);
   var tot=ml.reduce(function(s,e){return s+(parseFloat(e[1].ot)||0);},0);
   var totA=tot*cfg.otRate;
   var tww=ml.reduce(function(s,e){return s+(JSON.parse(e[1].wwList||'[]')).length;},0);
@@ -684,7 +698,7 @@ function rStats(){
     var v=logs[k];
     var repKm=JSON.parse(v.repList||'[]').reduce(function(rs,r){return rs+(parseInt(r.km||0));},0);
     var cashKm=JSON.parse(v.cashList||'[]').reduce(function(rs,r){return rs+(parseInt(r.km||0));},0);
-    return s+(parseInt(v.ekm||0)-parseInt(v.skm||0))+repKm+cashKm;
+    return s+dayKm(v)+repKm+cashKm;
   },0);
   var totalOdometer=cfg.initKm+allKm;
   var ot2I=[];ml.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x,xi){ot2I.push({date:e[0],idx:xi,site:x.site,mgr:x.mgr,type:x.type,settled:x.settled});});});
@@ -781,7 +795,7 @@ function rAnnual(){
     activeMonths++;
     var wd2=ml2.filter(function(e){return e[1].st==='work'||!e[1].st;}).length;
     var tc2=ml2.reduce(function(s,e){return s+(parseInt(e[1].calls)||0);},0);
-    var km2=ml2.reduce(function(s,e){return s+(parseInt(e[1].ekm||0)-parseInt(e[1].skm||0));},0);
+    var km2=ml2.reduce(function(s,e){return s+dayKm(e[1]);},0);
     var ot2=ml2.reduce(function(s,e){return s+(parseFloat(e[1].ot)||0);},0);
     var otP2=ot2*cfg.otRate;
     var toll2=ml2.reduce(function(s,e){return s+(parseInt(e[1].t1||0))*cfg.toll1+(parseInt(e[1].t2||0))*cfg.toll2;},0);
