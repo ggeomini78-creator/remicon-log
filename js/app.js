@@ -24,6 +24,11 @@ cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
+  {v:'1.2.2', d:'2026-08-03', t:'통계 탭이 월말결산으로 바뀌었어요', items:[
+    '아래 탭 이름이 통계에서 월말결산으로 바뀌었어요',
+    '월말결산에는 이번 달 운행 km만 보여요 (일지 운행 + 정비·현금운행 이동)',
+    '전체 누적 km 표시는 없앴어요 — 1년 운행거리는 연말결산에서 보세요'
+  ]},
   {v:'1.2.1', d:'2026-08-02', t:'운행거리·유류량이 마이너스로 나오던 문제 수정', items:[
     '종료 km를 아직 안 넣은 날은 그날 운행거리를 0으로 봐요',
     '전에는 시작 km만 넣으면 그 숫자만큼 마이너스로 잡혀서 운행거리가 −2,446km처럼 나왔어요',
@@ -611,7 +616,7 @@ function delE(){
 
 /* ── 통계 ── */
 function rStats(){
-  document.getElementById('hS').textContent='통계 / 월말결산';
+  document.getElementById('hS').textContent='월말결산';
   var y=cd.getFullYear(),m=cd.getMonth();
   var mp=y+'-'+String(m+1).padStart(2,'0');
   var ml=Object.entries(logs).filter(function(e){return e[0].startsWith(mp);});
@@ -694,13 +699,14 @@ function rStats(){
   var fuelDiff=+(fu.mu-fu.mf).toFixed(2);
   var fuelLabel=fuelDiff>=0?'🟢 초과소비 +'+fuelDiff.toFixed(1)+'L — 지급 받음':'🔴 잔량 '+Math.abs(fuelDiff).toFixed(1)+'L — 도급비 차감';
   var fuelColor=fuelDiff>=0?'#059669':'#dc2626';
-  var allKm=Object.keys(logs).reduce(function(s,k){
-    var v=logs[k];
+  /* 이달 정비·현금운행 이동거리 — 일지 운행(tkm)과 합쳐 이달 누적을 만든다 */
+  var mMoveKm=ml.reduce(function(s,e){
+    var v=e[1];
     var repKm=JSON.parse(v.repList||'[]').reduce(function(rs,r){return rs+(parseInt(r.km||0));},0);
     var cashKm=JSON.parse(v.cashList||'[]').reduce(function(rs,r){return rs+(parseInt(r.km||0));},0);
-    return s+dayKm(v)+repKm+cashKm;
+    return s+repKm+cashKm;
   },0);
-  var totalOdometer=cfg.initKm+allKm;
+  var monthKmTotal=tkm+mMoveKm;
   var ot2I=[];ml.forEach(function(e){JSON.parse(e[1].ot2List||'[]').forEach(function(x,xi){ot2I.push({date:e[0],idx:xi,site:x.site,mgr:x.mgr,type:x.type,settled:x.settled});});});
   var cashI=[];ml.forEach(function(e){JSON.parse(e[1].cashList||'[]').forEach(function(x){cashI.push({date:e[0],site:x.site,mgr:x.mgr,amt:x.amt,km:x.km});});});
   var cashSum=cashI.reduce(function(s,x){return s+(parseInt(x.amt||0));},0);
@@ -720,12 +726,12 @@ function rStats(){
   +'<div class="mc"><div class="mk">근무일</div><div class="mv">'+wd+'<span class="mu">일</span></div></div>'
   +'<div class="mc"><div class="mk">총 바리수</div><div class="mv">'+tc+'<span class="mu">바리</span></div></div>'
   +'<div class="mc"><div class="mk">운반량</div><div class="mv">'+tv.toFixed(1)+'<span class="mu">㎥</span></div></div>'
-  +'<div class="mc"><div class="mk">운행거리</div><div class="mv">'+tkm+'<span class="mu">km</span></div></div>'
+  +'<div class="mc"><div class="mk">운행거리</div><div class="mv">'+tkm.toLocaleString()+'<span class="mu">km</span></div></div>'
   +'</div>'
-  +'<div class="sec">전체 누적 km</div>'
-  +'<div class="fb"><div class="fr"><span class="fk">기준 km</span><span class="fv">'+cfg.initKm.toLocaleString()+'km</span></div>'
-  +'<div class="fr"><span class="fk">전체 운행 누적</span><span class="fv">+'+allKm.toLocaleString()+'km</span></div>'
-  +'<div class="fr"><span class="fk" style="font-weight:700">현재 총 km</span><span class="fv" style="color:var(--th-accent);font-size:19px">'+totalOdometer.toLocaleString()+'km</span></div></div>'
+  +'<div class="sec">이달 운행 누적 km</div>'
+  +'<div class="fb"><div class="fr"><span class="fk">일지 운행</span><span class="fv">'+tkm.toLocaleString()+'km</span></div>'
+  +'<div class="fr"><span class="fk">정비·현금운행 이동</span><span class="fv">+'+mMoveKm.toLocaleString()+'km</span></div>'
+  +'<div class="fr"><span class="fk" style="font-weight:700">이달 누적 합계</span><span class="fv" style="color:var(--th-accent);font-size:19px">'+monthKmTotal.toLocaleString()+'km</span></div></div>'
   +'<div class="sec">유류 현황 (이달 / 정산 별도)</div>'
   +'<div class="fb"><div class="fr"><span class="fk">이달 주유량</span><span class="fv" style="color:#059669">+'+fu.mf.toFixed(1)+'L</span></div>'
   +'<div class="fr"><span class="fk">이달 소비량</span><span class="fv" style="color:#dc2626">'+fu.mu.toFixed(1)+'L</span></div>'
