@@ -25,13 +25,13 @@
   <div class="content" id="mc"></div>
   <nav class="nav">
     <button class="nb on" id="nbCalendar" onclick="go('calendar')"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>달력</button>
-    <button class="nb" id="nbStats" onclick="go('stats')"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>통계</button>
+    <button class="nb" id="nbStats" onclick="go('stats')"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>월말결산</button>
     <button class="nb" id="nbAnnual" onclick="go('annual')"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 5H5v2a3 3 0 0 0 3 3M16 5h3v2a3 3 0 0 1-3 3M12 13v4M8 20h8M10 17h4"/></svg></span>연말결산</button>
     <button class="nb" id="nbConfig" onclick="go('config')"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2.2"/><circle cx="8" cy="16" r="2.2"/></svg></span>설정</button>
   </nav>
 </div>
 <script src="js/kcal.js?v=1"></script>
-<script src="js/app.js?v=17"></script>
+<script src="js/app.js?v=18"></script>
 <script>
 if('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').then(function(reg) {
