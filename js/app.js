@@ -24,6 +24,14 @@ cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
+  {v:'1.3.0', d:'2026-08-17', t:'운행일지 사진 첨부, 쉬는 날 메모 표시', items:[
+    '기록 화면 맨 아래에서 종이 운행일지를 찍어 붙여둘 수 있어요',
+    '사진을 고르면 저장 버튼을 안 눌러도 바로 저장돼요',
+    '사진을 누르면 크게 볼 수 있어요 — 손가락으로 쓸어서 구석구석 읽으세요',
+    '사진이 있는 날은 달력에 📷 표시가 떠요',
+    '휴무·정비·기타로 표시한 날은 메모에 적은 말이 달력에 그대로 보여요 (예: 비대기)',
+    '※ 사진은 용량이 커서 백업 파일에 담기지 않아요. 폰을 바꾸면 사진은 안 옮겨져요'
+  ]},
   {v:'1.2.2', d:'2026-08-03', t:'통계 탭이 월말결산으로 바뀌었어요', items:[
     '아래 탭 이름이 통계에서 월말결산으로 바뀌었어요',
     '월말결산에는 이번 달 운행 km만 보여요 (일지 운행 + 정비·현금운행 이동)',
@@ -49,6 +57,34 @@ var CHANGELOG=[
   ]}
 ];
 var APP_VERSION=CHANGELOG[0].v;
+
+/* ── 사진 저장소 (IndexedDB) — logs와 완전 분리, 키는 날짜 문자열 ── */
+var phDB=null, phKeys=[], phUrl='';
+function phTx(mode,fn){
+  if(phDB)return fn(phDB.transaction('p',mode).objectStore('p'));
+  var q=indexedDB.open('rl_photo',1);
+  q.onupgradeneeded=function(){q.result.createObjectStore('p');};
+  q.onsuccess=function(){phDB=q.result;fn(phDB.transaction('p',mode).objectStore('p'));};
+  q.onerror=function(){console.error('사진 DB 열기 실패',q.error);};
+}
+function phSet(k,b,cb){phTx('readwrite',function(s){var r=s.put(b,k);
+  r.onsuccess=function(){if(phKeys.indexOf(k)<0)phKeys.push(k);cb&&cb();};
+  r.onerror=function(){cb&&cb(r.error);};});}
+function phGet(k,cb){phTx('readonly',function(s){var r=s.get(k);
+  r.onsuccess=function(){cb(r.result);};r.onerror=function(){cb(null);};});}
+function phDel(k,cb){phTx('readwrite',function(s){var r=s['delete'](k);
+  r.onsuccess=function(){var i=phKeys.indexOf(k);if(i>=0)phKeys.splice(i,1);cb&&cb();};});}
+/* 달력 뱃지용 키 목록 (비동기라 첫 페인트 뒤 도착 → 달력이면 다시 그린다) */
+phTx('readonly',function(s){var r=s.getAllKeys();
+  r.onsuccess=function(){phKeys=r.result;if(tab==='calendar'&&document.getElementById('mc').innerHTML)rCal();};});
+
+/* 2026-06 사진 기능 시절 logs에 남은 base64 잔재 → IndexedDB로 옮기고 제거 (1회성, 멱등) */
+Object.keys(logs).forEach(function(k){
+  var p=logs[k].photo; if(!p) return;
+  fetch(p).then(function(r){return r.blob();}).then(function(b){
+    phSet(k,b,function(err){ if(!err){delete logs[k].photo; sv();} });
+  })['catch'](function(){ delete logs[k].photo; sv(); });
+});
 
 /* ── 테마 목록 ── */
 var THEMES=[
@@ -159,6 +195,7 @@ var slideDir=0;
 function pm(){slideDir=-1;cd=new Date(cd.getFullYear(),cd.getMonth()-1,1);render();}
 function nm(){slideDir=1;cd=new Date(cd.getFullYear(),cd.getMonth()+1,1);render();}
 function render(){
+  if(phUrl){URL.revokeObjectURL(phUrl);phUrl='';}
   var mc=document.getElementById('mc');
   mc.classList.toggle('cal-mode',tab==='calendar');
   if(tab==='calendar') rCal();
@@ -235,6 +272,7 @@ function rCal(){
     var mn='';
     if(ww>0) mn+='<div class="mbadge ww">'+(ww>1?ww:'')+'W</div>';
     if(ot2) mn+='<div class="mbadge ot2">2시↑</div>';
+    if(phKeys.indexOf(key)>=0) mn+='<div class="mbadge photo">📷</div>';
     var mn2=(parseFloat(log.fuel)>0?'<div class="mbadge fuel">주유</div>':'')
       +(parseFloat(log.ot)>0?'<div class="mbadge ot">OT</div>':'')
       +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge toll">톨비</div>':'');
@@ -246,7 +284,14 @@ function rCal(){
     /* 칸 높이가 정해져 있어 넘치는 내용은 잘린다. 기록 줄이 이미 두 줄 이상이면
        이름 줄은 생략하고 날짜 색으로만 알린다 (이름은 날짜를 눌러 상세에서 확인) */
     var rows=(badge?1:0)+(mn?1:0)+(mn2?1:0);
-    var sub=(mk&&rows<2)?'<div class="dsub '+mk.kind+'">'+esc(mk.name.split('·')[0])+'</div>':'';
+    /* 메모는 쉬는 날(휴무·정비·기타)에만 칸에 찍는다 — 왜 쉬었는지가 달력에서 바로 보이게.
+       근무일은 바리수·주유·오티 뱃지가 칸을 이미 채워서 넣을 자리가 없다 (넣으면 뱃지가 잘린다).
+       내가 직접 쓴 말이라 공휴일 이름보다 앞선다 (공휴일은 날짜가 빨간 것으로도 안다).
+       긴 메모는 CSS 로 잘리므로 '비대기' 처럼 짧게 쓰면 그대로 보인다 */
+    var off=(log.st==='vacation'||log.st==='repair'||log.st==='other');
+    var memo1=off?(log.memo||'').replace(/\s+/g,' ').trim():'';
+    var sub=memo1?'<div class="dsub memo">'+esc(memo1)+'</div>'
+      :(mk&&rows<2)?'<div class="dsub '+mk.kind+'">'+esc(mk.name.split('·')[0])+'</div>':'';
     h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')">'
       +'<div class="dtop"><span class="dn'+(red?' holi':'')+'">'+d+'</span>'
       +(lu?'<span class="lun">'+lu+'</span>':'')+'</div>'
@@ -558,9 +603,58 @@ function rEntry(){
   +'<button class="add-btn" onclick="addCash()">＋ 현금거래 추가</button>'
   +'<div class="shdr">메모</div>'
   +'<div class="field"><textarea id="fM" placeholder="특이사항, 현장명 등...">'+(log.memo||'')+'</textarea></div>'
+  +'<div class="shdr">운행일지 사진</div>'
+  +'<div id="phBox"></div>'
   +'<button class="bsave" id="btnSave" onclick="saveE()">저장</button>'
   +((log.calls||log.st)?'<button class="bdel" onclick="delE()">이 날 기록 삭제</button>':'')
   +'</div>';
+  phLoad();
+}
+
+/* ── 사진 UI ── */
+function phLoad(){
+  var k=sel;
+  phGet(k,function(b){
+    if(k!==sel)return;                         /* 콜백 도착 전 날짜가 바뀐 경우 무시 */
+    var box=document.getElementById('phBox'); if(!box)return;
+    if(phUrl){URL.revokeObjectURL(phUrl);phUrl='';}
+    if(b){
+      phUrl=URL.createObjectURL(b);
+      box.innerHTML='<div style="position:relative">'
+        +'<img src="'+phUrl+'" style="width:100%;border-radius:8px;display:block" onclick="phZoom()">'
+        +'<button class="pdel" onclick="phDelUI()">✕</button></div>'
+        +'<div style="font-size:14px;color:var(--th-muted);margin-top:6px">사진을 탭하면 크게 볼 수 있어요 (쓸어서 이동)</div>';
+    }else{
+      box.innerHTML='<div class="photo-btns">'
+        +'<div class="photo-btn">📷 촬영<input type="file" accept="image/*" capture="environment" onchange="hPh(event)"></div>'
+        +'<div class="photo-btn">🖼️ 갤러리<input type="file" accept="image/*" onchange="hPh(event)"></div></div>';
+    }
+  });
+}
+function hPh(ev){
+  var f=ev.target.files[0]; if(!f||!sel)return;
+  phSet(sel,f,function(err){
+    if(err){showToast('⚠️ 사진 저장 실패','#dc2626');return;}
+    showToast('📷 사진 저장됐어요'); phLoad();
+  });
+}
+/* 확대 — 원본 크기로 오버레이에 얹고 쓸어서 본다.
+   ★ blob URL 로 화면을 이동시키면 안 된다 (window.open / target='_blank').
+   iOS standalone 에서 히스토리에 남고, revokeObjectURL 후 죽은 항목이 되어
+   달력을 쓸다 되돌아가면 WebKitBlobResource 오류 1 화면이 뜬다. 2026-08-01 참조.
+   뷰포트가 user-scalable=no 라 앱 안에서 핀치 확대는 어차피 안 되므로,
+   원본 크기 이미지를 스크롤해서 읽는 방식으로 대신한다. */
+function phZoom(){
+  if(!phUrl)return;
+  var bg=document.createElement('div');
+  bg.className='wn-bg ph-bg';
+  bg.innerHTML='<img src="'+phUrl+'" alt="운행일지 사진">';
+  bg.onclick=function(){if(bg.parentNode)bg.parentNode.removeChild(bg);};
+  document.body.appendChild(bg);
+}
+function phDelUI(){
+  if(!confirm('사진을 삭제할까요?'))return;
+  phDel(sel,function(){showToast('🗑️ 사진 삭제됐어요','#64748b');phLoad();});
 }
 
 
@@ -609,7 +703,7 @@ function saveE(){
 function delE(){
   if(!sel)return;
   if(!confirm('이 날 기록을 삭제할까요?'))return;
-  delete logs[sel];sv();sel=null;
+  delete logs[sel];phDel(sel);sv();sel=null;
   showToast('🗑️ 삭제됐어요','#64748b');
   setTimeout(function(){go('calendar');},700);
 }
@@ -929,7 +1023,7 @@ function rConfig(){
   +'</div>'
   +'<div class="cfg-sec">데이터 백업 / 복원</div>'
   +'<div style="background:var(--th-bg2);border-radius:10px;padding:14px;margin-bottom:12px;border:0.5px solid var(--th-border)">'
-  +'<p style="font-size:15px;color:var(--th-muted);margin-bottom:12px;line-height:1.6">백업 파일을 저장해두면 폰을 바꿔도 데이터를 복원할 수 있어요.</p>'
+  +'<p style="font-size:15px;color:var(--th-muted);margin-bottom:12px;line-height:1.6">백업 파일을 저장해두면 폰을 바꿔도 데이터를 복원할 수 있어요.<br><span style="color:#fbbf24">※ 운행일지 사진은 용량이 커서 백업에 포함되지 않아요. 폰을 바꾸면 사진은 옮겨지지 않습니다.</span></p>'
   +'<button class="backup-btn dl" onclick="doBackup()">⬇️ 데이터 백업 (다운로드)</button>'
   +'<button class="backup-btn ul" onclick="document.getElementById(\'restoreFile\').click()">⬆️ 데이터 복원 (파일 선택)<input type="file" id="restoreFile" accept=".json" style="display:none" onchange="doRestore(event)"></button>'
   +'</div>'
@@ -1060,7 +1154,9 @@ function doRestore(ev){
       var data=JSON.parse(e.target.result);
       if(!data.logs||!data.cfg){showToast('올바른 백업 파일이 아니에요','#dc2626');return;}
       if(!confirm('현재 데이터가 모두 백업 데이터로 교체됩니다. 계속하시겠어요?'))return;
-      logs=data.logs;cfg=data.cfg;sv();applyTheme(cfg.theme);
+      logs=data.logs;cfg=data.cfg;
+      phKeys.slice().forEach(function(k){if(!logs[k])phDel(k);});
+      sv();applyTheme(cfg.theme);
       showToast('✅ 복원 완료!');render();
     }catch(err){showToast('파일을 읽을 수 없어요','#dc2626');}
   };
@@ -1069,7 +1165,7 @@ function doRestore(ev){
 function doReset(){
   if(!confirm('정말로 모든 데이터를 삭제하시겠어요?'))return;
   if(!confirm('한 번 더 확인합니다. 전체 데이터를 삭제합니다.'))return;
-  logs={};sv();showToast('🗑️ 초기화 완료','#64748b');render();
+  logs={};phTx('readwrite',function(s){s.clear();});phKeys=[];sv();showToast('🗑️ 초기화 완료','#64748b');render();
 }
 
 /* ── 앱 아이콘 (iOS) — 레미콘 타이포 ── */
