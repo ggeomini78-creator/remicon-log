@@ -63,6 +63,7 @@ Status badges on the calendar grid indicate daily activities and should adapt ba
 | Wastewater (폐수) | `.mbadge.ww` | Bg: `rgba(5, 150, 105, 0.15)`, Text: `#34d399` | Bg: `#e6f4ea`, Text: `#137333` |
 | 2h Overtime (2시↑) | `.mbadge.ot2` | Bg: `rgba(249, 115, 22, 0.15)`, Text: `#f97316` | Bg: `#fef7e0`, Text: `#b06000` |
 | Photo (📷) | `.mbadge.photo` | Bg: `rgba(248, 113, 113, 0.24)`, Text: `#ff9b9b` | Bg: `#fce8e6`, Text: `#c5221f` |
+| Memo (쉬는 날) | `.dsub.memo` | Text: `var(--th-text)` | Text: `var(--th-text)` |
 
 ## 4. Typography
 - **Font Family**: Inter, Arial Narrow, Arial, sans-serif.

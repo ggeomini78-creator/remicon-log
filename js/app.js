@@ -24,11 +24,12 @@ cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
-  {v:'1.3.0', d:'2026-08-17', t:'운행일지 사진을 다시 넣을 수 있어요', items:[
+  {v:'1.3.0', d:'2026-08-17', t:'운행일지 사진 첨부, 쉬는 날 메모 표시', items:[
     '기록 화면 맨 아래에서 종이 운행일지를 찍어 붙여둘 수 있어요',
     '사진을 고르면 저장 버튼을 안 눌러도 바로 저장돼요',
     '사진을 누르면 크게 볼 수 있어요 — 손가락으로 쓸어서 구석구석 읽으세요',
     '사진이 있는 날은 달력에 📷 표시가 떠요',
+    '휴무·정비·기타로 표시한 날은 메모에 적은 말이 달력에 그대로 보여요 (예: 비대기)',
     '※ 사진은 용량이 커서 백업 파일에 담기지 않아요. 폰을 바꾸면 사진은 안 옮겨져요'
   ]},
   {v:'1.2.2', d:'2026-08-03', t:'통계 탭이 월말결산으로 바뀌었어요', items:[
@@ -283,7 +284,14 @@ function rCal(){
     /* 칸 높이가 정해져 있어 넘치는 내용은 잘린다. 기록 줄이 이미 두 줄 이상이면
        이름 줄은 생략하고 날짜 색으로만 알린다 (이름은 날짜를 눌러 상세에서 확인) */
     var rows=(badge?1:0)+(mn?1:0)+(mn2?1:0);
-    var sub=(mk&&rows<2)?'<div class="dsub '+mk.kind+'">'+esc(mk.name.split('·')[0])+'</div>':'';
+    /* 메모는 쉬는 날(휴무·정비·기타)에만 칸에 찍는다 — 왜 쉬었는지가 달력에서 바로 보이게.
+       근무일은 바리수·주유·오티 뱃지가 칸을 이미 채워서 넣을 자리가 없다 (넣으면 뱃지가 잘린다).
+       내가 직접 쓴 말이라 공휴일 이름보다 앞선다 (공휴일은 날짜가 빨간 것으로도 안다).
+       긴 메모는 CSS 로 잘리므로 '비대기' 처럼 짧게 쓰면 그대로 보인다 */
+    var off=(log.st==='vacation'||log.st==='repair'||log.st==='other');
+    var memo1=off?(log.memo||'').replace(/\s+/g,' ').trim():'';
+    var sub=memo1?'<div class="dsub memo">'+esc(memo1)+'</div>'
+      :(mk&&rows<2)?'<div class="dsub '+mk.kind+'">'+esc(mk.name.split('·')[0])+'</div>':'';
     h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')">'
       +'<div class="dtop"><span class="dn'+(red?' holi':'')+'">'+d+'</span>'
       +(lu?'<span class="lun">'+lu+'</span>':'')+'</div>'

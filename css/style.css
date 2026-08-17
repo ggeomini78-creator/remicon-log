@@ -291,6 +291,7 @@ body{
 }
 .dsub.holi{color:var(--th-holiday)}
 .dsub.event{color:var(--th-event)}
+.dsub.memo{color:var(--th-text)}
 .cgrid .cc .dn.holi{color:var(--th-holiday)}
 /* 오늘이 공휴일이면 흰 알약 대신 빨간 알약 */
 .cc.today .dn.holi{background:var(--th-holiday);color:#fff!important}
