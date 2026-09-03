@@ -24,6 +24,13 @@ cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
+  {v:'1.3.1', d:'2026-09-03', t:'쓰다 만 기록이 사라지지 않아요', items:[
+    '기록을 쓰다가 아래 탭을 잘못 눌러도 넣던 내용이 그대로 남아요',
+    '그 날짜를 다시 열면 쓰던 내용이 되살아나요 — 저장은 꼭 눌러야 기록돼요',
+    '달력 위에 "쓰다 만 기록 이어쓰기"가 뜨고, 그 날짜 칸에 테두리가 표시돼요',
+    '되살린 내용이 필요 없으면 위쪽 "버리기"를 누르면 저장된 기록으로 돌아가요',
+    '앱이 꺼지거나 새로고침돼도 쓰던 내용은 남아요'
+  ]},
   {v:'1.3.0', d:'2026-08-17', t:'운행일지 사진 첨부, 쉬는 날 메모 표시', items:[
     '기록 화면 맨 아래에서 종이 운행일지를 찍어 붙여둘 수 있어요',
     '사진을 고르면 저장 버튼을 안 눌러도 바로 저장돼요',
@@ -176,12 +183,81 @@ function calcPrevKm(targetDate){
   return t;
 }
 
+/* ── 쓰다 만 기록 (저장 전 임시 보관) ──
+   기록 화면에서 값을 넣다가 아래 탭을 잘못 누르면 화면이 통째로 다시 그려져
+   입력이 날아갔다 (2026-09-03). 저장 전 입력을 날짜별로 rl9_draft 에 따로 두고,
+   그 날짜를 다시 열면 그대로 되살린다. 저장하거나 삭제하면 지운다.
+   값을 넣을 때마다 바로 보관하므로 앱이 꺼지거나 새로고침돼도 남는다.
+   사진은 고르는 즉시 IndexedDB 에 들어가므로 여기 대상이 아니다. */
+var DRAFT_KEY='rl9_draft';
+var drafts={};
+try{drafts=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}')||{};}catch(e){drafts={};}
+var entryDate=null, entryBase=null;   /* 지금 그려진 기록 화면의 날짜와, 열었을 때 보였던 값 */
+var FORM_KEYS=['st','calls','vol','skm','ekm','fuel','ot','ot2List','wwList','t1','t2','repList','cashList','memo'];
+
+/* 저장된 기록을 화면에 보이는 형태(전부 문자열)로 — 시작 km 자동 채움까지 포함.
+   화면에 보인 그대로와 비교해야 '열기만 하고 나간' 경우를 변경으로 안 본다 */
+function formFromLog(log,prevEkm){
+  return{
+    st:log.st||'work',
+    calls:String(log.calls||''), vol:String(log.vol||''),
+    skm:String(log.skm||prevEkm||''), ekm:String(log.ekm||''),
+    fuel:String(log.fuel||''), ot:String(log.ot||''),
+    ot2List:JSON.stringify(JSON.parse(log.ot2List||'[]')),
+    wwList:JSON.stringify(JSON.parse(log.wwList||'[]')),
+    t1:String(log.t1||''), t2:String(log.t2||''),
+    repList:JSON.stringify(JSON.parse(log.repList||'[]')),
+    cashList:JSON.stringify(JSON.parse(log.cashList||'[]')),
+    memo:String(log.memo||'')
+  };
+}
+/* 화면에 지금 들어 있는 값 — 기록 화면이 아니면 null. saveE 가 저장하는 모양과 같다 */
+function readForm(){
+  if(!document.getElementById('fC')) return null;
+  var g=function(id){var el=document.getElementById(id);return el?el.value:'';};
+  return{
+    st:cSt,
+    calls:g('fC'), vol:g('fV'), skm:g('fSk'), ekm:g('fEk'),
+    fuel:g('fF'), ot:g('fOt'),
+    ot2List:JSON.stringify(ol), wwList:JSON.stringify(wwList),
+    t1:g('fT1'), t2:g('fT2'),
+    repList:JSON.stringify(repList), cashList:JSON.stringify(cashList),
+    memo:g('fM')
+  };
+}
+function formEq(a,b){
+  for(var i=0;i<FORM_KEYS.length;i++){
+    var k=FORM_KEYS[i];
+    if(String(a[k]||'')!==String(b[k]||'')) return false;
+  }
+  return true;
+}
+function draftsStore(){
+  try{
+    if(Object.keys(drafts).length) localStorage.setItem(DRAFT_KEY,JSON.stringify(drafts));
+    else localStorage.removeItem(DRAFT_KEY);
+  }catch(e){ console.error('임시 보관 실패',e); }
+}
+/* 화면 값이 열었을 때와 달라졌으면 보관, 같으면 보관하지 않는다 (되돌려 놓은 경우 지움) */
+function draftSave(){
+  if(!entryDate||!entryBase) return;
+  var f=readForm(); if(!f) return;
+  if(formEq(f,entryBase)){ draftClear(entryDate); return; }
+  drafts[entryDate]=f; draftsStore();
+}
+function draftClear(k){ if(drafts[k]){ delete drafts[k]; draftsStore(); } }
+function draftDiscard(){
+  if(!confirm('쓰던 내용을 버리고 저장된 기록으로 되돌릴까요?')) return;
+  draftClear(sel); rEntry(); showToast('쓰던 내용을 버렸어요','#64748b');
+}
+
 /* ── 네비게이션 ── */
 function go(t){
   if(navLock) return;
   navLock=true;
   setTimeout(function(){navLock=false;},300);
 
+  if(tab==='entry') draftSave();   /* 탭을 바꾸기 전에 쓰던 값을 챙긴다 */
   tab=t;
   ['Calendar','Entry','Stats','Annual','Config'].forEach(function(x){
     var btn=document.getElementById('nb'+x);
@@ -198,6 +274,7 @@ function render(){
   if(phUrl){URL.revokeObjectURL(phUrl);phUrl='';}
   var mc=document.getElementById('mc');
   mc.classList.toggle('cal-mode',tab==='calendar');
+  if(tab!=='entry'){ entryDate=null; entryBase=null; }
   if(tab==='calendar') rCal();
   else if(tab==='entry') rEntry();
   else if(tab==='stats') rStats();
@@ -235,7 +312,12 @@ window.addEventListener('resize',fit1);
 /* ── 달력 ── */
 function rCal(){
   var y=cd.getFullYear(),m=cd.getMonth();
-  document.getElementById('hS').textContent='';
+  /* 쓰다 만 기록이 있으면 헤더 아래 줄에서 바로 이어쓸 수 있게 한다 (가장 최근 날짜 하나) */
+  var dks=Object.keys(drafts).sort(), hs=document.getElementById('hS');
+  if(dks.length){
+    var dl=dks[dks.length-1], dp=dl.split('-');
+    hs.innerHTML='<span class="draft-link" onclick="openDay(\''+esc(dl)+'\')">✏️ '+(+dp[1])+'월 '+(+dp[2])+'일 쓰다 만 기록 이어쓰기 ›</span>';
+  }else hs.textContent='';
   var days=new Date(y,m+1,0).getDate(), first=new Date(y,m,1).getDay();
   var td=new Date(), tdk=dk(td.getFullYear(),td.getMonth(),td.getDate());
   var mp=y+'-'+String(m+1).padStart(2,'0');
@@ -292,7 +374,7 @@ function rCal(){
     var memo1=off?(log.memo||'').replace(/\s+/g,' ').trim():'';
     var sub=memo1?'<div class="dsub memo">'+esc(memo1)+'</div>'
       :(mk&&rows<2)?'<div class="dsub '+mk.kind+'">'+esc(mk.name.split('·')[0])+'</div>':'';
-    h+='<div class="cc'+(isT?' today':'')+'" onclick="openDay(\''+key+'\')">'
+    h+='<div class="cc'+(isT?' today':'')+(drafts[key]?' draft':'')+'" onclick="openDay(\''+key+'\')">'
       +'<div class="dtop"><span class="dn'+(red?' holi':'')+'">'+d+'</span>'
       +(lu?'<span class="lun">'+lu+'</span>':'')+'</div>'
       +sub+badge
@@ -312,6 +394,13 @@ function rCal(){
 }
 
 function openDay(k){sel=k;go('entry');}
+
+/* 값을 넣거나 버튼을 누를 때마다 바로 보관 — 탭을 잘못 눌러도, 앱이 꺼져도 남는다.
+   click 은 항목의 onclick(추가·삭제·정산 토글)이 먼저 돌고 여기로 올라오므로
+   바뀐 뒤의 값이 보관된다 */
+document.getElementById('mc').addEventListener('input',function(){if(tab==='entry')draftSave();});
+document.getElementById('mc').addEventListener('click',function(){if(tab==='entry')draftSave();});
+window.addEventListener('pagehide',function(){if(tab==='entry')draftSave();});
 
 /* 스와이프 (한 번만 등록) */
 document.getElementById('mc').parentNode.addEventListener('touchstart',function(e){
@@ -523,22 +612,28 @@ function rEntry(){
   var mkS=kcMarkAll(sel).map(function(x){return x.name;}).join(' · ');
   document.getElementById('hS').textContent=y+'.'+m+'.'+d+' ('+dow+')'
     +(luS?' · 음 '+luS:'')+(mkS?' · '+mkS:'');
-  cSt=log.st||'work';
-  ol=JSON.parse(log.ot2List||'[]');
-  wwList=JSON.parse(log.wwList||'[]');
-  repList=JSON.parse(log.repList||'[]');
-  cashList=JSON.parse(log.cashList||'[]');
-  var kmD=dayKm(log);
+  /* 쓰다 만 기록이 있으면 저장된 값 대신 그걸 화면에 올린다.
+     비교 기준(entryBase)은 언제나 저장된 값 — 여기서 저장된 값으로 되돌려 놓으면 보관이 풀린다 */
+  var base=formFromLog(log,prevEkm);
+  var dr=drafts[sel]||null;
+  var v=dr||base;
+  entryDate=sel; entryBase=base;
+  cSt=v.st||'work';
+  ol=JSON.parse(v.ot2List||'[]');
+  wwList=JSON.parse(v.wwList||'[]');
+  repList=JSON.parse(v.repList||'[]');
+  cashList=JSON.parse(v.cashList||'[]');
+  var kmD=dayKm(v);
   var prevKm=calcPrevKm(sel);
   var repKmToday=repList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
   var cashKmToday=cashList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
   var totalKm=cfg.initKm+prevKm+kmD+repKmToday+cashKmToday;
-  var otA=(parseFloat(log.ot)||0)*cfg.otRate;
-  var t1=parseInt(log.t1||0),t2=parseInt(log.t2||0),tTot=tollTotal(t1,t2);
+  var otA=(parseFloat(v.ot)||0)*cfg.otRate;
+  var t1=parseInt(v.t1||0),t2=parseInt(v.t2||0),tTot=tollTotal(t1,t2);
 
   /* ★ 이달 연료 (월별 리셋) */
   var prev=fuelMonthExclude(sel);
-  var todayFuel=parseFloat(log.fuel||0);
+  var todayFuel=parseFloat(v.fuel||0);
   var todayKm=kmD;
   var mTotalFuel=+(prev.mf+todayFuel).toFixed(1);
   var mTotalUsed=+(prev.mu+todayKm*cfg.fuelRate).toFixed(1);
@@ -547,15 +642,16 @@ function rEntry(){
   var fuelColor=fuelDiff>=0?'#34d399':'#f87171';
 
   document.getElementById('mc').innerHTML='<div class="ef">'
+  +(dr?'<div class="draft-note"><span>✏️ 저장 안 한 입력을 되살렸어요. 저장을 눌러야 기록돼요</span><button onclick="draftDiscard()">버리기</button></div>':'')
   +'<div class="shdr">근무 상태</div>'
   +'<div class="btns">'+['work','vacation','repair','other'].map(function(k,i){
     return'<button id="stb'+i+'" class="btn'+(k==='vacation'?' off-btn':'')+(k==='repair'?' rep-btn':'')+(cSt===k?' on':'')+'" onclick="setSt(\''+k+'\')">'+['근무','휴무','정비','기타'][i]+'</button>';
   }).join('')+'</div>'
   +'<div class="shdr">기본 운행</div>'
-  +'<div class="r2"><div class="field"><label class="fl">바리수</label><input type="number" id="fC" value="'+(log.calls||'')+'" placeholder="0" min="0" max="30" oninput="aVol()"></div>'
-  +'<div class="field"><label class="fl">운반량 (㎥)</label><input type="number" id="fV" value="'+(log.vol||'')+'" placeholder="자동입력" step="0.5"></div></div>'
-  +'<div class="r2"><div class="field"><label class="fl">시작 km</label><input type="number" id="fSk" value="'+(log.skm||prevEkm||'')+'" placeholder="'+(prevEkm||'7924')+'" oninput="uKm()"></div>'
-  +'<div class="field"><label class="fl">종료 km</label><input type="number" id="fEk" value="'+(log.ekm||'')+'" placeholder="7999" oninput="uKm()"></div></div>'
+  +'<div class="r2"><div class="field"><label class="fl">바리수</label><input type="number" id="fC" value="'+(v.calls||'')+'" placeholder="0" min="0" max="30" oninput="aVol()"></div>'
+  +'<div class="field"><label class="fl">운반량 (㎥)</label><input type="number" id="fV" value="'+(v.vol||'')+'" placeholder="자동입력" step="0.5"></div></div>'
+  +'<div class="r2"><div class="field"><label class="fl">시작 km</label><input type="number" id="fSk" value="'+(v.skm||'')+'" placeholder="'+(prevEkm||'7924')+'" oninput="uKm()"></div>'
+  +'<div class="field"><label class="fl">종료 km</label><input type="number" id="fEk" value="'+(v.ekm||'')+'" placeholder="7999" oninput="uKm()"></div></div>'
   +'<div class="kmh" id="kmH">'+(kmD>0?'✅ 오늘 운행거리: '+kmD+'km':'종료km 입력 시 자동계산')+'</div>'
   +'<div class="km-card" id="kmCard">'
   +'<div class="km-card-title">전체 누적 km</div>'
@@ -567,7 +663,7 @@ function rEntry(){
   +'<div class="km-total-bar"><span class="km-total-label">전체 누적 km</span><span class="km-total-val">'+totalKm.toLocaleString()+'km</span></div>'
   +'</div>'
   +'<div class="shdr">연료 주유</div>'
-  +'<div class="field"><label class="fl">당일 주유량 (L)</label><input type="number" id="fF" value="'+(log.fuel||'')+'" placeholder="0" step="10" oninput="uFuelCard()"></div>'
+  +'<div class="field"><label class="fl">당일 주유량 (L)</label><input type="number" id="fF" value="'+(v.fuel||'')+'" placeholder="0" step="10" oninput="uFuelCard()"></div>'
   +'<div class="fuel-card" id="fuelCard">'
   +'<div class="fuel-card-title">이달 연료 현황</div>'
   +'<div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div>'
@@ -577,7 +673,7 @@ function rEntry(){
   +'<span style="font-size:15px;font-weight:700;color:'+fuelColor+'">'+fuelLabel+'</span></div>'
   +'</div>'
   +'<div class="shdr">시간외수당 (오티)</div>'
-  +'<div class="field"><label class="fl">오티 시간 — 4시 이후</label><input type="number" id="fOt" value="'+(log.ot||'')+'" placeholder="0" step="0.5" oninput="uOT()"></div>'
+  +'<div class="field"><label class="fl">오티 시간 — 4시 이후</label><input type="number" id="fOt" value="'+(v.ot||'')+'" placeholder="0" step="0.5" oninput="uOT()"></div>'
   +'<div class="chint" id="otA" style="color:#7c3aed">'+(otA>0?'💰 오티 수당: '+otA.toLocaleString()+'원':'')+'</div>'
   +'<div class="shdr">2시간초과 현장</div>'
   +'<div id="o2Con">'+mkOT2()+'</div>'
@@ -586,8 +682,8 @@ function rEntry(){
   +'<div id="wwCon">'+mkWW()+'</div>'
   +'<button class="add-btn" onclick="addWW()">＋ 폐수처리 현장 추가</button>'
   +'<div class="shdr">톨비 (울산대교)</div>'
-  +'<div class="r2"><div class="field"><label class="fl">3,600원 — 횟수</label><input type="number" id="fT1" value="'+(log.t1||'')+'" placeholder="0" min="0" oninput="uToll()"></div>'
-  +'<div class="field"><label class="fl">2,400원 — 횟수</label><input type="number" id="fT2" value="'+(log.t2||'')+'" placeholder="0" min="0" oninput="uToll()"></div></div>'
+  +'<div class="r2"><div class="field"><label class="fl">3,600원 — 횟수</label><input type="number" id="fT1" value="'+(v.t1||'')+'" placeholder="0" min="0" oninput="uToll()"></div>'
+  +'<div class="field"><label class="fl">2,400원 — 횟수</label><input type="number" id="fT2" value="'+(v.t2||'')+'" placeholder="0" min="0" oninput="uToll()"></div></div>'
   +'<div class="toll-card" id="tollCard">'
   +'<div class="toll-card-title">톨비 현황 (울산대교)</div>'
   +'<div class="toll-row"><span class="toll-key">3,600원 × '+t1+'회</span><span class="toll-val">'+(t1*cfg.toll1).toLocaleString()+'원</span></div>'
@@ -602,7 +698,7 @@ function rEntry(){
   +'<div id="cashCon">'+mkCash()+'</div>'
   +'<button class="add-btn" onclick="addCash()">＋ 현금거래 추가</button>'
   +'<div class="shdr">메모</div>'
-  +'<div class="field"><textarea id="fM" placeholder="특이사항, 현장명 등...">'+(log.memo||'')+'</textarea></div>'
+  +'<div class="field"><textarea id="fM" placeholder="특이사항, 현장명 등...">'+esc(v.memo||'')+'</textarea></div>'
   +'<div class="shdr">운행일지 사진</div>'
   +'<div id="phBox"></div>'
   +'<button class="bsave" id="btnSave" onclick="saveE()">저장</button>'
@@ -689,6 +785,9 @@ function saveE(){
       memo:document.getElementById('fM').value
     };
     sv();
+    /* 저장됐으니 임시 보관은 지운다. entryDate 를 비워야 저장 버튼 click 이
+       #mc 로 올라와 draftSave 가 다시 돌아도 옛 기준과 비교해 되살리지 않는다 */
+    draftClear(sel); entryDate=null; entryBase=null;
     showToast('✅ 저장됐어요!');
     setTimeout(function(){go('calendar');},700);
   }catch(err){
@@ -703,7 +802,7 @@ function saveE(){
 function delE(){
   if(!sel)return;
   if(!confirm('이 날 기록을 삭제할까요?'))return;
-  delete logs[sel];phDel(sel);sv();sel=null;
+  delete logs[sel];phDel(sel);sv();draftClear(sel);entryDate=null;entryBase=null;sel=null;
   showToast('🗑️ 삭제됐어요','#64748b');
   setTimeout(function(){go('calendar');},700);
 }
