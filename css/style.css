@@ -487,6 +487,26 @@ body{
 .cl-item:last-child{border-bottom:none;padding-bottom:2px}
 .cl-t{font-size:16px;font-weight:700;color:var(--on-primary);margin:3px 0 8px;line-height:1.4}
 
+/* ── 쓰다 만 기록 (저장 전 임시 보관) ──
+   달력: 헤더 아래 줄의 이어쓰기 링크 + 해당 날짜 칸 테두리.
+   기록 화면: 맨 위 안내 띠 + 버리기 버튼. 색은 기념일과 같은 --th-event(주황) */
+.draft-link{cursor:pointer;color:var(--th-event);font-weight:700}
+.cc.draft{box-shadow:inset 0 0 0 2px var(--th-event)}
+.draft-note{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:0 0 6px;padding:10px 12px;
+  background:var(--canvas-night-soft);
+  border:1px solid var(--th-event);border-radius:var(--r-sm);
+}
+.draft-note span{font-size:14px;font-weight:600;color:var(--on-primary);line-height:1.4}
+.draft-note button{
+  flex-shrink:0;
+  background:transparent;color:var(--th-event);
+  border:1px solid var(--th-event);border-radius:var(--r-pill);
+  padding:7px 12px;font-size:14px;font-weight:700;cursor:pointer;
+  font-family:inherit;
+}
+
 /* ── 새 버전 알림 띠 ── 하단 탭바 위에 둔다 (상단은 헤더·당겨서새로고침이 쓴다) */
 .upbar{
   position:fixed;left:0;right:0;
