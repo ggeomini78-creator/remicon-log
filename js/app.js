@@ -13,6 +13,7 @@ if(!cfg.ot2Pay)  cfg.ot2Pay=0;
 if(!cfg.theme||['dark','red','green','orange','purple','kakao','linear'].indexOf(cfg.theme)>=0) cfg.theme='default';
 cfg.monthlyUnitPrices = cfg.monthlyUnitPrices || {};
 if(cfg.wwRate===undefined) cfg.wwRate=0;
+if(cfg.mealRate===undefined) cfg.mealRate=7000;   /* 오티 식대 (하루 OT_MEAL_H시간 이상) */
 /* 달력 표시 (음력·공휴일·절기) */
 if(cfg.showLunar===undefined)   cfg.showLunar=true;
 if(cfg.showHoliday===undefined) cfg.showHoliday=true;
@@ -24,6 +25,13 @@ cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
+  {v:'1.4.0', d:'2026-10-05', t:'오티 식대가 월말결산에 들어가요', items:[
+    '하루 오티를 3시간 이상 한 날은 식대 7,000원이 붙어요',
+    '월말결산 오티 수당 칸에 식대 받은 날짜와 합계가 같이 나와요',
+    '이달 수령 예정액과 연말결산 합계에도 식대가 더해져요',
+    '기록 화면에서 오티를 3시간 이상 넣으면 식대 포함 금액이 바로 보여요',
+    '식대 금액이 바뀌면 설정 → 급여 설정에서 고칠 수 있어요'
+  ]},
   {v:'1.3.1', d:'2026-09-03', t:'쓰다 만 기록이 사라지지 않아요', items:[
     '기록을 쓰다가 아래 탭을 잘못 눌러도 넣던 내용이 그대로 남아요',
     '그 날짜를 다시 열면 쓰던 내용이 되살아나요 — 저장은 꼭 눌러야 기록돼요',
@@ -144,6 +152,14 @@ function tollTotal(t1,t2){return(parseInt(t1)||0)*cfg.toll1+(parseInt(t2)||0)*cf
 
 /* ★ 하루 운행거리: 시작/종료 km이 둘 다 있고 종료>시작일 때만 계산.
    종료 km 미입력 시 0으로 처리해야 시작 km이 통째로 마이너스로 잡히지 않는다. */
+/* 오티 식대: 그날 오티가 OT_MEAL_H시간 이상이면 하루 cfg.mealRate */
+var OT_MEAL_H=3;
+function otMeal(ot){return (parseFloat(ot)||0)>=OT_MEAL_H?(cfg.mealRate||0):0;}
+function otText(h){
+  var a=h*cfg.otRate, ml=otMeal(h);
+  if(a<=0)return '';
+  return '💰 오티 수당: '+a.toLocaleString()+'원'+(ml>0?' + 식대 '+ml.toLocaleString()+'원':'');
+}
 function dayKm(v){
   if(!v||!v.skm||!v.ekm)return 0;
   var sk=parseInt(v.skm)||0,ek=parseInt(v.ekm)||0;
@@ -585,7 +601,7 @@ function uToll(){
     +'<div class="toll-row"><span class="toll-key">2,400원 × '+t2+'회</span><span class="toll-val">'+(t2*cfg.toll2).toLocaleString()+'원</span></div>'
     +'<div class="toll-total-bar"><span class="toll-total-label">오늘 톨비 합계</span><span class="toll-total-val">'+tot.toLocaleString()+'원</span></div>';
 }
-function uOT(){var h=parseFloat(document.getElementById('fOt').value)||0;var a=h*cfg.otRate;document.getElementById('otA').textContent=a>0?'💰 오티 수당: '+a.toLocaleString()+'원':'';}
+function uOT(){var h=parseFloat(document.getElementById('fOt').value)||0;document.getElementById('otA').textContent=otText(h);}
 function aVol(){var c=parseInt(document.getElementById('fC').value)||0;var v=document.getElementById('fV');if(c>0&&!v.dataset.m)v.value=c*6;}
 
 /* ── 기록 탭 ── */
@@ -628,7 +644,6 @@ function rEntry(){
   var repKmToday=repList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
   var cashKmToday=cashList.reduce(function(s,r){return s+(parseInt(r.km||0));},0);
   var totalKm=cfg.initKm+prevKm+kmD+repKmToday+cashKmToday;
-  var otA=(parseFloat(v.ot)||0)*cfg.otRate;
   var t1=parseInt(v.t1||0),t2=parseInt(v.t2||0),tTot=tollTotal(t1,t2);
 
   /* ★ 이달 연료 (월별 리셋) */
@@ -674,7 +689,7 @@ function rEntry(){
   +'</div>'
   +'<div class="shdr">시간외수당 (오티)</div>'
   +'<div class="field"><label class="fl">오티 시간 — 4시 이후</label><input type="number" id="fOt" value="'+(v.ot||'')+'" placeholder="0" step="0.5" oninput="uOT()"></div>'
-  +'<div class="chint" id="otA" style="color:#7c3aed">'+(otA>0?'💰 오티 수당: '+otA.toLocaleString()+'원':'')+'</div>'
+  +'<div class="chint" id="otA" style="color:#7c3aed">'+otText(parseFloat(v.ot)||0)+'</div>'
   +'<div class="shdr">2시간초과 현장</div>'
   +'<div id="o2Con">'+mkOT2()+'</div>'
   +'<button class="add-btn" onclick="addO2()">＋ 2시간초과 현장 추가</button>'
@@ -819,6 +834,8 @@ function rStats(){
   var tkm=ml.reduce(function(s,e){return s+dayKm(e[1]);},0);
   var tot=ml.reduce(function(s,e){return s+(parseFloat(e[1].ot)||0);},0);
   var totA=tot*cfg.otRate;
+  var mealDays=ml.filter(function(e){return otMeal(e[1].ot)>0;}).length;
+  var mealPay=ml.reduce(function(s,e){return s+otMeal(e[1].ot);},0);
   var tww=ml.reduce(function(s,e){return s+(JSON.parse(e[1].wwList||'[]')).length;},0);
   var tt1=ml.reduce(function(s,e){return s+(parseInt(e[1].t1||0));},0);
   var tt2=ml.reduce(function(s,e){return s+(parseInt(e[1].t2||0));},0);
@@ -870,7 +887,8 @@ function rStats(){
       otDays.push({
         day: parseInt(pts[2]),
         ot: ot,
-        amount: ot * cfg.otRate
+        amount: ot * cfg.otRate,
+        meal: otMeal(ot)
       });
     }
   });
@@ -881,8 +899,8 @@ function rStats(){
     otDetailHtml = '<div class="ot-detail-list" style="margin-top:8px; border-top:1px dashed var(--th-border); padding-top:8px; font-size:15px; color:var(--th-muted);">';
     otDays.forEach(function(od) {
       otDetailHtml += '<div style="display:flex; justify-content:space-between; margin-bottom:4px;">'
-        + '<span>' + od.day + '일 (' + od.ot + '시간)</span>'
-        + '<span>' + od.amount.toLocaleString() + '원</span>'
+        + '<span>' + od.day + '일 (' + od.ot + '시간' + (od.meal > 0 ? ' · 식대' : '') + ')</span>'
+        + '<span>' + od.amount.toLocaleString() + '원' + (od.meal > 0 ? ' + ' + od.meal.toLocaleString() + '원' : '') + '</span>'
         + '</div>';
     });
     otDetailHtml += '</div>';
@@ -909,7 +927,7 @@ function rStats(){
   var base=tc*monthUnitPrice;
   var ot2Pay2=ot2Monthly.length*cfg.ot2Pay;
   var wwPay=tww*(cfg.wwRate||0);
-  var monthTotal=base+totA+ot2Pay2+tollMonT+wwPay-mRepCost;
+  var monthTotal=base+totA+mealPay+ot2Pay2+tollMonT+wwPay-mRepCost;
 
   var h='<div class="sp">'
   +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><button class="ma" onclick="pm()">‹</button><span style="font-size:19px;font-weight:600">'+y+'년 '+(m+1)+'월</span><button class="ma" onclick="nm()">›</button></div>'
@@ -932,6 +950,7 @@ function rStats(){
   +'<div class="sec">오티 수당</div>'
   +'<div class="fb"><div class="fr"><span class="fk">이달 오티 시간</span><span class="fv">'+tot+'시간</span></div>'
   +'<div class="fr"><span class="fk">오티 수당 합계</span><span class="fv" style="color:#7c3aed">'+totA.toLocaleString()+'원</span></div>'
+  +'<div class="fr"><span class="fk">식대 ('+OT_MEAL_H+'시간 이상 '+mealDays+'일)</span><span class="fv" style="color:#7c3aed">'+mealPay.toLocaleString()+'원</span></div>'
   +otDetailHtml+'</div>'
   +'<div class="sec">폐수처리 ('+tww+'건 / 합계 '+wwPay.toLocaleString()+'원)</div>'
   +(wwItems.length?wwItems.map(function(e){var p=e.date.split('-');return'<div class="wwi"><div class="ot2d">'+p[1]+'월 '+p[2]+'일</div><div class="ot2n">'+(e.site||'현장 미입력')+'</div></div>';}).join(''):'<div class="emsg">이달 폐수처리 없음</div>')
@@ -962,6 +981,7 @@ function rStats(){
   +'<div class="sec" style="margin-top:24px">📋 '+(m+1)+'월 최종 결산 (유류 별도)</div>'
   +'<div class="fb"><div class="fr"><span class="fk">기본급 ('+tc+'바리 × '+monthUnitPrice.toLocaleString()+'원)</span><span class="fv">+'+base.toLocaleString()+'원</span></div>'
   +(totA>0?'<div class="fr"><span class="fk">오티 수당</span><span class="fv" style="color:#7c3aed">+'+totA.toLocaleString()+'원</span></div>':'')
+  +(mealPay>0?'<div class="fr"><span class="fk">오티 식대 ('+mealDays+'일)</span><span class="fv" style="color:#7c3aed">+'+mealPay.toLocaleString()+'원</span></div>':'')
   +(ot2Pay2>0?'<div class="fr"><span class="fk">2시간초과 수당</span><span class="fv" style="color:#7c3aed">+'+ot2Pay2.toLocaleString()+'원</span></div>':'')
   +(wwPay>0?'<div class="fr"><span class="fk">폐수 수당</span><span class="fv" style="color:#059669">+'+wwPay.toLocaleString()+'원</span></div>':'')
   +(tollMonT>0?'<div class="fr"><span class="fk">톨비 지급</span><span class="fv" style="color:var(--th-accent)">+'+tollMonT.toLocaleString()+'원</span></div>':'')
@@ -997,6 +1017,7 @@ function rAnnual(){
     var km2=ml2.reduce(function(s,e){return s+dayKm(e[1]);},0);
     var ot2=ml2.reduce(function(s,e){return s+(parseFloat(e[1].ot)||0);},0);
     var otP2=ot2*cfg.otRate;
+    var meal2=ml2.reduce(function(s,e){return s+otMeal(e[1].ot);},0);
     var toll2=ml2.reduce(function(s,e){return s+(parseInt(e[1].t1||0))*cfg.toll1+(parseInt(e[1].t2||0))*cfg.toll2;},0);
     var rep2=ml2.reduce(function(s,e){return s+(JSON.parse(e[1].repList||'[]')).reduce(function(rs,r){return rs+(parseInt(r.cost)||0);},0);},0);
     var base2=tc2*getUnitPrice(y,mi);
@@ -1004,7 +1025,7 @@ function rAnnual(){
     var ot2P2=ot2M2.length*cfg.ot2Pay;
     var ww2=ml2.reduce(function(s,e){return s+(JSON.parse(e[1].wwList||'[]')).length;},0);
     var wwP2=ww2*(cfg.wwRate||0);
-    var mTot2=base2+otP2+ot2P2+toll2+wwP2-rep2;
+    var mTot2=base2+otP2+meal2+ot2P2+toll2+wwP2-rep2;
     annWd+=wd2;annCalls+=tc2;annKm+=km2;annOT+=ot2;annOTpay+=otP2;annToll+=toll2;annRep+=rep2;annBase+=base2;annTotal+=mTot2;
     rows+='<tr style="border-bottom:0.5px solid var(--th-border)">'
       +'<td style="padding:8px 10px;font-size:15px;font-weight:600;color:var(--th-text)">'+(mi+1)+'월</td>'
@@ -1092,6 +1113,7 @@ function rConfig(){
   +'<div class="srow"><div><span class="slbl">' + (cm + 1) + '월 바리당 단가</span><span class="slbl-sub">선택된 월에만 적용되는 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="' + curMonthPrice + '" oninput="setMonthlyPrice(' + cy + ',' + cm + ', +this.value);sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">기본 바리당 단가</span><span class="slbl-sub">신규 월 시작 시 기본값</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.unitPrice+'" oninput="cfg.unitPrice=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">오티 시간당</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.otRate+'" oninput="cfg.otRate=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
+  +'<div class="srow"><div><span class="slbl">오티 식대 (하루)</span><span class="slbl-sub">오티 '+OT_MEAL_H+'시간 이상인 날</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+(cfg.mealRate||0)+'" oninput="cfg.mealRate=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">2시간초과 건당</span><span class="slbl-sub">미정산 건에만 적용</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+cfg.ot2Pay+'" placeholder="0" oninput="cfg.ot2Pay=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'<div class="srow"><div><span class="slbl">폐수 건당 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="'+(cfg.wwRate||0)+'" oninput="cfg.wwRate=+this.value;sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
   +'</div>'

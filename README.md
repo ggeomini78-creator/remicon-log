@@ -43,6 +43,7 @@ remicon-log/
   unitPrice: 74300,   // 바리당 단가 (원) — 기본급 = 바리수 × unitPrice
   fuelRate: 0.55,     // km당 유류 소모량 (L/km)
   otRate: 18000,      // 오티 시간당 단가 (원)
+  mealRate: 7000,     // 오티 식대 — 오티 3시간 이상인 날 하루 1번 (원)
   fuelPrice: 1500,    // 연료 정산 단가 (원/L)
   toll1: 3600,        // 톨비 대형 (원)
   toll2: 2400,        // 톨비 소형 (원)
@@ -161,6 +162,8 @@ remicon-log/
 ```
 오티수당 = ot시간 × cfg.otRate
 ```
+- **식대**: 그날 `ot >= 3`(`OT_MEAL_H`)이면 하루 `cfg.mealRate`(기본 7,000원). 시간과 곱하지 않는다.
+- 식대는 월말결산 수령 예정액·연말결산 합계에 포함된다.
 
 ### 2시간초과
 - `type:"monthly"` 이고 `settled:false`인 건만 월말결산에 `ot2Pay` 단가로 합산.
