@@ -19,13 +19,20 @@ if(cfg.showLunar===undefined)   cfg.showLunar=true;
 if(cfg.showHoliday===undefined) cfg.showHoliday=true;
 if(cfg.showTerm===undefined)    cfg.showTerm=false;   /* 절기는 칸이 좁아 기본 꺼둠 */
 cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar}] */
-cfg.reminders = cfg.reminders || [];                  /* 날짜 알림 [{d:'YYYY-MM-DD',t,seen}] */
+cfg.reminders = cfg.reminders || [];                  /* 날짜 알림 [{d:'YYYY-MM-DD',t,seen,rep,last}] */
 
 /* ── 업데이트 내역 ──
    새 항목은 맨 위에 추가한다. APP_VERSION 은 여기서 따라오므로 따로 손댈 필요 없다.
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
+  {v:'1.5.1', d:'2026-10-12', t:'알림을 반복으로 걸 수 있어요', items:[
+    '알림을 추가할 때 한 번 · 매주 · 매달 · 매년 중에 고를 수 있어요',
+    '매달로 걸면 다달이 같은 날에 팝업으로 알려드려요 (예: 매달 25일 카드값)',
+    '31일처럼 그 달에 없는 날로 걸면 그 달 마지막 날에 알려드려요',
+    '반복 알림은 달력에 날짜마다 🔔가 뜨고, 설정 → 알림에는 다음 알림 날짜가 나와요',
+    '반복 알림을 삭제하면 앞으로 올 알림까지 모두 지워져요'
+  ]},
   {v:'1.5.0', d:'2026-10-12', t:'날짜 알림을 걸어둘 수 있어요', items:[
     '달력에서 날짜를 누르면 맨 위에 "알림" 칸이 있어요 — 할 일을 적고 추가를 누르세요',
     '그날 앱을 열면 팝업으로 알려드려요 (예: 보험 갱신, 정기검사, 단가 확인)',
@@ -1244,61 +1251,131 @@ function upLEDate(i){
    백업 파일에도 cfg 와 함께 담긴다. 저장 버튼 없이 추가·삭제 즉시 저장 (사진과 같은 방식).
    앱이 꺼져 있을 때 폰 알림을 보내려면 푸시 서버가 필요해서 여기선 하지 않는다 */
 function todayKey(){var t=new Date();return dk(t.getFullYear(),t.getMonth(),t.getDate());}
-function remOf(k){return cfg.reminders.filter(function(r){return r.d===k;});}
+/* ── 반복 ──
+   rep: 없음(한 번) | 'w' 매주 | 'm' 매달 | 'y' 매년. d 는 시작일(첫 알림 날짜).
+   한 번짜리는 seen, 반복은 last(마지막으로 확인한 알림 날짜)로 다시 안 뜨게 한다.
+   매달 31일처럼 그 달에 없는 날은 그 달 말일에 알린다 (매년 2월 29일 → 평년 2월 28일) */
+function kDate(k){var p=k.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function kAdd(k,n){var x=kDate(k);x.setDate(x.getDate()+n);return dk(x.getFullYear(),x.getMonth(),x.getDate());}
+function remHits(r,k){
+  if(k<r.d) return false;
+  if(!r.rep) return k===r.d;
+  var a=kDate(r.d), b=kDate(k);
+  if(r.rep==='w') return a.getDay()===b.getDay();
+  var day=Math.min(a.getDate(),new Date(b.getFullYear(),b.getMonth()+1,0).getDate());
+  if(r.rep==='m') return b.getDate()===day;
+  if(r.rep==='y') return a.getMonth()===b.getMonth()&&b.getDate()===day;
+  return false;
+}
+/* k 이하에서 가장 최근 / k 이상에서 가장 가까운 알림 날짜 (없으면 null). 반복 주기가 최대 1년이라 370일만 본다 */
+function remLastHit(r,k){
+  if(!r.rep) return r.d<=k?r.d:null;
+  for(var i=0;i<370;i++){var x=kAdd(k,-i); if(x<r.d) return null; if(remHits(r,x)) return x;}
+  return null;
+}
+function remNextHit(r,k){
+  if(!r.rep) return r.d>=k?r.d:null;
+  if(k<r.d) k=r.d;
+  for(var i=0;i<370;i++){var x=kAdd(k,i); if(remHits(r,x)) return x;}
+  return null;
+}
+/* 오늘 띄울 알림 날짜 — 아직 확인 안 한 가장 최근 알림. 반복은 놓친 게 여러 번이어도 한 번만 */
+function remDue(r,tk){
+  if(!r.rep) return (!r.seen&&r.d<=tk)?r.d:null;
+  var h=remLastHit(r,tk);
+  return (h&&(!r.last||h>r.last))?h:null;
+}
+function remRepTxt(r){
+  if(!r.rep) return '';
+  var a=kDate(r.d);
+  if(r.rep==='w') return '매주 '+['일','월','화','수','목','금','토'][a.getDay()]+'요일';
+  if(r.rep==='m') return '매달 '+a.getDate()+'일';
+  return '매년 '+remMD(r.d);
+}
+function remOf(k){return cfg.reminders.filter(function(r){return remHits(r,k);});}
 function remMD(k){var p=k.split('-');return (+p[1])+'월 '+(+p[2])+'일';}
+var remRep='';   /* 기록 화면에서 고른 반복 — 추가하고 나면 '한 번'으로 돌아간다 */
+function remTag(r){return r.rep?'<span class="rem-rep">🔁 '+remRepTxt(r)+'</span>':'';}
 function mkRem(){
   var h='';
   cfg.reminders.forEach(function(r,i){
-    if(r.d!==sel)return;
-    h+='<div class="rem-item"><span class="rem-t">'+esc(r.t)+'</span>'
+    if(!remHits(r,sel))return;
+    h+='<div class="rem-item"><span class="rem-t">'+esc(r.t)+remTag(r)+'</span>'
       +'<button class="item-rm" onclick="rmRem('+i+')">삭제</button></div>';
   });
   return h+'<div class="field rem-add"><input type="text" id="fRem" placeholder="예: 보험 갱신, 정기검사" onkeydown="if(event.keyCode===13)addRem()">'
     +'<button onclick="addRem()">추가</button></div>'
-    +'<div class="rem-hint">이 날 앱을 열면 팝업으로 알려드려요</div>';
+    +'<div class="btns rem-reps">'+[['','한 번'],['w','매주'],['m','매달'],['y','매년']].map(function(o){
+      return'<button class="btn'+(remRep===o[0]?' on':'')+'" onclick="setRemRep(\''+o[0]+'\')">'+o[1]+'</button>';
+    }).join('')+'</div>'
+    +'<div class="rem-hint" id="remHint">'+remHintTxt()+'</div>';
+}
+function remHintTxt(){
+  if(!remRep) return '이 날 앱을 열면 팝업으로 알려드려요';
+  var t=remRepTxt({d:sel,rep:remRep})+'마다 팝업으로 알려드려요';
+  if(remRep==='m'&&+sel.slice(8,10)>28) t+=' ('+(+sel.slice(8,10))+'일이 없는 달은 말일)';
+  return t;
+}
+function setRemRep(v){
+  remRep=v;
+  var bs=document.querySelectorAll('.rem-reps .btn');
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on',i===['','w','m','y'].indexOf(v));
+  var h=document.getElementById('remHint'); if(h) h.textContent=remHintTxt();
 }
 function addRem(){
   var el=document.getElementById('fRem'); if(!el||!sel)return;
   var t=el.value.replace(/\s+/g,' ').trim();
   if(!t){showToast('알림 내용을 적어주세요','#dc2626');return;}
-  /* 지난 날짜는 이미 지나간 일이라 팝업을 띄우지 않는다 */
-  cfg.reminders.push({d:sel,t:t,seen:sel<todayKey()});
+  var tk=todayKey(), r={d:sel,t:t};
+  /* 지난 날짜는 이미 지나간 일이라 팝업을 띄우지 않는다.
+     반복은 어제까지의 알림을 확인한 것으로 두고, 오늘 이후부터 알린다 */
+  if(remRep){
+    r.rep=remRep;
+    if(sel<tk){var h=remLastHit(r,kAdd(tk,-1)); if(h) r.last=h;}
+  }else r.seen=sel<tk;
+  cfg.reminders.push(r);
   cfg.reminders.sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0;});
   sv();
+  remRep='';
   document.getElementById('remCon').innerHTML=mkRem();
-  showToast('🔔 '+remMD(sel)+' 알림을 걸었어요');
+  showToast('🔔 '+(r.rep?remRepTxt(r):remMD(sel))+' 알림을 걸었어요');
 }
 function rmRem(i){
+  var r=cfg.reminders[i]; if(!r)return;
+  if(r.rep&&!confirm(remRepTxt(r)+' 반복 알림이에요.\n앞으로 올 알림까지 모두 지울까요?'))return;
   cfg.reminders.splice(i,1); sv();
   var c=document.getElementById('remCon'); if(c) c.innerHTML=mkRem();
   else if(tab==='config') rConfig();
 }
-/* 설정탭 — 오늘 이후 알림만 모아 보여준다. 날짜를 누르면 그날 기록 화면으로 */
+/* 설정탭 — 다음 알림 날짜순. 반복 알림은 다음 날짜를 보여준다. 날짜를 누르면 그날 기록 화면으로 */
 function mkRemCfg(){
-  var tk=todayKey(), h='';
-  cfg.reminders.forEach(function(r,i){
-    if(r.d<tk)return;
-    h+='<div class="rem-item"><span class="rem-t"><span class="rem-d" onclick="openDay(\''+esc(r.d)+'\')">'+remMD(r.d)+'</span> '+esc(r.t)+'</span>'
-      +'<button class="item-rm" onclick="rmRem('+i+')">삭제</button></div>';
-  });
+  var tk=todayKey();
+  var L=[];
+  cfg.reminders.forEach(function(r,i){var n=remNextHit(r,tk); if(n) L.push({r:r,i:i,n:n});});
+  L.sort(function(a,b){return a.n<b.n?-1:a.n>b.n?1:0;});
+  var h=L.map(function(x){
+    return'<div class="rem-item"><span class="rem-t"><span class="rem-d" onclick="openDay(\''+esc(x.n)+'\')">'+remMD(x.n)+'</span> '+esc(x.r.t)+remTag(x.r)+'</span>'
+      +'<button class="item-rm" onclick="rmRem('+x.i+')">삭제</button></div>';
+  }).join('');
   return (h||'<div style="font-size:16px;color:var(--th-muted);padding:4px 0 6px">다가오는 알림이 없어요</div>')
     +'<div class="rem-hint">달력에서 날짜를 눌러 알림을 추가하세요</div>';
 }
 /* 오늘 알림 + 앱을 안 열어서 놓친 지난 알림을 한 번에 띄운다.
-   확인을 눌러야 seen 이 저장된다 (실수로 꺼져도 다음에 다시 뜸).
+   확인을 눌러야 seen/last 가 저장된다 (실수로 꺼져도 다음에 다시 뜸).
    다른 팝업이 떠 있으면 미룬다 — 업데이트 팝업은 닫을 때 여기를 부른다 */
 function checkReminders(){
   if(document.getElementById('wnBg')) return;
   var tk=todayKey();
-  var due=cfg.reminders.filter(function(r){return !r.seen&&r.d<=tk;});
+  var due=[];
+  cfg.reminders.forEach(function(r){var h=remDue(r,tk); if(h) due.push({r:r,h:h});});
   if(!due.length) return;
   var bg=document.createElement('div');
   bg.className='wn-bg'; bg.id='wnBg';
   bg.innerHTML='<div class="wn" onclick="event.stopPropagation()">'
     +'<div class="wn-ver">'+remMD(tk)+'</div>'
     +'<div class="wn-t">🔔 알림이 있어요</div>'
-    +'<ul class="wn-list">'+due.map(function(r){
-      return'<li>'+(r.d<tk?'<span class="rem-past">'+remMD(r.d)+' (지난 알림)</span> ':'')+esc(r.t)+'</li>';
+    +'<ul class="wn-list">'+due.map(function(x){
+      return'<li>'+(x.h<tk?'<span class="rem-past">'+remMD(x.h)+' (지난 알림)</span> ':'')+esc(x.r.t)+remTag(x.r)+'</li>';
     }).join('')+'</ul>'
     +'<button class="backup-btn dl wn-btn" onclick="closeReminders()">확인</button>'
     +'</div>';
@@ -1307,7 +1384,10 @@ function checkReminders(){
 }
 function closeReminders(){
   var tk=todayKey();
-  cfg.reminders.forEach(function(r){if(r.d<=tk)r.seen=true;});
+  cfg.reminders.forEach(function(r){
+    var h=remDue(r,tk); if(!h)return;
+    if(r.rep) r.last=h; else r.seen=true;
+  });
   sv();
   var bg=document.getElementById('wnBg');
   if(bg&&bg.parentNode) bg.parentNode.removeChild(bg);
