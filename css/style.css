@@ -831,3 +831,5 @@ body{
 }
 .rem-hint{font-size:14px;color:var(--th-muted);margin:6px 0 2px}
 .rem-past{color:var(--th-event);font-weight:700}
+.rem-rep{display:block;font-size:13px;font-weight:700;color:var(--th-event);margin-top:2px}
+.rem-reps{margin:8px 0 0}
