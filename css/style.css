@@ -69,6 +69,8 @@
   --badge-ot2-text: #ffab5e;
   --badge-photo-bg: rgba(248, 113, 113, 0.24);
   --badge-photo-text: #ff9b9b;
+  --badge-rem-bg: rgba(232, 163, 61, 0.24);
+  --badge-rem-text: #f0b860;
 }
 
 /* ── 화이트 테마 (전체 팔레트 반전) ── */
@@ -108,6 +110,8 @@ html.theme-white{
   --badge-ot2-text: #b06000;
   --badge-photo-bg: #fce8e6;
   --badge-photo-text: #c5221f;
+  --badge-rem-bg: #fef7e0;
+  --badge-rem-text: #b06000;
 }
 
 /* ── 폰트 기본 ── */
@@ -313,6 +317,7 @@ body{
 .mbadge.ww{background:var(--badge-ww-bg);color:var(--badge-ww-text)}
 .mbadge.ot2{background:var(--badge-ot2-bg);color:var(--badge-ot2-text)}
 .mbadge.photo{background:var(--badge-photo-bg);color:var(--badge-photo-text)}
+.mbadge.rem{background:var(--badge-rem-bg);color:var(--badge-rem-text)}
 .wbadge{background:rgba(5,150,105,.2);color:#34d399}.ot2badge{background:rgba(124,58,237,.2);color:#a78bfa}
 .dots{display:flex;gap:2px;margin-top:1px}.dot{width:4px;height:4px;border-radius:50%}
 .df{background:#34d399}.dp{background:#fbbf24}.dph{background:#f87171}.dt{background:#60a5fa}
@@ -804,3 +809,25 @@ body{
 
 .srow{gap:10px}
 .srow > div:first-child{min-width:0}
+
+/* ── 날짜 알림 ── 기록 화면 맨 위 · 설정탭 목록. 색은 기념일과 같은 --th-event(주황) */
+.rem-item{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 12px;margin-bottom:6px;
+  background:var(--canvas-night-soft);
+  border:1px solid var(--hairline-dark);border-left:3px solid var(--th-event);
+  border-radius:var(--r-sm);
+}
+.rem-t{font-size:16px;font-weight:600;color:var(--on-primary);line-height:1.4;word-break:break-all}
+.rem-d{color:var(--th-event);font-weight:700;cursor:pointer;margin-right:4px}
+.field.rem-add{display:flex;gap:6px;margin-bottom:0}
+.rem-add input{flex:1;min-width:0}
+.rem-add button{
+  flex-shrink:0;
+  background:var(--th-btn-save);color:var(--th-bg);
+  border:none;border-radius:var(--r-pill);
+  padding:0 16px;font-size:15px;font-weight:700;cursor:pointer;
+  font-family:inherit;
+}
+.rem-hint{font-size:14px;color:var(--th-muted);margin:6px 0 2px}
+.rem-past{color:var(--th-event);font-weight:700}

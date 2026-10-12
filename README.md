@@ -57,7 +57,8 @@ remicon-log/
   showLunar: true,    // 날짜 옆 음력
   showHoliday: true,  // 빨간날 + 공휴일 이름
   showTerm: false,    // 절기·기념일 (칸이 좁아 기본 꺼둠)
-  lunarEvents: []     // 내가 등록한 기념일 [{name, lm, ld, leap, solar}]
+  lunarEvents: [],    // 내가 등록한 기념일 [{name, lm, ld, leap, solar}]
+  reminders: []       // 날짜 알림 [{d:'YYYY-MM-DD', t:내용, seen:팝업 확인 여부}]
 }
 ```
 
@@ -253,6 +254,17 @@ remicon-log/
   - iOS는 홈화면 추가 시점에 1회 캡처 → 변경 시 앱 삭제 후 재추가 필요.
 - **하단 탭바**: `env(safe-area-inset-bottom)`으로 홈 인디케이터 영역 회피.
 - **사진**: 촬영·갤러리 선택 즉시 IndexedDB에 원본 Blob으로 저장(저장 버튼과 무관). 뷰포트가 핀치 확대를 막으므로, 사진을 탭하면 **오버레이에 원본 크기로 얹고 쓸어서** 읽는다. **`window.open` 으로 blob URL을 열지 않는다** (아래 iOS 항목).
+
+### 날짜 알림 (`cfg.reminders`)
+
+- 기록 화면(날짜) 맨 위 **'알림'** 칸에서 추가·삭제. 저장 버튼과 무관하게 **즉시 저장**된다.
+- `logs` 와 분리돼 있어 그날 기록을 지워도 알림은 남는다. `cfg` 안이라 **백업 파일에 포함**된다.
+- 앱을 열 때(`checkReminders()`)와 화면에 다시 돌아올 때(`visibilitychange`) 오늘 이하 날짜의
+  `seen:false` 알림을 한 팝업에 모아 띄운다. 놓친 지난 알림은 "N월 N일 (지난 알림)" 으로 표시.
+  - '확인'을 눌러야 `seen` 이 저장된다. 지난 날짜에 새로 거는 알림은 처음부터 `seen:true`.
+  - 업데이트 팝업과 같은 `#wnBg` 를 쓴다. 업데이트 팝업이 떠 있으면 건너뛰고, 그걸 닫을 때 이어서 뜬다.
+- 달력 칸에 🔔 뱃지(`.mbadge.rem`), 설정탭 '알림'에 오늘 이후 목록.
+- **앱이 꺼져 있을 때 폰 알림(푸시)은 없다** — 서버가 없어서. 앱을 열어야 뜬다.
 
 ### 업데이트 알림
 

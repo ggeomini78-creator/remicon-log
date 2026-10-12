@@ -19,12 +19,21 @@ if(cfg.showLunar===undefined)   cfg.showLunar=true;
 if(cfg.showHoliday===undefined) cfg.showHoliday=true;
 if(cfg.showTerm===undefined)    cfg.showTerm=false;   /* 절기는 칸이 좁아 기본 꺼둠 */
 cfg.lunarEvents = cfg.lunarEvents || [];              /* [{name,lm,ld,leap,solar}] */
+cfg.reminders = cfg.reminders || [];                  /* 날짜 알림 [{d:'YYYY-MM-DD',t,seen}] */
 
 /* ── 업데이트 내역 ──
    새 항목은 맨 위에 추가한다. APP_VERSION 은 여기서 따라오므로 따로 손댈 필요 없다.
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
+  {v:'1.5.0', d:'2026-10-12', t:'날짜 알림을 걸어둘 수 있어요', items:[
+    '달력에서 날짜를 누르면 맨 위에 "알림" 칸이 있어요 — 할 일을 적고 추가를 누르세요',
+    '그날 앱을 열면 팝업으로 알려드려요 (예: 보험 갱신, 정기검사, 단가 확인)',
+    '알림을 건 날은 달력에 🔔 표시가 떠요',
+    '며칠 앱을 안 열어서 놓친 알림도 다음에 열 때 같이 알려드려요',
+    '다가오는 알림은 설정 → 알림에서 한눈에 볼 수 있어요',
+    '※ 앱을 열어야 알려드려요. 앱이 꺼져 있을 때 폰 알림으로 오지는 않아요'
+  ]},
   {v:'1.4.0', d:'2026-10-05', t:'오티 식대가 월말결산에 들어가요', items:[
     '하루 오티를 3시간 이상 한 날은 식대 7,000원이 붙어요',
     '월말결산 오티 수당 칸에 식대 받은 날짜와 합계가 같이 나와요',
@@ -371,6 +380,7 @@ function rCal(){
     if(ww>0) mn+='<div class="mbadge ww">'+(ww>1?ww:'')+'W</div>';
     if(ot2) mn+='<div class="mbadge ot2">2시↑</div>';
     if(phKeys.indexOf(key)>=0) mn+='<div class="mbadge photo">📷</div>';
+    if(remOf(key).length) mn+='<div class="mbadge rem">🔔</div>';
     var mn2=(parseFloat(log.fuel)>0?'<div class="mbadge fuel">주유</div>':'')
       +(parseFloat(log.ot)>0?'<div class="mbadge ot">OT</div>':'')
       +(tollTotal(log.t1,log.t2)>0?'<div class="mbadge toll">톨비</div>':'');
@@ -658,6 +668,8 @@ function rEntry(){
 
   document.getElementById('mc').innerHTML='<div class="ef">'
   +(dr?'<div class="draft-note"><span>✏️ 저장 안 한 입력을 되살렸어요. 저장을 눌러야 기록돼요</span><button onclick="draftDiscard()">버리기</button></div>':'')
+  +'<div class="shdr">알림</div>'
+  +'<div id="remCon">'+mkRem()+'</div>'
   +'<div class="shdr">근무 상태</div>'
   +'<div class="btns">'+['work','vacation','repair','other'].map(function(k,i){
     return'<button id="stb'+i+'" class="btn'+(k==='vacation'?' off-btn':'')+(k==='repair'?' rep-btn':'')+(cSt===k?' on':'')+'" onclick="setSt(\''+k+'\')">'+['근무','휴무','정비','기타'][i]+'</button>';
@@ -1108,6 +1120,8 @@ function rConfig(){
   +'<div id="leCon">'+mkLE()+'</div>'
   +'<button class="add-btn" onclick="addLE()">+ 기념일 추가</button>'
   +'</div>'
+  +'<div class="cfg-sec">알림</div>'
+  +'<div class="sblk" style="padding:12px 14px">'+mkRemCfg()+'</div>'
   +'<div class="cfg-sec">급여 설정 (' + (cm + 1) + '월 기준)</div>'
   +'<div class="sblk">'
   +'<div class="srow"><div><span class="slbl">' + (cm + 1) + '월 바리당 단가</span><span class="slbl-sub">선택된 월에만 적용되는 단가</span></div><div style="display:flex;align-items:center;gap:4px"><input class="sinp" type="number" value="' + curMonthPrice + '" oninput="setMonthlyPrice(' + cy + ',' + cm + ', +this.value);sv()"><span style="font-size:14px;color:var(--th-muted)">원</span></div></div>'
@@ -1224,6 +1238,86 @@ function upLEDate(i){
   document.getElementById('leCon').innerHTML=mkLE();
 }
 
+/* ── 날짜 알림 ──
+   기록 화면(날짜)에서 걸어두면 그날 앱을 열 때 팝업으로 알려준다.
+   운행기록(logs)과 따로 cfg.reminders 에 둔다 — 기록을 지우거나 저장 안 해도 알림은 남고,
+   백업 파일에도 cfg 와 함께 담긴다. 저장 버튼 없이 추가·삭제 즉시 저장 (사진과 같은 방식).
+   앱이 꺼져 있을 때 폰 알림을 보내려면 푸시 서버가 필요해서 여기선 하지 않는다 */
+function todayKey(){var t=new Date();return dk(t.getFullYear(),t.getMonth(),t.getDate());}
+function remOf(k){return cfg.reminders.filter(function(r){return r.d===k;});}
+function remMD(k){var p=k.split('-');return (+p[1])+'월 '+(+p[2])+'일';}
+function mkRem(){
+  var h='';
+  cfg.reminders.forEach(function(r,i){
+    if(r.d!==sel)return;
+    h+='<div class="rem-item"><span class="rem-t">'+esc(r.t)+'</span>'
+      +'<button class="item-rm" onclick="rmRem('+i+')">삭제</button></div>';
+  });
+  return h+'<div class="field rem-add"><input type="text" id="fRem" placeholder="예: 보험 갱신, 정기검사" onkeydown="if(event.keyCode===13)addRem()">'
+    +'<button onclick="addRem()">추가</button></div>'
+    +'<div class="rem-hint">이 날 앱을 열면 팝업으로 알려드려요</div>';
+}
+function addRem(){
+  var el=document.getElementById('fRem'); if(!el||!sel)return;
+  var t=el.value.replace(/\s+/g,' ').trim();
+  if(!t){showToast('알림 내용을 적어주세요','#dc2626');return;}
+  /* 지난 날짜는 이미 지나간 일이라 팝업을 띄우지 않는다 */
+  cfg.reminders.push({d:sel,t:t,seen:sel<todayKey()});
+  cfg.reminders.sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0;});
+  sv();
+  document.getElementById('remCon').innerHTML=mkRem();
+  showToast('🔔 '+remMD(sel)+' 알림을 걸었어요');
+}
+function rmRem(i){
+  cfg.reminders.splice(i,1); sv();
+  var c=document.getElementById('remCon'); if(c) c.innerHTML=mkRem();
+  else if(tab==='config') rConfig();
+}
+/* 설정탭 — 오늘 이후 알림만 모아 보여준다. 날짜를 누르면 그날 기록 화면으로 */
+function mkRemCfg(){
+  var tk=todayKey(), h='';
+  cfg.reminders.forEach(function(r,i){
+    if(r.d<tk)return;
+    h+='<div class="rem-item"><span class="rem-t"><span class="rem-d" onclick="openDay(\''+esc(r.d)+'\')">'+remMD(r.d)+'</span> '+esc(r.t)+'</span>'
+      +'<button class="item-rm" onclick="rmRem('+i+')">삭제</button></div>';
+  });
+  return (h||'<div style="font-size:16px;color:var(--th-muted);padding:4px 0 6px">다가오는 알림이 없어요</div>')
+    +'<div class="rem-hint">달력에서 날짜를 눌러 알림을 추가하세요</div>';
+}
+/* 오늘 알림 + 앱을 안 열어서 놓친 지난 알림을 한 번에 띄운다.
+   확인을 눌러야 seen 이 저장된다 (실수로 꺼져도 다음에 다시 뜸).
+   다른 팝업이 떠 있으면 미룬다 — 업데이트 팝업은 닫을 때 여기를 부른다 */
+function checkReminders(){
+  if(document.getElementById('wnBg')) return;
+  var tk=todayKey();
+  var due=cfg.reminders.filter(function(r){return !r.seen&&r.d<=tk;});
+  if(!due.length) return;
+  var bg=document.createElement('div');
+  bg.className='wn-bg'; bg.id='wnBg';
+  bg.innerHTML='<div class="wn" onclick="event.stopPropagation()">'
+    +'<div class="wn-ver">'+remMD(tk)+'</div>'
+    +'<div class="wn-t">🔔 알림이 있어요</div>'
+    +'<ul class="wn-list">'+due.map(function(r){
+      return'<li>'+(r.d<tk?'<span class="rem-past">'+remMD(r.d)+' (지난 알림)</span> ':'')+esc(r.t)+'</li>';
+    }).join('')+'</ul>'
+    +'<button class="backup-btn dl wn-btn" onclick="closeReminders()">확인</button>'
+    +'</div>';
+  bg.onclick=closeReminders;
+  document.body.appendChild(bg);
+}
+function closeReminders(){
+  var tk=todayKey();
+  cfg.reminders.forEach(function(r){if(r.d<=tk)r.seen=true;});
+  sv();
+  var bg=document.getElementById('wnBg');
+  if(bg&&bg.parentNode) bg.parentNode.removeChild(bg);
+  if(tab==='calendar') render();
+}
+/* 앱을 켜둔 채 날짜가 바뀌는 경우 — 다시 화면에 돌아올 때 확인 */
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible') checkReminders();
+});
+
 /* ★ 테마 적용 및 저장 */
 function setTheme(t){
   cfg.theme=t;
@@ -1276,6 +1370,7 @@ function doRestore(ev){
       if(!data.logs||!data.cfg){showToast('올바른 백업 파일이 아니에요','#dc2626');return;}
       if(!confirm('현재 데이터가 모두 백업 데이터로 교체됩니다. 계속하시겠어요?'))return;
       logs=data.logs;cfg=data.cfg;
+      cfg.lunarEvents=cfg.lunarEvents||[]; cfg.reminders=cfg.reminders||[];
       phKeys.slice().forEach(function(k){if(!logs[k])phDel(k);});
       sv();applyTheme(cfg.theme);
       showToast('✅ 복원 완료!');render();
@@ -1341,6 +1436,7 @@ function closeWhatsNew(){
   cfg.seenVersion=APP_VERSION; sv();
   var bg=document.getElementById('wnBg');
   if(bg&&bg.parentNode) bg.parentNode.removeChild(bg);
+  checkReminders();   /* 업데이트 팝업 뒤에 이어서 */
 }
 /* 앱을 열 때 한 번 — 버전이 달라졌으면 최신 항목 하나만 띄운다 */
 function checkWhatsNew(){
@@ -1366,6 +1462,7 @@ function showUpdateBar(){
 /* ── 시작 ── */
 render();
 checkWhatsNew();
+checkReminders();   /* 업데이트 팝업이 떠 있으면 건너뛰고, 그걸 닫을 때 뜬다 */
 
 /* ── 당겨서 새로고침 (Pull to Refresh) ── */
 (function() {
