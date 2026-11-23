@@ -22,11 +22,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # 올리기(build)와 배포(deploy)를 다른 job 으로 나눈다.
+  # 한 job 안에서 올리자마자 바로 배포하면 방금 올린 파일 묶음을 못 찾아
+  # "No artifacts named github-pages" 로 실패했다 (2026-11-23, 재실행해도 같음).
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,6 +37,14 @@ jobs:
         with:
           # Upload entire repository
           path: '.'
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
