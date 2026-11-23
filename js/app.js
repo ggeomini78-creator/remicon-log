@@ -30,7 +30,8 @@ var CHANGELOG=[
     '기록 화면 연료 칸에 그날 사용량이 나와요 (그날 운행 km × km당 소모량)',
     '지난 날짜를 열면 그날 사용량과 주유량을 그대로 볼 수 있어요',
     '연료 칸 아래 "날짜별 사용 내역 보기"를 누르면 이달 하루하루 사용량·주유량이 쭉 나와요',
-    '월말결산 유류 현황에도 날짜별 사용 내역이 같이 나와요'
+    '월말결산 유류 현황에도 날짜별 사용 내역이 같이 나와요',
+    '설정의 업데이트 내역은 너무 길어져서 최근 두 개만 보여드려요'
   ]},
   {v:'1.5.1', d:'2026-10-12', t:'알림을 반복으로 걸 수 있어요', items:[
     '알림을 추가할 때 한 번 · 매주 · 매달 · 매년 중에 고를 수 있어요',
@@ -1176,7 +1177,8 @@ function rConfig(){
   +'<div class="cfg-sec">업데이트 내역</div>'
   +'<div class="sblk" style="padding:4px 14px 12px">'
   +'<p style="font-size:14px;color:var(--th-muted);margin:10px 0 4px">현재 버전 v'+esc(APP_VERSION)+'</p>'
-  +CHANGELOG.map(function(e){
+  /* 내역이 쌓여 설정 화면이 너무 길어져서 최근 2개만 보여준다 (2026-11-23) */
+  +CHANGELOG.slice(0,2).map(function(e){
     return'<div class="cl-item">'
       +'<div class="wn-ver">'+wnDate(e)+'</div>'
       +'<div class="cl-t">'+esc(e.t)+'</div>'

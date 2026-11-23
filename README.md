@@ -281,7 +281,7 @@ remicon-log/
 - 앱을 열 때 `checkWhatsNew()` 가 `cfg.seenVersion` 과 비교해 다르면 **최신 항목 하나만** 팝업.
   - 닫아야 `seenVersion` 이 저장된다 (실수로 꺼져도 다음에 다시 뜸)
   - **신규 설치**(`logs` 비어있고 `seenVersion` 없음)에는 안 띄운다
-- 설정탭 **'업데이트 내역'** 에 `CHANGELOG` 전체 + 현재 버전 표시.
+- 설정탭 **'업데이트 내역'** 에 `CHANGELOG` 최근 2개 + 현재 버전 표시.
 - 새 버전을 다 받으면 하단 탭바 위에 **'새 버전이 준비됐어요 · 새로고침'** 띠
   (`showUpdateBar()`, `index.html` 의 `updatefound` 리스너가 호출). **자동 새로고침은 안 한다** —
   기록 작성 중이면 입력이 날아간다.
