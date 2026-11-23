@@ -452,6 +452,15 @@ body{
   justify-content:space-between;
   align-items:center;
 }
+/* 날짜별 유류 내역 */
+.fd-toggle{display:block;width:100%;background:transparent;border:none;border-top:1px solid var(--hairline-dark);color:var(--th-accent);font-size:14px;font-weight:600;padding:11px var(--sp-md);text-align:center;font-family:inherit}
+.fd-list{border-top:1px dashed var(--hairline-dark)}
+.fd-list.in-fb{margin-top:0;padding:4px 0}
+.fdrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px var(--sp-md);font-size:14px;color:var(--th-muted)}
+.fd-list.in-fb .fdrow{padding-left:0;padding-right:0}
+.fdrow.on{background:rgba(29,78,216,.08);font-weight:700}
+.fd-day{white-space:nowrap}.fd-val{white-space:nowrap;text-align:right}
+.fd-used{color:#f87171;font-weight:700}.fd-fuel{color:#34d399;font-weight:700}
 .fbb-label,.km-total-label,.toll-total-label{font-size:12px;color:var(--th-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase}
 .fbb-val,.km-total-val,.toll-total-val{font-size:22px;font-weight:700;color:var(--on-primary)}
 .toll-row{display:flex;justify-content:space-between;align-items:center;padding:7px var(--sp-md);border-bottom:1px solid var(--hairline-dark)}

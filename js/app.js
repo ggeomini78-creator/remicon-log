@@ -26,6 +26,13 @@ cfg.reminders = cfg.reminders || [];                  /* 날짜 알림 [{d:'YYYY
    문구는 운전기사가 읽을 말로 쓴다 (기술 용어 금지).
    ★ 배포할 때 sw.js 의 CACHE 와 index.html 의 ?v= 도 같이 올릴 것 — CLAUDE.md 참고 */
 var CHANGELOG=[
+  {v:'1.6.0', d:'2026-11-23', t:'날짜별 유류 사용량을 볼 수 있어요', items:[
+    '기록 화면 연료 칸에 그날 사용량이 나와요 (그날 운행 km × km당 소모량)',
+    '지난 날짜를 열면 그날 사용량과 주유량을 그대로 볼 수 있어요',
+    '연료 칸 아래 "날짜별 사용 내역 보기"를 누르면 이달 하루하루 사용량·주유량이 쭉 나와요',
+    '월말결산 유류 현황에도 날짜별 사용 내역이 같이 나와요',
+    '설정의 업데이트 내역은 너무 길어져서 최근 두 개만 보여드려요'
+  ]},
   {v:'1.5.1', d:'2026-10-12', t:'알림을 반복으로 걸 수 있어요', items:[
     '알림을 추가할 때 한 번 · 매주 · 매달 · 매년 중에 고를 수 있어요',
     '매달로 걸면 다달이 같은 날에 팝업으로 알려드려요 (예: 매달 25일 카드값)',
@@ -201,6 +208,48 @@ function fuelMonthExclude(targetDate){
     mf+=parseFloat(v.fuel||0); mu+=km*cfg.fuelRate;
   });
   return{mf:+mf.toFixed(2),mu:+mu.toFixed(2)};
+}
+
+/* 날짜별 유류 내역 (이달만). 운행 km 나 주유가 있는 날만 한 줄씩.
+   기록 화면에서는 selDate 줄을 저장된 값 대신 지금 입력 중인 값(liveKm/liveFuel)으로 그린다. */
+function fuelDayRows(mp,selDate,liveKm,liveFuel){
+  var keys=Object.keys(logs).filter(function(k){return k.startsWith(mp);});
+  if(selDate&&keys.indexOf(selDate)<0)keys.push(selDate);
+  keys.sort();
+  var h='';
+  keys.forEach(function(k){
+    var km,fuel;
+    if(k===selDate){km=liveKm;fuel=liveFuel;}
+    else{km=dayKm(logs[k]);fuel=parseFloat(logs[k].fuel||0)||0;}
+    if(km<=0&&fuel<=0)return;
+    var used=+(km*cfg.fuelRate).toFixed(1);
+    h+='<div class="fdrow'+(k===selDate?' on':'')+'">'
+      +'<span class="fd-day">'+parseInt(k.substring(8),10)+'일 · '+km.toLocaleString()+'km</span>'
+      +'<span class="fd-val">'+(fuel>0?'<span class="fd-fuel">주유 +'+fuel+'L</span> · ':'')
+      +'<span class="fd-used">사용 '+used+'L</span></span></div>';
+  });
+  return h||'<div class="fdrow"><span class="fd-day">이달 운행 기록이 없어요</span></div>';
+}
+/* 기록 화면 연료 카드 안쪽. 처음 그릴 때(rEntry)와 입력할 때(uFuelCard) 같이 쓴다 */
+var fuelListOpen=false;
+function tgFuelList(){fuelListOpen=!fuelListOpen;uFuelCard();}
+function fuelCardHtml(todayKm,todayFuel){
+  var prev=fuelMonthExclude(sel);
+  var todayUsed=+(todayKm*cfg.fuelRate).toFixed(1);
+  var mTotalFuel=+(prev.mf+todayFuel).toFixed(1);
+  var mTotalUsed=+(prev.mu+todayKm*cfg.fuelRate).toFixed(1);
+  var diff=+(mTotalUsed-mTotalFuel).toFixed(1);
+  var diffLabel=diff>=0?'🟢 초과소비 +'+diff+'L — 지급 받음':'🔴 잔량 '+Math.abs(diff)+'L — 도급비 차감';
+  var diffColor=diff>=0?'#34d399':'#f87171';
+  return '<div class="fuel-card-title">이달 연료 현황</div>'
+    +'<div class="fcrow"><span class="fck">당일 사용량 ('+todayKm.toLocaleString()+'km×'+cfg.fuelRate+')</span><span class="fcv minus">'+todayUsed+'L</span></div>'
+    +'<div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div>'
+    +'<div class="fcrow" style="background:rgba(29,78,216,.08)"><span class="fck" style="font-weight:600;color:var(--th-accent)">이달 총 주유량</span><span class="fcv blue">'+mTotalFuel+'L</span></div>'
+    +'<div class="fcrow"><span class="fck">이달 소비량 (km×'+cfg.fuelRate+')</span><span class="fcv minus">'+mTotalUsed+'L</span></div>'
+    +'<div class="fuel-balance-big"><span class="fbb-label">이달 유류 정산 방향</span>'
+    +'<span style="font-size:15px;font-weight:700;color:'+diffColor+'">'+diffLabel+'</span></div>'
+    +'<button type="button" class="fd-toggle" onclick="tgFuelList()">날짜별 사용 내역 '+(fuelListOpen?'접기 ▴':'보기 ▾')+'</button>'
+    +(fuelListOpen?'<div class="fd-list">'+fuelDayRows(sel.substring(0,7),sel,todayKm,todayFuel)+'</div>':'');
 }
 
 function calcPrevKm(targetDate){
@@ -574,18 +623,7 @@ function uFuelCard(){
   var sk=parseInt(document.getElementById('fSk').value)||0;
   var ek=parseInt(document.getElementById('fEk').value)||0;
   var todayKm=ek>sk?ek-sk:0;
-  var prev=fuelMonthExclude(sel);
-  var mTotalFuel=+(prev.mf+todayFuel).toFixed(1);
-  var mTotalUsed=+(prev.mu+todayKm*cfg.fuelRate).toFixed(1);
-  var diff=+(mTotalUsed-mTotalFuel).toFixed(1);
-  var diffLabel=diff>=0?'🟢 초과소비 +'+diff+'L — 지급 받음':'🔴 잔량 '+Math.abs(diff)+'L — 도급비 차감';
-  var diffColor=diff>=0?'#34d399':'#f87171';
-  el.innerHTML='<div class="fuel-card-title">이달 연료 현황</div>'
-    +'<div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div>'
-    +'<div class="fcrow" style="background:rgba(29,78,216,.08)"><span class="fck" style="font-weight:600;color:var(--th-accent)">이달 총 주유량</span><span class="fcv blue">'+mTotalFuel+'L</span></div>'
-    +'<div class="fcrow"><span class="fck">이달 소비량 (km×'+cfg.fuelRate+')</span><span class="fcv minus">'+mTotalUsed+'L</span></div>'
-    +'<div class="fuel-balance-big"><span class="fbb-label">이달 유류 정산 방향</span>'
-    +'<span style="font-size:15px;font-weight:700;color:'+diffColor+'">'+diffLabel+'</span></div>';
+  el.innerHTML=fuelCardHtml(todayKm,todayFuel);
 }
 
 function uKmCard(){
@@ -663,16 +701,6 @@ function rEntry(){
   var totalKm=cfg.initKm+prevKm+kmD+repKmToday+cashKmToday;
   var t1=parseInt(v.t1||0),t2=parseInt(v.t2||0),tTot=tollTotal(t1,t2);
 
-  /* ★ 이달 연료 (월별 리셋) */
-  var prev=fuelMonthExclude(sel);
-  var todayFuel=parseFloat(v.fuel||0);
-  var todayKm=kmD;
-  var mTotalFuel=+(prev.mf+todayFuel).toFixed(1);
-  var mTotalUsed=+(prev.mu+todayKm*cfg.fuelRate).toFixed(1);
-  var fuelDiff=+(mTotalUsed-mTotalFuel).toFixed(1);
-  var fuelLabel=fuelDiff>=0?'🟢 초과소비 +'+fuelDiff+'L — 지급 받음':'🔴 잔량 '+Math.abs(fuelDiff)+'L — 도급비 차감';
-  var fuelColor=fuelDiff>=0?'#34d399':'#f87171';
-
   document.getElementById('mc').innerHTML='<div class="ef">'
   +(dr?'<div class="draft-note"><span>✏️ 저장 안 한 입력을 되살렸어요. 저장을 눌러야 기록돼요</span><button onclick="draftDiscard()">버리기</button></div>':'')
   +'<div class="shdr">알림</div>'
@@ -698,14 +726,7 @@ function rEntry(){
   +'</div>'
   +'<div class="shdr">연료 주유</div>'
   +'<div class="field"><label class="fl">당일 주유량 (L)</label><input type="number" id="fF" value="'+(v.fuel||'')+'" placeholder="0" step="10" oninput="uFuelCard()"></div>'
-  +'<div class="fuel-card" id="fuelCard">'
-  +'<div class="fuel-card-title">이달 연료 현황</div>'
-  +'<div class="fcrow"><span class="fck">당일 주유량</span><span class="fcv plus">'+(todayFuel>0?'+'+todayFuel:'0')+'L</span></div>'
-  +'<div class="fcrow" style="background:rgba(29,78,216,.08)"><span class="fck" style="font-weight:600;color:var(--th-accent)">이달 총 주유량</span><span class="fcv blue">'+mTotalFuel+'L</span></div>'
-  +'<div class="fcrow"><span class="fck">이달 소비량 (km×'+cfg.fuelRate+')</span><span class="fcv minus">'+mTotalUsed+'L</span></div>'
-  +'<div class="fuel-balance-big"><span class="fbb-label">이달 유류 정산 방향</span>'
-  +'<span style="font-size:15px;font-weight:700;color:'+fuelColor+'">'+fuelLabel+'</span></div>'
-  +'</div>'
+  +'<div class="fuel-card" id="fuelCard">'+fuelCardHtml(kmD,parseFloat(v.fuel||0)||0)+'</div>'
   +'<div class="shdr">시간외수당 (오티)</div>'
   +'<div class="field"><label class="fl">오티 시간 — 4시 이후</label><input type="number" id="fOt" value="'+(v.ot||'')+'" placeholder="0" step="0.5" oninput="uOT()"></div>'
   +'<div class="chint" id="otA" style="color:#7c3aed">'+otText(parseFloat(v.ot)||0)+'</div>'
@@ -965,7 +986,8 @@ function rStats(){
   +'<div class="sec">유류 현황 (이달 / 정산 별도)</div>'
   +'<div class="fb"><div class="fr"><span class="fk">이달 주유량</span><span class="fv" style="color:#059669">+'+fu.mf.toFixed(1)+'L</span></div>'
   +'<div class="fr"><span class="fk">이달 소비량</span><span class="fv" style="color:#dc2626">'+fu.mu.toFixed(1)+'L</span></div>'
-  +'<div class="fr"><span class="fk" style="font-weight:700">이달 유류 정산</span><span class="fv" style="color:'+fuelColor+'">'+fuelLabel+'</span></div></div>'
+  +'<div class="fr"><span class="fk" style="font-weight:700">이달 유류 정산</span><span class="fv" style="color:'+fuelColor+'">'+fuelLabel+'</span></div>'
+  +'<div class="fd-list in-fb">'+fuelDayRows(y+'-'+String(m+1).padStart(2,'0'),null,0,0)+'</div></div>'
   +'<div class="sec">오티 수당</div>'
   +'<div class="fb"><div class="fr"><span class="fk">이달 오티 시간</span><span class="fv">'+tot+'시간</span></div>'
   +'<div class="fr"><span class="fk">오티 수당 합계</span><span class="fv" style="color:#7c3aed">'+totA.toLocaleString()+'원</span></div>'
@@ -1155,7 +1177,8 @@ function rConfig(){
   +'<div class="cfg-sec">업데이트 내역</div>'
   +'<div class="sblk" style="padding:4px 14px 12px">'
   +'<p style="font-size:14px;color:var(--th-muted);margin:10px 0 4px">현재 버전 v'+esc(APP_VERSION)+'</p>'
-  +CHANGELOG.map(function(e){
+  /* 내역이 쌓여 설정 화면이 너무 길어져서 최근 2개만 보여준다 (2026-11-23) */
+  +CHANGELOG.slice(0,2).map(function(e){
     return'<div class="cl-item">'
       +'<div class="wn-ver">'+wnDate(e)+'</div>'
       +'<div class="cl-t">'+esc(e.t)+'</div>'
